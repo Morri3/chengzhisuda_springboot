@@ -1,6 +1,7 @@
 package com.zyq.parttime.minio;
 
 import io.minio.*;
+import io.minio.errors.*;
 import io.minio.messages.DeleteObject;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -12,12 +13,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLEncoder;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -25,26 +28,26 @@ public class MinIO {
     @Autowired
     private MinioClient minioClient;
 
+    @Value("${minio.endpoint}")
+    private String endpoint;
+    @Value("${minio.accessKey}")
+    private String accessKey;
+    @Value("${minio.secretKey}")
+    private String secretKey;
     @Value("${minio.bucket}")
     public String bucketName;
-
     @Value("${minio.urlprefix}")
     public String urlprefix;
 
-//    //判断bucket是否存在
-//    public Boolean existBucket(String name) {
-//        Boolean flag = true;//是否存在，true存在，false不存在
-//        try {
-//            boolean exist = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
-//            if (!exist) {//不存在创建桶
-//                minioClient.makeBucket(MakeBucketArgs.builder().bucket(name).build());
-//                flag = false;
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        return flag;
-//    }
+    //判断bucket是否存在
+    public Boolean existBucket(String name) throws Exception {
+        Boolean flag = true;//是否存在，true存在，false不存在
+        if (!minioClient.bucketExists(BucketExistsArgs.builder().bucket(name).build())) {
+            minioClient.makeBucket(MakeBucketArgs.builder().bucket(name).build());
+            flag = false;
+        }
+        return flag;
+    }
 
     //创建bucket
     public Boolean createBucket(String bucketName) {
@@ -69,24 +72,28 @@ public class MinIO {
     }
 
     //上传文件
-    public Map<String, String> uploadFile(MultipartFile file) {
-
-//        String filename = FileUtils.extractUploadFilename(file);
-//        try {
-//            InputStream inputStream = file.getInputStream();
-//            // 上传到minio服务器
-//            minioClient.putObject(PutObjectArgs.builder()
-//                    .bucket(this.bucketName)
-//                    .object(filename)
-//                    .stream(inputStream, -1L, 10485760L)
-//                    .build());
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-        // 返回地址
-        Map<String, String> resultMap = new HashMap<>();
-//        resultMap.put("url",filename);
-        return resultMap;
+    public String uploadFile(MultipartFile file, String bucketName) throws Exception {
+        try {
+            //是否存在这个桶
+            this.existBucket(bucketName);
+            //原始文件名
+            String originalFilename = file.getOriginalFilename();
+            //新的文件名 = 存储桶文件名_时间戳.后缀名
+            assert originalFilename != null;
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+            String fileName = bucketName + "_" + System.currentTimeMillis() + "_" +
+                    format.format(new Date()) + "_" + new Random().nextInt(1000) +
+                    originalFilename.substring(originalFilename.lastIndexOf("."));
+            //开始上传
+            minioClient.putObject(
+                    PutObjectArgs.builder().bucket(bucketName).object(fileName).stream(
+                                    file.getInputStream(), file.getSize(), -1)
+                            .contentType(file.getContentType()).build());
+            return file.getName() + "上传成功！url：" + endpoint + "/" + bucketName + "/" + fileName;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return file.getName() + "上传失败!";
+        }
     }
 
     //下载文件

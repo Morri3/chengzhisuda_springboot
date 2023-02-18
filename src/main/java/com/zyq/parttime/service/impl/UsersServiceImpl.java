@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -324,9 +325,14 @@ public class UsersServiceImpl implements UsersService {
     }
 
     @Override
-    public Boolean minio() throws ParttimeServiceException {
-        System.out.println(minIO.createBucket("zyq"));//创建桶
-//        System.out.println(minIO.deleteBucket("zyq"));//删除桶
-        return minIO.createBucket("zyq");
+    public Boolean minio(MultipartFile file) throws ParttimeServiceException, Exception {
+//        System.out.println(minIO.existBucket("parttime"));
+//        System.out.println(minIO.existBucket("asg"));
+//        System.out.println(minIO.createBucket("zyq"));//创建桶
+//        System.out.println(minIO.deleteBucket("asg"));//删除桶
+        System.out.println(minIO.uploadFile(file, "parttime"));//上传文件
+
+        return true;
+//        return minIO.createBucket("zyq");
     }
 }

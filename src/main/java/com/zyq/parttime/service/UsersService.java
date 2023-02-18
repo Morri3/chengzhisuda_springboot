@@ -5,6 +5,7 @@ import com.zyq.parttime.form.resumemanage.GetResumeDto;
 import com.zyq.parttime.form.resumemanage.ResumeInfoDto;
 import com.zyq.parttime.form.userinfomanage.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.text.ParseException;
 
@@ -29,5 +30,5 @@ public interface UsersService {
     //简历查看-学生
     ResumeInfoDto getResume(GetResumeDto getResumeDto) throws ParttimeServiceException;
 
-    Boolean minio() throws ParttimeServiceException;
+    Boolean minio(MultipartFile file) throws ParttimeServiceException, Exception;
 }

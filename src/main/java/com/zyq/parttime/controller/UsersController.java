@@ -10,6 +10,7 @@ import com.zyq.parttime.service.UsersService;
 import com.zyq.parttime.service.impl.UsersServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.text.ParseException;
 
@@ -65,8 +66,8 @@ public class UsersController {
 
     @RequestMapping(value = "/minio/test", method = RequestMethod.POST)
     @ResponseBody
-    public ResponseData minio() throws ParseException {
-        Boolean res=usersService.minio();
+    public ResponseData minio(@RequestBody MultipartFile file) throws ParseException, Exception {
+        Boolean res=usersService.minio(file);
         return new ResponseData(ExceptionMsg.SUCCESS);
     }
 }
