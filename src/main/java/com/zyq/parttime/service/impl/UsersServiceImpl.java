@@ -2,9 +2,14 @@ package com.zyq.parttime.service.impl;
 
 import cn.dev33.satoken.secure.SaSecureUtil;
 import com.zyq.parttime.entity.Employer;
+import com.zyq.parttime.entity.Resumedetail;
+import com.zyq.parttime.entity.Resumes;
 import com.zyq.parttime.entity.Student;
 import com.zyq.parttime.exception.ParttimeServiceException;
+import com.zyq.parttime.form.resumemanage.*;
 import com.zyq.parttime.form.userinfomanage.*;
+import com.zyq.parttime.minio.MinIO;
+import com.zyq.parttime.repository.resumemanage.ResumesInfoRepository;
 import com.zyq.parttime.repository.userinfomanage.EmpInfoRepository;
 import com.zyq.parttime.repository.userinfomanage.StuInfoRepository;
 import com.zyq.parttime.service.LogAndRegService;
@@ -12,11 +17,14 @@ import com.zyq.parttime.service.UsersService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Service
 public class UsersServiceImpl implements UsersService {
@@ -26,6 +34,15 @@ public class UsersServiceImpl implements UsersService {
     private StuInfoRepository stuInfoRepository;
     @Autowired
     private EmpInfoRepository empInfoRepository;
+    @Autowired
+    private ResumesInfoRepository resumesInfoRepository;
+    @Autowired
+    private MinIO minIO;
+
+    @Value("${minio.endpoint}")
+    private String endpoint;
+    @Value("${minio.bucket}")
+    private String bucket;
 
     @Override
     public StuInfoDto getStuInfo(GetInfoDto getInfoDto) throws ParttimeServiceException {
@@ -187,4 +204,129 @@ public class UsersServiceImpl implements UsersService {
         return res;
     }
 
+    @Override
+    public ResumeInfoDto getResume(GetResumeDto getResumeDto) throws ParttimeServiceException {
+        ResumeInfoDto res = new ResumeInfoDto();
+
+        if (getResumeDto != null) {
+            //获取学生账号
+            String telephone = getResumeDto.getTelephone();
+
+            //根据学生账号查找该学生的resumes
+            Resumes resumes = resumesInfoRepository.findResumesByStuId(telephone);
+            if (resumes != null) {//存在简历
+                //填充简历的基本信息
+                res.setTelephone(telephone);
+                res.setCurrent_area(resumes.getCurrentArea());
+                res.setExp(resumes.getExp());
+                res.setUpload_time(resumes.getUploadTime());
+
+                //根据r_id查找四个子类的内容
+                List<Resumedetail> campusExpList = resumesInfoRepository.findResumeDetailListByRId(resumes.getId(), "校园经历");
+                List<Resumedetail> educationBgList = resumesInfoRepository.findResumeDetailListByRId(resumes.getId(), "教育背景");
+                List<Resumedetail> projectExpList = resumesInfoRepository.findResumeDetailListByRId(resumes.getId(), "项目经历");
+                List<Resumedetail> professionalSkillList = resumesInfoRepository.findResumeDetailListByRId(resumes.getId(), "专业技能");
+
+                // 遍历四个子类
+                //1.遍历校园经历
+                List<CampusExpDto> list1 = new ArrayList<>();
+                if (campusExpList.size() > 0) {//有内容
+                    //遍历列表
+                    for (Resumedetail item : campusExpList) {
+                        CampusExpDto dto = new CampusExpDto();
+                        dto.setR_id(item.getR().getId());
+                        dto.setTitle(item.getTitle());
+                        dto.setContent(item.getContent());
+                        dto.setCategory("校园经历");
+                        dto.setHasContent(1);//有内容
+                        list1.add(dto);
+                    }
+                } else {//无内容
+                    CampusExpDto dto = new CampusExpDto();
+                    dto.setR_id(resumes.getId());
+                    dto.setCategory("校园经历");
+                    dto.setHasContent(0);//无内容
+                    list1.add(dto);
+                }
+                //2.遍历教育背景
+                List<EducationBgDto> list2 = new ArrayList<>();
+                if (educationBgList.size() > 0) {//有内容
+                    //遍历列表
+                    for (Resumedetail item : campusExpList) {
+                        EducationBgDto dto = new EducationBgDto();
+                        dto.setR_id(item.getR().getId());
+                        dto.setTitle(item.getTitle());
+                        dto.setContent(item.getContent());
+                        dto.setCategory("教育背景");
+                        dto.setHasContent(1);//有内容
+                        list2.add(dto);
+                    }
+                } else {//无内容
+                    EducationBgDto dto = new EducationBgDto();
+                    dto.setR_id(resumes.getId());
+                    dto.setCategory("教育背景");
+                    dto.setHasContent(0);//无内容
+                    list2.add(dto);
+                }
+                //3.遍历项目经历
+                List<ProjectExpDto> list3 = new ArrayList<>();
+                if (campusExpList.size() > 0) {//有内容
+                    //遍历列表
+                    for (Resumedetail item : projectExpList) {
+                        ProjectExpDto dto = new ProjectExpDto();
+                        dto.setR_id(item.getR().getId());
+                        dto.setTitle(item.getTitle());
+                        dto.setContent(item.getContent());
+                        dto.setCategory("项目经历");
+                        dto.setHasContent(1);//有内容
+                        list3.add(dto);
+                    }
+                } else {//无内容
+                    ProjectExpDto dto = new ProjectExpDto();
+                    dto.setR_id(resumes.getId());
+                    dto.setCategory("项目经历");
+                    dto.setHasContent(0);//无内容
+                    list3.add(dto);
+                }
+                //4.遍历专业技能
+                List<ProfessionalSkillDto> list4 = new ArrayList<>();
+                if (campusExpList.size() > 0) {//有内容
+                    //遍历列表
+                    for (Resumedetail item : professionalSkillList) {
+                        ProfessionalSkillDto dto = new ProfessionalSkillDto();
+                        dto.setR_id(item.getR().getId());
+                        dto.setTitle(item.getTitle());
+                        dto.setContent(item.getContent());
+                        dto.setCategory("专业技能");
+                        dto.setHasContent(1);//有内容
+                        list4.add(dto);
+                    }
+                } else {//无内容
+                    ProfessionalSkillDto dto = new ProfessionalSkillDto();
+                    dto.setR_id(resumes.getId());
+                    dto.setCategory("专业技能");
+                    dto.setHasContent(0);//无内容
+                    list4.add(dto);
+                }
+
+                //把四个子类填充到res中
+                res.setCampusExpList(list1);
+                res.setEducationBgList(list2);
+                res.setProjectExpList(list3);
+                res.setProfessionalSkillList(list4);
+            } else {//不存在简历
+                logger.warn("获取简历失败");
+                res.setTelephone(telephone);
+                res.setMemo("请填写简历");
+            }
+        }
+        return res;
+    }
+
+    @Override
+    public Boolean minio() throws ParttimeServiceException {
+        System.out.println(minIO.createBucket("zyq"));//创建桶
+//        System.out.println(minIO.deleteBucket("zyq"));//删除桶
+        return minIO.createBucket("zyq");
+    }
 }

@@ -27,6 +27,9 @@ public class Resumes {
     @Column(name = "upload_time")
     private Date uploadTime;
 
+    @Column(name = "exp")
+    private String exp;
+
     @OneToMany(mappedBy = "r")
     private Set<Resumedetail> resumedetails = new LinkedHashSet<>();
 
@@ -52,6 +55,14 @@ public class Resumes {
 
     public void setCurrentArea(String currentArea) {
         this.currentArea = currentArea;
+    }
+
+    public String getExp() {
+        return exp;
+    }
+
+    public void setExp(String exp) {
+        this.exp = exp;
     }
 
     public Student getStu() {

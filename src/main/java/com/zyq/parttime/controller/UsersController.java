@@ -1,5 +1,7 @@
 package com.zyq.parttime.controller;
 
+import com.zyq.parttime.form.resumemanage.GetResumeDto;
+import com.zyq.parttime.form.resumemanage.ResumeInfoDto;
 import com.zyq.parttime.form.userinfomanage.*;
 import com.zyq.parttime.result.ExceptionMsg;
 import com.zyq.parttime.result.ResponseData;
@@ -53,4 +55,18 @@ public class UsersController {
 
     //TODO 修改密码-兼职发布者/管理员
 
+    //TODO 简历查看-学生
+    @RequestMapping(value = "/resumes/get", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseData getResume(@RequestBody GetResumeDto getResumeDto) throws ParseException {
+        ResumeInfoDto res = usersService.getResume(getResumeDto);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
+    @RequestMapping(value = "/minio/test", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseData minio() throws ParseException {
+        Boolean res=usersService.minio();
+        return new ResponseData(ExceptionMsg.SUCCESS);
+    }
 }

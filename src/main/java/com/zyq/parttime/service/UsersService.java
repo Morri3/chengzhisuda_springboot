@@ -1,6 +1,8 @@
 package com.zyq.parttime.service;
 
 import com.zyq.parttime.exception.ParttimeServiceException;
+import com.zyq.parttime.form.resumemanage.GetResumeDto;
+import com.zyq.parttime.form.resumemanage.ResumeInfoDto;
 import com.zyq.parttime.form.userinfomanage.*;
 import org.springframework.stereotype.Service;
 
@@ -24,4 +26,8 @@ public interface UsersService {
 
     //修改密码-兼职发布者/管理员
 
+    //简历查看-学生
+    ResumeInfoDto getResume(GetResumeDto getResumeDto) throws ParttimeServiceException;
+
+    Boolean minio() throws ParttimeServiceException;
 }
