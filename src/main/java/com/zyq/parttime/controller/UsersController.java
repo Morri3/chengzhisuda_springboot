@@ -3,6 +3,7 @@ package com.zyq.parttime.controller;
 import com.zyq.parttime.exception.ParttimeServiceException;
 import com.zyq.parttime.form.resumemanage.GetResumeDto;
 import com.zyq.parttime.form.resumemanage.ResumeInfoDto;
+import com.zyq.parttime.form.resumemanage.ResumeUploadCallbackDto;
 import com.zyq.parttime.form.userinfomanage.*;
 import com.zyq.parttime.result.ExceptionMsg;
 import com.zyq.parttime.result.ResponseData;
@@ -64,6 +65,15 @@ public class UsersController {
     @ResponseBody
     public ResponseData getResume(@RequestBody GetResumeDto getResumeDto) throws ParseException {
         ResumeInfoDto res = usersService.getResume(getResumeDto);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
+    //TODO 简历上传-学生
+    @RequestMapping(value = "/resumes/upload", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseData uploadResume(@RequestBody MultipartFile file, @RequestParam String telephone)
+            throws ParseException, Exception {
+        ResumeUploadCallbackDto res = usersService.uploadResume(file, telephone);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 

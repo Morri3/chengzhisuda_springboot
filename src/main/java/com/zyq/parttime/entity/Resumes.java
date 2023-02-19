@@ -33,6 +33,9 @@ public class Resumes {
     @Column(name = "pic_url")
     private String picUrl;
 
+    @Column(name = "create_time")
+    private Date createTime;
+
     @OneToMany(mappedBy = "r")
     private Set<Resumedetail> resumedetails = new LinkedHashSet<>();
 
@@ -82,6 +85,14 @@ public class Resumes {
 
     public void setPicUrl(String picUrl) {
         this.picUrl = picUrl;
+    }
+
+    public Date getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
     }
 
     public int getId() {

@@ -3,6 +3,7 @@ package com.zyq.parttime.service;
 import com.zyq.parttime.exception.ParttimeServiceException;
 import com.zyq.parttime.form.resumemanage.GetResumeDto;
 import com.zyq.parttime.form.resumemanage.ResumeInfoDto;
+import com.zyq.parttime.form.resumemanage.ResumeUploadCallbackDto;
 import com.zyq.parttime.form.userinfomanage.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,6 +32,9 @@ public interface UsersService {
 
     //简历查看-学生
     ResumeInfoDto getResume(GetResumeDto getResumeDto) throws ParttimeServiceException;
+
+    //简历上传-学生
+    ResumeUploadCallbackDto uploadResume(MultipartFile file,String telephone) throws ParttimeServiceException,Exception;
 
     //minio创建桶
     Boolean createBucket(String bucketName) throws ParttimeServiceException, Exception;
