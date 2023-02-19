@@ -95,10 +95,8 @@ public class UsersController {
     @RequestMapping(value = "/minio/download", method = RequestMethod.GET)
     @ResponseBody
     public ResponseData download(@RequestBody String fileName, HttpServletResponse res) throws ParseException, Exception {
-        String r=usersService.download(fileName, res);//original是文件路径
-//        if (usersService.download(originalName, response) != null) return new ResponseData(ExceptionMsg.SUCCESS, "成功");
-//        else return new ResponseData(ExceptionMsg.SUCCESS, "失败");
-        return new ResponseData(ExceptionMsg.SUCCESS, r);
+        String result = usersService.download(fileName, res);
+        return new ResponseData(ExceptionMsg.SUCCESS, result);
     }
 
     //TODO minio删除文件

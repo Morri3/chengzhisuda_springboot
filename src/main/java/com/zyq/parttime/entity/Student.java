@@ -43,7 +43,7 @@ public class Student {
     private Date graduationDate;
 
     @Column(name = "head")
-    private long head;
+    private String head;
 
     @Column(name = "grade")
     private String grade;
@@ -100,11 +100,11 @@ public class Student {
         this.grade = grade;
     }
 
-    public long getHead() {
+    public String getHead() {
         return head;
     }
 
-    public void setHead(long head) {
+    public void setHead(String head) {
         this.head = head;
     }
 

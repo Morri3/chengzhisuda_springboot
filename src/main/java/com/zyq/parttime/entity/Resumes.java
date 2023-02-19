@@ -30,6 +30,9 @@ public class Resumes {
     @Column(name = "exp")
     private String exp;
 
+    @Column(name = "pic_url")
+    private String picUrl;
+
     @OneToMany(mappedBy = "r")
     private Set<Resumedetail> resumedetails = new LinkedHashSet<>();
 
@@ -71,6 +74,14 @@ public class Resumes {
 
     public void setStu(Student stu) {
         this.stu = stu;
+    }
+
+    public String getPicUrl() {
+        return picUrl;
+    }
+
+    public void setPicUrl(String picUrl) {
+        this.picUrl = picUrl;
     }
 
     public int getId() {

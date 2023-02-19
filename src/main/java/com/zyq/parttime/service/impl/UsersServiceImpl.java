@@ -343,8 +343,8 @@ public class UsersServiceImpl implements UsersService {
 
     @Override
     public String download(String fileName, HttpServletResponse res) throws ParttimeServiceException, Exception {
-        if(minIO.downloadFile("parttime", fileName, res)!=null) return "yes";
-        else return "no";
+        if(minIO.downloadFile("parttime", fileName, res)!=null) return "下载成功";
+        else return "下载失败";
     }
 
     @Override
