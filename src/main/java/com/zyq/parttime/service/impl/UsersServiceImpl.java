@@ -21,6 +21,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -325,14 +327,28 @@ public class UsersServiceImpl implements UsersService {
     }
 
     @Override
-    public Boolean minio(MultipartFile file) throws ParttimeServiceException, Exception {
-//        System.out.println(minIO.existBucket("parttime"));
-//        System.out.println(minIO.existBucket("asg"));
-//        System.out.println(minIO.createBucket("zyq"));//创建桶
-//        System.out.println(minIO.deleteBucket("asg"));//删除桶
-        System.out.println(minIO.uploadFile(file, "parttime"));//上传文件
+    public Boolean createBucket(String bucketName) throws ParttimeServiceException, Exception {
+        return minIO.createBucket(bucketName);
+    }
 
-        return true;
-//        return minIO.createBucket("zyq");
+    @Override
+    public Boolean deleteBucket(String bucketName) throws ParttimeServiceException, Exception {
+        return minIO.deleteBucket(bucketName);
+    }
+
+    @Override
+    public String upload(MultipartFile file) throws ParttimeServiceException, Exception {
+        return minIO.uploadFile(file, "parttime");
+    }
+
+    @Override
+    public String download(String fileName, HttpServletResponse res) throws ParttimeServiceException, Exception {
+        if(minIO.downloadFile("parttime", fileName, res)!=null) return "yes";
+        else return "no";
+    }
+
+    @Override
+    public String deleteFile(String fileName) throws ParttimeServiceException, Exception {
+        return minIO.deleteFile("parttime", fileName);
     }
 }

@@ -1,5 +1,6 @@
 package com.zyq.parttime.controller;
 
+import com.zyq.parttime.exception.ParttimeServiceException;
 import com.zyq.parttime.form.resumemanage.GetResumeDto;
 import com.zyq.parttime.form.resumemanage.ResumeInfoDto;
 import com.zyq.parttime.form.userinfomanage.*;
@@ -12,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.InputStream;
 import java.text.ParseException;
 
 @RestController
@@ -64,10 +67,45 @@ public class UsersController {
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
-    @RequestMapping(value = "/minio/test", method = RequestMethod.POST)
+    //TODO minio创建桶
+    @RequestMapping(value = "/minio/create_bucket", method = RequestMethod.POST)
     @ResponseBody
-    public ResponseData minio(@RequestBody MultipartFile file) throws ParseException, Exception {
-        Boolean res=usersService.minio(file);
-        return new ResponseData(ExceptionMsg.SUCCESS);
+    public ResponseData createBucket(@RequestBody String bucketName) throws ParseException, Exception {
+        Boolean res = usersService.createBucket(bucketName);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
+    //TODO minio删除桶
+    @RequestMapping(value = "/minio/delete_bucket", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseData deleteBucket(@RequestBody String bucketName) throws ParseException, Exception {
+        Boolean res = usersService.deleteBucket(bucketName);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
+    //TODO minio上传文件
+    @RequestMapping(value = "/minio/upload", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseData upload(@RequestBody MultipartFile file) throws ParseException, Exception {
+        String res = usersService.upload(file);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
+    //TODO minio下载文件
+    @RequestMapping(value = "/minio/download", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseData download(@RequestBody String fileName, HttpServletResponse res) throws ParseException, Exception {
+        String r=usersService.download(fileName, res);//original是文件路径
+//        if (usersService.download(originalName, response) != null) return new ResponseData(ExceptionMsg.SUCCESS, "成功");
+//        else return new ResponseData(ExceptionMsg.SUCCESS, "失败");
+        return new ResponseData(ExceptionMsg.SUCCESS, r);
+    }
+
+    //TODO minio删除文件
+    @RequestMapping(value = "/minio/delete", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseData deleteFile(@RequestBody String fileName) throws ParseException, Exception {
+        String res = usersService.deleteFile(fileName);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 }

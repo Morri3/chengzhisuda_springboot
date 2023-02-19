@@ -39,7 +39,7 @@ public class MinIOClientConfig {
     private String accessKey;
     private String secretKey;
     private String bucket;// 桶名
-    private String urlPrefix;// 统一前缀
+//    private String urlPrefix;// 统一前缀
 
     //创建minio连接对象
     @Bean
@@ -82,11 +82,11 @@ public class MinIOClientConfig {
         this.bucket = bucket;
     }
 
-    public String getUrlPrefix() {
-        return urlPrefix;
-    }
-
-    public void setUrlPrefix(String urlPrefix) {
-        this.urlPrefix = urlPrefix;
-    }
+//    public String getUrlPrefix() {
+//        return urlPrefix;
+//    }
+//
+//    public void setUrlPrefix(String urlPrefix) {
+//        this.urlPrefix = urlPrefix;
+//    }
 }

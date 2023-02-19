@@ -1,26 +1,38 @@
 package com.zyq.parttime.minio;
 
+import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.zyq.parttime.config.MinIOClientConfig;
+import com.zyq.parttime.exception.ParttimeServiceException;
 import io.minio.*;
 import io.minio.errors.*;
+import io.minio.http.Method;
 import io.minio.messages.DeleteObject;
+import io.minio.messages.Item;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.FastByteArrayOutputStream;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Component
@@ -36,8 +48,10 @@ public class MinIO {
     private String secretKey;
     @Value("${minio.bucket}")
     public String bucketName;
-    @Value("${minio.urlprefix}")
-    public String urlprefix;
+//    @Value("${minio.urlprefix}")
+//    public String urlprefix;
+
+    private static final int DEFAULT_EXPIRY_TIME = 4 * 24 * 3600;//有效期为4天
 
     //判断bucket是否存在
     public Boolean existBucket(String name) throws Exception {
@@ -73,91 +87,190 @@ public class MinIO {
 
     //上传文件
     public String uploadFile(MultipartFile file, String bucketName) throws Exception {
+        existBucket(bucketName);
         try {
-            //是否存在这个桶
-            this.existBucket(bucketName);
-            //原始文件名
-            String originalFilename = file.getOriginalFilename();
-            //新的文件名 = 存储桶文件名_时间戳.后缀名
-            assert originalFilename != null;
-            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-            String fileName = bucketName + "_" + System.currentTimeMillis() + "_" +
-                    format.format(new Date()) + "_" + new Random().nextInt(1000) +
-                    originalFilename.substring(originalFilename.lastIndexOf("."));
-            //开始上传
-            minioClient.putObject(
-                    PutObjectArgs.builder().bucket(bucketName).object(fileName).stream(
-                                    file.getInputStream(), file.getSize(), -1)
-                            .contentType(file.getContentType()).build());
-            return file.getName() + "上传成功！url：" + endpoint + "/" + bucketName + "/" + fileName;
+            //得到文件流
+            InputStream inputStream = file.getInputStream();
+
+            //重名会覆盖
+            String fileName = file.getOriginalFilename();
+            minioClient.putObject(PutObjectArgs.builder().bucket(bucketName).object(fileName).
+                    stream(inputStream, inputStream.available(), -1).
+                    contentType(file.getContentType()).build());
+
+            //生成url
+            String url = minioClient.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
+                    .bucket(bucketName)
+                    .object(fileName)
+                    .method(Method.GET)
+                    .expiry(DEFAULT_EXPIRY_TIME)//有效期
+                    .build());
+            return url;
         } catch (Exception e) {
             e.printStackTrace();
-            return file.getName() + "上传失败!";
+            return "上传失败";
         }
     }
 
     //下载文件
-    public void downloadFile(@RequestParam(name = "fileName") String fileName,
-                             @RequestParam(defaultValue = "false") Boolean delete,
-                             HttpServletResponse response) {
+    public InputStream downloadFile(String bucketName, String fileName, HttpServletResponse res) throws Exception {
+        try {
+            InputStream file = minioClient.getObject(GetObjectArgs.builder().bucket(bucketName).object(fileName).build());
+            String filename = new String(fileName.getBytes("ISO8859-1"), StandardCharsets.UTF_8);
+            if (StringUtils.isNotBlank(fileName)) {
+                filename = fileName;
+            }
+            res.setHeader("Content-Disposition", "attachment;filename=" + filename);
+            ServletOutputStream servletOutputStream = res.getOutputStream();
+            int len;
+            byte[] buffer = new byte[1024];
+            while ((len = file.read(buffer)) > 0) {
+                servletOutputStream.write(buffer, 0, len);
+            }
+            servletOutputStream.flush();
+            file.close();
+            servletOutputStream.close();
+            return file;
 
-//        InputStream inputStream = null;
-//        OutputStream outputStream = null;
-//        try {
-//            if (StringUtils.isBlank(fileName)) {
-//                response.setHeader("Content-type", "text/html;charset=UTF-8");
-//                String data = "文件下载失败";
-//                OutputStream ps = response.getOutputStream();
-//                ps.write(data.getBytes("UTF-8"));
-//                return;
+//            InputStream file = minioClient.getObject(GetObjectArgs.builder().bucket(bucketName).object(fileName).build());
+//            String filename = new String(fileName.getBytes("ISO8859-1"), StandardCharsets.UTF_8);
+//            if (StrUtil.isNotBlank(fileName)) {
+//                filename = fileName;
 //            }
-//
-//            outputStream = response.getOutputStream();
+//            res.setHeader("Content-Disposition", "attachment;filename=" + filename);
+//            ServletOutputStream servletOutputStream = res.getOutputStream();
+//            int len;
+//            byte[] buffer = new byte[1024];
+//            while ((len = file.read(buffer)) > 0) {
+//                servletOutputStream.write(buffer, 0, len);
+//            }
+//            servletOutputStream.flush();
+//            file.close();
+//            servletOutputStream.close();
+//            return file;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
+//        System.out.println(fileUrl);
+//        if (StringUtils.isBlank(fileUrl)) {
+//            response.setHeader("Content-type", "text/html;charset=UTF-8");
+//            String data = "文件下载失败";
+//            OutputStream ps = response.getOutputStream();
+//            ps.write(data.getBytes("UTF-8"));
+//            return;
+//        }
+//        try {
+//            // 拿到文件路径
+//            String url = fileUrl.split("9000/")[1];
 //            // 获取文件对象
-//            inputStream = minioClient.getObject(GetObjectArgs.builder().bucket(this.bucketName).object(fileName).build());
+//            GetObjectArgs args = GetObjectArgs.builder().bucket(bucketName).object(url.substring(url.indexOf("/") + 1)).build();
+//            InputStream object = minioClient.getObject(args);
 //            byte buf[] = new byte[1024];
 //            int length = 0;
 //            response.reset();
-//            response.setHeader("Content-Disposition", "attachment;filename=" +
-//                    URLEncoder.encode(fileName.substring(fileName.lastIndexOf("/") + 1), "UTF-8"));
+//            response.setHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(url.substring(url.lastIndexOf("/") + 1), "UTF-8"));
 //            response.setContentType("application/octet-stream");
 //            response.setCharacterEncoding("UTF-8");
+//            OutputStream outputStream = response.getOutputStream();
 //            // 输出文件
-//            while ((length = inputStream.read(buf)) > 0) {
+//            while ((length = object.read(buf)) > 0) {
 //                outputStream.write(buf, 0, length);
 //            }
-//            inputStream.close();
-//            // 判断：下载后是否同时删除minio上的存储文件
-//            if (BooleanUtils.isTrue(delete)) {
-//                minioClient.removeObject(RemoveObjectArgs.builder().bucket(this.bucketName).object(fileName).build());
-//            }
-//        } catch (Throwable ex) {
+//            // 关闭输出流
+//            outputStream.close();
+//        } catch (Exception ex) {
 //            response.setHeader("Content-type", "text/html;charset=UTF-8");
 //            String data = "文件下载失败";
-//            try {
-//                OutputStream ps = response.getOutputStream();
-//                ps.write(data.getBytes("UTF-8"));
-//            } catch (Exception e) {
-//                e.printStackTrace();
+//            OutputStream ps = response.getOutputStream();
+//            ps.write(data.getBytes("UTF-8"));
+//        }
+
+//        try {
+//            GetObjectArgs args = GetObjectArgs.builder().bucket(bucketName).object(originalName).build();
+//            InputStream file = minioClient.getObject(args);
+//            String filename = new String(originalName.getBytes("ISO8859-1"), StandardCharsets.UTF_8);
+//            if (StrUtil.isNotBlank(originalName)) {
+//                filename = originalName;
 //            }
-//        } finally {
-//            try {
-//                outputStream.close();
-//                if (inputStream != null) {
-//                    inputStream.close();
-//                }
-//            } catch (Exception e) {
-//                e.printStackTrace();
+//            response.setHeader("Content-Disposition", "attachment;filename=" + filename);
+//            ServletOutputStream servletOutputStream = response.getOutputStream();
+//            int len;
+//            byte[] buffer = new byte[1024];
+//            while ((len = file.read(buffer)) > 0) {
+//                servletOutputStream.write(buffer, 0, len);
 //            }
+//            servletOutputStream.flush();
+//            file.close();
+//            servletOutputStream.close();
+//            return file;
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return null;
+//        }
+
+//        try {
+//            //获取文件输入流
+//            InputStream file = minioClient.getObject(GetObjectArgs.builder().bucket(bucketName).object(originalName).build());
+//            //在http请求get传输参数方式时，web容器是tomcat，而tomcat的默认编码是iso8859-1。若项目不是iso8859-1编码，在接收到中文类字符时，会出现乱码。
+//
+//            //文件名，将iso8859-1转化为项目编码gbk或utf-8
+//            String fileName = new String(originalName.getBytes("ISO8859-1"), StandardCharsets.UTF_8);
+//            if (StringUtils.isNotBlank(originalName)) {//判断参数originalName是否不为空，参数不为空返回true，参数为空返回false
+//                fileName = originalName;//参数不为空，文件名就是originalName
+//            }
+//
+//            //设置http消息头
+//            response.setHeader("Content-Disposition", "attachment;filename=" + fileName);
+//            //当Content-Type 的类型为要下载的类型时，该信息头告诉浏览器这个文件的名字和类型
+//
+//            //获取输出流
+//            ServletOutputStream servletOutputStream = response.getOutputStream();
+//            int len;//实际读取的字节数
+//            byte[] buffer = new byte[1024];//缓冲区数组
+//            while ((len = file.read(buffer)) > 0) {//从输入流中读取一定数量的字节并将其存储到缓冲区数组buffer中
+//                servletOutputStream.write(buffer, 0, len);
+//            }
+//
+//            servletOutputStream.flush();//刷新此输出流并强制写出所有缓冲的输出字节
+//            file.close();//关闭文件
+//            servletOutputStream.close();//关闭输出流
+//
+//            System.out.println(originalName);//test
+//            System.out.println(fileName);//test
+//
+//            return file;
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return null;
 //        }
     }
 
-//
-//    /**
-//     * 查看文件对象
-//     * @param bucketName 存储bucket名称
-//     * @return 存储bucket内文件对象信息
-//     */
+    //删除文件
+    public String deleteFile(String bucketName, String fileName) throws Exception {
+        try {
+            System.out.println(fileName.getClass().getName());
+            Iterable<Result<Item>> list = minioClient.listObjects(ListObjectsArgs.builder().bucket(bucketName).build());//获得bucket中所有文件
+            list.forEach(item -> {
+                try {
+                    JSONObject obj = JSONObject.parseObject(fileName);//把fileName转json对象，再获取其中的文件名
+                    if (item.get().objectName().equals(obj.get("fileName"))) {//找到目标文件，删除
+                        minioClient.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(item.get().objectName()).build());
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+            return "删除成功";
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "删除失败";
+    }
+
+//    //查看文件对象
+//    //@return 存储bucket内文件对象信息
 //    public List<ObjectItem> listObjects(String bucketName) {
 //        Iterable<Result<Item>> results = minioClient.listObjects(ListObjectsArgs.builder().bucket(bucketName).build());
 //        List<ObjectItem> objectItems = new ArrayList<>();

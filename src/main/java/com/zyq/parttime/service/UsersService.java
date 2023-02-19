@@ -7,6 +7,8 @@ import com.zyq.parttime.form.userinfomanage.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.InputStream;
 import java.text.ParseException;
 
 @Service
@@ -30,5 +32,18 @@ public interface UsersService {
     //简历查看-学生
     ResumeInfoDto getResume(GetResumeDto getResumeDto) throws ParttimeServiceException;
 
-    Boolean minio(MultipartFile file) throws ParttimeServiceException, Exception;
+    //minio创建桶
+    Boolean createBucket(String bucketName) throws ParttimeServiceException, Exception;
+
+    //minio删除桶
+    Boolean deleteBucket(String bucketName) throws ParttimeServiceException, Exception;
+
+    //minio上传文件
+    String upload(MultipartFile file) throws ParttimeServiceException, Exception;
+
+    //minio下载文件
+    String download(String fileName, HttpServletResponse res) throws ParttimeServiceException, Exception;
+
+    //minio删除文件
+    String deleteFile(String fileName) throws ParttimeServiceException, Exception;
 }
