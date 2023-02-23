@@ -25,11 +25,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.net.URLEncoder;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -232,10 +234,14 @@ public class UsersServiceImpl implements UsersService {
                 res.setUpload_time(resumes.getUploadTime());
 
                 //根据r_id查找四个子类的内容
-                List<Resumedetail> campusExpList = resumesInfoRepository.findResumeDetailListByRId(resumes.getId(), "校园经历");
-                List<Resumedetail> educationBgList = resumesInfoRepository.findResumeDetailListByRId(resumes.getId(), "教育背景");
-                List<Resumedetail> projectExpList = resumesInfoRepository.findResumeDetailListByRId(resumes.getId(), "项目经历");
-                List<Resumedetail> professionalSkillList = resumesInfoRepository.findResumeDetailListByRId(resumes.getId(), "专业技能");
+                List<Resumedetail> campusExpList =
+                        resumesDetailRepository.findResumeDetailListByRIdAndCategory(resumes.getId(), "校园经历");
+                List<Resumedetail> educationBgList =
+                        resumesDetailRepository.findResumeDetailListByRIdAndCategory(resumes.getId(), "教育背景");
+                List<Resumedetail> projectExpList =
+                        resumesDetailRepository.findResumeDetailListByRIdAndCategory(resumes.getId(), "项目经历");
+                List<Resumedetail> professionalSkillList =
+                        resumesDetailRepository.findResumeDetailListByRIdAndCategory(resumes.getId(), "专业技能");
 
                 // 遍历四个子类
                 //1.遍历校园经历
@@ -244,15 +250,25 @@ public class UsersServiceImpl implements UsersService {
                     //遍历列表
                     for (Resumedetail item : campusExpList) {
                         ResumeDetailDto dto = new ResumeDetailDto();
+                        dto.setTelephone(telephone);
+                        dto.setRd_id(item.getId());
                         dto.setR_id(item.getR().getId());
                         dto.setTitle(item.getTitle());
                         dto.setContent(item.getContent());
                         dto.setCategory("校园经历");
                         dto.setHasContent(1);//有内容
+                        //获取start_time、end_time拼成String
+                        Date start_time = item.getStartTime();
+                        Date end_time = item.getEndTime();
+                        DateFormat sdf = new SimpleDateFormat("yyyy.MM");
+                        String start = sdf.format(start_time);
+                        String end = sdf.format(end_time);
+                        dto.setTime(start + '-' + end);
                         list1.add(dto);
                     }
                 } else {//无内容
                     ResumeDetailDto dto = new ResumeDetailDto();
+                    dto.setTelephone(telephone);
                     dto.setR_id(resumes.getId());
                     dto.setCategory("校园经历");
                     dto.setHasContent(0);//无内容
@@ -264,15 +280,25 @@ public class UsersServiceImpl implements UsersService {
                     //遍历列表
                     for (Resumedetail item : campusExpList) {
                         ResumeDetailDto dto = new ResumeDetailDto();
+                        dto.setTelephone(telephone);
+                        dto.setRd_id(item.getId());
                         dto.setR_id(item.getR().getId());
                         dto.setTitle(item.getTitle());
                         dto.setContent(item.getContent());
                         dto.setCategory("教育背景");
                         dto.setHasContent(1);//有内容
+                        //获取start_time、end_time拼成String
+                        Date start_time = item.getStartTime();
+                        Date end_time = item.getEndTime();
+                        DateFormat sdf = new SimpleDateFormat("yyyy.MM");
+                        String start = sdf.format(start_time);
+                        String end = sdf.format(end_time);
+                        dto.setTime(start + '-' + end);
                         list2.add(dto);
                     }
                 } else {//无内容
                     ResumeDetailDto dto = new ResumeDetailDto();
+                    dto.setTelephone(telephone);
                     dto.setR_id(resumes.getId());
                     dto.setCategory("教育背景");
                     dto.setHasContent(0);//无内容
@@ -284,15 +310,25 @@ public class UsersServiceImpl implements UsersService {
                     //遍历列表
                     for (Resumedetail item : projectExpList) {
                         ResumeDetailDto dto = new ResumeDetailDto();
+                        dto.setTelephone(telephone);
+                        dto.setRd_id(item.getId());
                         dto.setR_id(item.getR().getId());
                         dto.setTitle(item.getTitle());
                         dto.setContent(item.getContent());
                         dto.setCategory("项目经历");
                         dto.setHasContent(1);//有内容
+                        //获取start_time、end_time拼成String
+                        Date start_time = item.getStartTime();
+                        Date end_time = item.getEndTime();
+                        DateFormat sdf = new SimpleDateFormat("yyyy.MM");
+                        String start = sdf.format(start_time);
+                        String end = sdf.format(end_time);
+                        dto.setTime(start + '-' + end);
                         list3.add(dto);
                     }
                 } else {//无内容
                     ResumeDetailDto dto = new ResumeDetailDto();
+                    dto.setTelephone(telephone);
                     dto.setR_id(resumes.getId());
                     dto.setCategory("项目经历");
                     dto.setHasContent(0);//无内容
@@ -304,6 +340,8 @@ public class UsersServiceImpl implements UsersService {
                     //遍历列表
                     for (Resumedetail item : professionalSkillList) {
                         ResumeDetailDto dto = new ResumeDetailDto();
+                        dto.setTelephone(telephone);
+                        dto.setRd_id(item.getId());
                         dto.setR_id(item.getR().getId());
                         dto.setTitle(item.getTitle());
                         dto.setContent(item.getContent());
@@ -313,6 +351,7 @@ public class UsersServiceImpl implements UsersService {
                     }
                 } else {//无内容
                     ResumeDetailDto dto = new ResumeDetailDto();
+                    dto.setTelephone(telephone);
                     dto.setR_id(resumes.getId());
                     dto.setCategory("专业技能");
                     dto.setHasContent(0);//无内容
@@ -643,7 +682,49 @@ public class UsersServiceImpl implements UsersService {
         return res;
     }
 
+    @Override
+    public ResumeEditCallbackDto editPersonal(EditPersonalDto editPersonalDto) throws ParseException, Exception {
+        ResumeEditCallbackDto res = new ResumeEditCallbackDto();
 
+        if (editPersonalDto != null) {
+            String telephone = editPersonalDto.getTelephone();//手机号
+            String exp = editPersonalDto.getExp();
+            String current_area = editPersonalDto.getCurrent_area();
+
+            if (telephone != null && !telephone.equals("")) {//手机号不为空
+                //根据手机号查找学生用户
+                Student student = stuInfoRepository.findStudentByTelephone(telephone);
+
+                if (student != null) {//存在学生
+                    //根据手机号找到该学生的简历
+                    Resumes resumes = resumesInfoRepository.findResumesByStuId(telephone);
+
+                    if (resumes != null) {//存在简历
+                        //更新DB
+                        resumesInfoRepository.updateResumesInfo(telephone, exp, current_area);
+
+                        //找到简历的详细信息
+                        GetResumeDto request = new GetResumeDto();
+                        request.setTelephone(telephone);
+                        ResumeInfoDto dto = this.getResume(request);//返回的详细信息dto
+
+                        //填充到res
+                        res.setTelephone(telephone);
+                        res.setInfo(dto);
+                    } else {//不存在简历
+                        logger.warn("该账号不存在简历信息");
+                        res.setTelephone(telephone);
+                        res.setMemo("该账号不存在简历信息");
+                    }
+                } else {//不存在账号
+                    logger.warn("该账号不存在");
+                    res.setTelephone(telephone);
+                    res.setMemo("该账号不存在");
+                }
+            }
+        }
+        return res;
+    }
 
     @Override
     public Boolean createBucket(String bucketName) throws ParttimeServiceException, Exception {

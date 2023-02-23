@@ -1,9 +1,7 @@
 package com.zyq.parttime.controller;
 
 import com.zyq.parttime.exception.ParttimeServiceException;
-import com.zyq.parttime.form.resumemanage.GetResumeDto;
-import com.zyq.parttime.form.resumemanage.ResumeInfoDto;
-import com.zyq.parttime.form.resumemanage.ResumeUploadCallbackDto;
+import com.zyq.parttime.form.resumemanage.*;
 import com.zyq.parttime.form.userinfomanage.*;
 import com.zyq.parttime.result.ExceptionMsg;
 import com.zyq.parttime.result.ResponseData;
@@ -78,13 +76,13 @@ public class UsersController {
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
-//    //TODO 简历编辑（个人信息）-学生
-//    @RequestMapping(value = "/resumes/edit_personal", method = RequestMethod.POST)
-//    @ResponseBody
-//    public ResponseData editPersonal(@RequestBody EditPersonalDto editPersonalDto) throws ParseException, Exception {
-//        ResumeEditCallbackDto res = usersService.editPersonal(editPersonalDto);
-//        return new ResponseData(ExceptionMsg.SUCCESS, res);
-//    }
+    //TODO 简历编辑（个人信息）-学生
+    @RequestMapping(value = "/resumes/edit_personal", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseData editPersonal(@RequestBody EditPersonalDto editPersonalDto) throws ParseException, Exception {
+        ResumeEditCallbackDto res = usersService.editPersonal(editPersonalDto);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
 
     //TODO minio创建桶
     @RequestMapping(value = "/minio/create_bucket", method = RequestMethod.POST)

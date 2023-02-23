@@ -1,11 +1,10 @@
 package com.zyq.parttime.service;
 
 import com.zyq.parttime.exception.ParttimeServiceException;
-import com.zyq.parttime.form.resumemanage.GetResumeDto;
-import com.zyq.parttime.form.resumemanage.ResumeInfoDto;
-import com.zyq.parttime.form.resumemanage.ResumeUploadCallbackDto;
+import com.zyq.parttime.form.resumemanage.*;
 import com.zyq.parttime.form.userinfomanage.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
@@ -37,6 +36,9 @@ public interface UsersService {
     //简历上传-学生
     ResumeUploadCallbackDto uploadResume(MultipartFile file, String telephone, Date upload_time)
             throws ParttimeServiceException, Exception;
+
+    //编辑简历（个人信息）——学生
+    ResumeEditCallbackDto editPersonal(EditPersonalDto editPersonalDto) throws ParseException, Exception;
 
     //minio创建桶
     Boolean createBucket(String bucketName) throws ParttimeServiceException, Exception;

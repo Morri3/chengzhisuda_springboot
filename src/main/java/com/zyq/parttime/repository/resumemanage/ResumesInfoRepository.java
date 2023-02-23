@@ -16,9 +16,6 @@ public interface ResumesInfoRepository extends JpaRepository<Resumes, Integer>, 
     @Query(value = "select * from resumes where stu_id = ?1", nativeQuery = true)
     Resumes findResumesByStuId(String telephone);
 
-    @Query(value = "select * from resumedetail where r_id = ?1 and category =?2", nativeQuery = true)
-    List<Resumedetail> findResumeDetailListByRId(int r_id, String category);
-
     @Transactional
     @Modifying
     @Query(value = "insert into resumes(stu_id, pic_url,create_time) values(?1,?2,?3)", nativeQuery = true)
@@ -26,4 +23,9 @@ public interface ResumesInfoRepository extends JpaRepository<Resumes, Integer>, 
 
     @Query(value = "select r_id from resumes order by create_time desc limit 0,1", nativeQuery = true)
     int findLatestResumes();
+
+    @Transactional
+    @Modifying
+    @Query(value = "update resumes set exp=?1 and current_area=?2 where stu_id=?3", nativeQuery = true)
+    void updateResumesInfo(String current_area, String exp, String telephone);
 }

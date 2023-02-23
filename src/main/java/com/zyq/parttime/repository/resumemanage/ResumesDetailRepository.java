@@ -9,10 +9,14 @@ import org.springframework.data.jpa.repository.Query;
 
 import javax.transaction.Transactional;
 import java.util.Date;
+import java.util.List;
 
 public interface ResumesDetailRepository extends JpaRepository<Resumedetail, Integer>, JpaSpecificationExecutor<Resumedetail> {
     @Query(value = "select rd_id from resumedetail order by create_time desc limit 0,1", nativeQuery = true)
     int findLatestResumesDetail();
+
+    @Query(value = "select * from resumedetail where r_id = ?1 and category =?2", nativeQuery = true)
+    List<Resumedetail> findResumeDetailListByRIdAndCategory(int r_id, String category);
 
     @Transactional
     @Modifying
