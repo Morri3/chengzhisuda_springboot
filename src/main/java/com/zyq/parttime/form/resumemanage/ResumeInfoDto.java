@@ -13,9 +13,9 @@ public class ResumeInfoDto implements Serializable {
     private String current_area;
     private String exp;
     private Date upload_time;
-    private List<CampusExpDto> campusExpList;
-    private List<EducationBgDto> educationBgList;
-    private List<ProjectExpDto> projectExpList;
-    private List<ProfessionalSkillDto> professionalSkillList;
+    private List<ResumeDetailDto> campusExpList;
+    private List<ResumeDetailDto> educationBgList;
+    private List<ResumeDetailDto> projectExpList;
+    private List<ResumeDetailDto> professionalSkillList;
     private String memo;//若不存在简历，该字段为”请填写简历“
 }

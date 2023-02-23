@@ -17,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletResponse;
 import java.io.InputStream;
 import java.text.ParseException;
+import java.util.Date;
 
 @RestController
 @RequestMapping("/users")
@@ -71,11 +72,19 @@ public class UsersController {
     //TODO 简历上传-学生
     @RequestMapping(value = "/resumes/upload", method = RequestMethod.POST)
     @ResponseBody
-    public ResponseData uploadResume(@RequestBody MultipartFile file, @RequestParam String telephone)
-            throws ParseException, Exception {
-        ResumeUploadCallbackDto res = usersService.uploadResume(file, telephone);
+    public ResponseData uploadResume(@RequestBody MultipartFile file, @RequestParam String telephone,
+                                     @RequestBody Date upload_time) throws ParseException, Exception {
+        ResumeUploadCallbackDto res = usersService.uploadResume(file, telephone, upload_time);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
+
+//    //TODO 简历编辑（个人信息）-学生
+//    @RequestMapping(value = "/resumes/edit_personal", method = RequestMethod.POST)
+//    @ResponseBody
+//    public ResponseData editPersonal(@RequestBody EditPersonalDto editPersonalDto) throws ParseException, Exception {
+//        ResumeEditCallbackDto res = usersService.editPersonal(editPersonalDto);
+//        return new ResponseData(ExceptionMsg.SUCCESS, res);
+//    }
 
     //TODO minio创建桶
     @RequestMapping(value = "/minio/create_bucket", method = RequestMethod.POST)

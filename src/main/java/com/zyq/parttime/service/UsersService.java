@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletResponse;
 import java.io.InputStream;
 import java.text.ParseException;
+import java.util.Date;
 
 @Service
 public interface UsersService {
@@ -34,7 +35,8 @@ public interface UsersService {
     ResumeInfoDto getResume(GetResumeDto getResumeDto) throws ParttimeServiceException;
 
     //简历上传-学生
-    ResumeUploadCallbackDto uploadResume(MultipartFile file,String telephone) throws ParttimeServiceException,Exception;
+    ResumeUploadCallbackDto uploadResume(MultipartFile file, String telephone, Date upload_time)
+            throws ParttimeServiceException, Exception;
 
     //minio创建桶
     Boolean createBucket(String bucketName) throws ParttimeServiceException, Exception;
