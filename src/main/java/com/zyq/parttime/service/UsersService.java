@@ -40,6 +40,9 @@ public interface UsersService {
     //编辑简历（个人信息）——学生
     ResumeEditCallbackDto editPersonal(EditPersonalDto editPersonalDto) throws ParseException, Exception;
 
+    //编辑简历（校园经历）——学生
+    GetCampusDto editCampus(EditCampusDto editCampusDto) throws ParseException, Exception;
+
     //minio创建桶
     Boolean createBucket(String bucketName) throws ParttimeServiceException, Exception;
 

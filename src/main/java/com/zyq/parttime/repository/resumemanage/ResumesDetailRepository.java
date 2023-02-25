@@ -30,4 +30,27 @@ public interface ResumesDetailRepository extends JpaRepository<Resumedetail, Int
     @Query(value = "insert into resumedetail(r_id, content, category, create_time) values(?1,?2,?3,?4)", nativeQuery = true)
     void addAProfessionalResumesDetailRecord(int r_id, String content, String category, Date create_time);
 
+    @Query(value = "select * from resumedetail where rd_id = ?1", nativeQuery = true)
+    Resumedetail findResumeDetailByRdId(int rd_id);
+
+    @Transactional
+    @Modifying
+    @Query(value = "update resumedetail set title=?1,content=?2 where rd_id=?3", nativeQuery = true)
+    void updateResumedetailInfo1(String title, String content, int rd_id);
+
+    @Transactional
+    @Modifying
+    @Query(value = "update resumedetail set title=?1,content=?2,end_time=?3 where rd_id=?4", nativeQuery = true)
+    void updateResumedetailInfo2(String title, String content, Date end_time, int rd_id);
+
+    @Transactional
+    @Modifying
+    @Query(value = "update resumedetail set title=?1,content=?2,start_time=?3 where rd_id=?4", nativeQuery = true)
+    void updateResumedetailInfo3(String title, String content, Date start_time, int rd_id);
+
+    @Transactional
+    @Modifying
+    @Query(value = "update resumedetail set title=?1,content=?2,start_time=?3,end_time=?4 where rd_id=?5", nativeQuery = true)
+    void updateResumedetailInfo4(String title, String content, Date start_time, Date end_time, int rd_id);
+
 }

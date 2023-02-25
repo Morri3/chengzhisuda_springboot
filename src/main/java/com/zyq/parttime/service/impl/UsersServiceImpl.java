@@ -398,7 +398,7 @@ public class UsersServiceImpl implements UsersService {
 
                 //图片url存入DB，即创建resume记录
                 Date now = new Date(System.currentTimeMillis());//当前时间
-                resumesInfoRepository.createAResumeRecord(telephone, pic_url, now);
+                resumesInfoRepository.createAResumeRecord(telephone, pic_url, now, now);
                 //获取刚刚创建的resume的id
                 int r_id = resumesInfoRepository.findLatestResumes();
 
@@ -701,12 +701,14 @@ public class UsersServiceImpl implements UsersService {
 
                     if (resumes != null) {//存在简历
                         //更新DB
-                        resumesInfoRepository.updateResumesInfo(telephone, exp, current_area);
+                        resumesInfoRepository.updateResumesInfo(exp, current_area, telephone);
 
                         //找到简历的详细信息
                         GetResumeDto request = new GetResumeDto();
                         request.setTelephone(telephone);
                         ResumeInfoDto dto = this.getResume(request);//返回的详细信息dto
+                        dto.setExp(exp);
+                        dto.setCurrent_area(current_area);
 
                         //填充到res
                         res.setTelephone(telephone);
@@ -721,6 +723,85 @@ public class UsersServiceImpl implements UsersService {
                     res.setTelephone(telephone);
                     res.setMemo("该账号不存在");
                 }
+            } else {//手机号为空
+                logger.warn("请输入手机号");
+                res.setTelephone(telephone);
+                res.setMemo("请输入手机号");
+            }
+        }
+        return res;
+    }
+
+    @Override
+    public GetCampusDto editCampus(EditCampusDto editCampusDto) throws ParseException, Exception {
+        GetCampusDto res = new GetCampusDto();
+
+        if (editCampusDto != null) {
+            String telephone = editCampusDto.getTelephone();//手机号
+            int rd_id = editCampusDto.getRd_id();
+            String title = editCampusDto.getTitle();
+            String content = editCampusDto.getContent();
+            String start_time = editCampusDto.getStart_time();
+            String end_time = editCampusDto.getEnd_time();
+
+            if (telephone != null && !telephone.equals("")) {//手机号不为空
+                //根据手机号查找学生用户
+                Student student = stuInfoRepository.findStudentByTelephone(telephone);
+
+                if (student != null) {//存在学生
+                    //根据手机号找到该学生的简历、校园经历
+                    Resumes resumes = resumesInfoRepository.findResumesByStuId(telephone);
+                    Resumedetail resumedetail = resumesDetailRepository.findResumeDetailByRdId(rd_id);
+
+                    if (resumes != null && resumedetail != null) {//存在简历和校园经历
+                        int f1 = 0, f2 = 0;//判断是否为空
+                        //处理时间
+                        Date start = new Date(), end = new Date();
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM");
+                        if (start_time != null && !start_time.equals("")) {//开始日期非空
+                            start = sdf.parse(start_time);
+                        } else {//空
+                            f1 = 1;
+                        }
+                        if (end_time != null && !end_time.equals("")) {//结束日期非空
+                            end = sdf.parse(end_time);
+                        } else {//空
+                            f2 = 1;
+                        }
+
+                        //更新DB
+                        if (f1 == 1 && f2 == 1) {
+                            resumesDetailRepository.updateResumedetailInfo1(title, content, rd_id);
+                        } else if (f1 == 1 && f2 == 0) {
+                            resumesDetailRepository.updateResumedetailInfo2(title, content, end, rd_id);
+                        } else if (f1 == 0 && f2 == 1) {
+                            resumesDetailRepository.updateResumedetailInfo3(title, content, start, rd_id);
+                        } else {
+                            resumesDetailRepository.updateResumedetailInfo4(title, content, start, end, rd_id);
+                        }
+
+                        Resumedetail resumedetail2 = resumesDetailRepository.findResumeDetailByRdId(rd_id);
+                        //填充到res
+                        res.setTelephone(telephone);
+                        res.setRd_id(rd_id);
+                        res.setTitle(resumedetail2.getTitle());
+                        res.setContent(resumedetail2.getContent());
+                        res.setStart_time(resumedetail2.getStartTime());
+                        res.setEnd_time(resumedetail2.getEndTime());
+                    } else {//不存在简历/校园经历
+                        logger.warn("该账号不存在简历信息或校园经历信息");
+                        res.setTelephone(telephone);
+                        res.setMemo("该账号不存在简历信息或校园经历信息");
+                    }
+                } else {//不存在账号
+                    logger.warn("该账号不存在");
+                    res.setTelephone(telephone);
+                    res.setMemo("该账号不存在");
+                }
+            } else {//手机号为空
+                logger.warn("请输入手机号");
+                res.setTelephone(telephone);
+                res.setMemo("请输入手机号");
             }
         }
         return res;

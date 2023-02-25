@@ -84,6 +84,14 @@ public class UsersController {
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
+    //TODO 简历编辑（校园经历）-学生
+    @RequestMapping(value = "/resumes/edit_campus", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseData editCampus(@RequestBody EditCampusDto editCampusDto) throws ParseException, Exception {
+        GetCampusDto res = usersService.editCampus(editCampusDto);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
     //TODO minio创建桶
     @RequestMapping(value = "/minio/create_bucket", method = RequestMethod.POST)
     @ResponseBody
