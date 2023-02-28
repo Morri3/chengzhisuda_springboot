@@ -53,4 +53,9 @@ public interface ResumesDetailRepository extends JpaRepository<Resumedetail, Int
     @Query(value = "update resumedetail set title=?1,content=?2,start_time=?3,end_time=?4 where rd_id=?5", nativeQuery = true)
     void updateResumedetailInfo4(String title, String content, Date start_time, Date end_time, int rd_id);
 
+    @Transactional
+    @Modifying
+    @Query(value = "update resumedetail set content=?1 where rd_id=?2", nativeQuery = true)
+    void updateResumedetailInfo5(String content, int rd_id);
+
 }

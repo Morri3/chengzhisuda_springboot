@@ -373,7 +373,7 @@ public class UsersServiceImpl implements UsersService {
     }
 
     @Override
-    public ResumeUploadCallbackDto uploadResume(MultipartFile file, String telephone, Date upload_time)
+    public ResumeUploadCallbackDto uploadResume(MultipartFile file, String telephone, String upload_time)
             throws ParttimeServiceException, Exception {
         ResumeUploadCallbackDto res = new ResumeUploadCallbackDto();
 
@@ -394,11 +394,13 @@ public class UsersServiceImpl implements UsersService {
                 res.setPic_url(pic_url);
 
                 //填充上传时间
-                res.setUpload_time(upload_time);
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                Date uploadTime = sdf.parse(upload_time);
+                res.setUpload_time(uploadTime);
 
                 //图片url存入DB，即创建resume记录
                 Date now = new Date(System.currentTimeMillis());//当前时间
-                resumesInfoRepository.createAResumeRecord(telephone, pic_url, now, now);
+                resumesInfoRepository.createAResumeRecord(telephone, pic_url, uploadTime, now);
                 //获取刚刚创建的resume的id
                 int r_id = resumesInfoRepository.findLatestResumes();
 
@@ -464,9 +466,9 @@ public class UsersServiceImpl implements UsersService {
                         String end = (time.split("-"))[1];
 
                         //String转Date
-                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM");
-                        Date start_time = sdf.parse(start);//用于存到DB
-                        Date end_time = sdf.parse(end);//用于存到DB
+                        SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy.MM");
+                        Date start_time = sdf2.parse(start);//用于存到DB
+                        Date end_time = sdf2.parse(end);//用于存到DB
 
                         //标题
                         String title = (words.get(i + 2).get("words")).toString();
@@ -512,9 +514,9 @@ public class UsersServiceImpl implements UsersService {
                         String end = (time.split("-"))[1];
                         while (isDate(start) == true && isDate(end) == true) {//当前的是时间格式，就继续循环，表示当前遇到的是一个项目的时间
                             //String转Date
-                            SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM");
-                            Date start_time = sdf.parse(start);//用于存到DB
-                            Date end_time = sdf.parse(end);//用于存到DB
+                            SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy.MM");
+                            Date start_time = sdf2.parse(start);//用于存到DB
+                            Date end_time = sdf2.parse(end);//用于存到DB
 
                             //标题
                             String title = (words.get(k + 1).get("words")).toString();
@@ -572,29 +574,29 @@ public class UsersServiceImpl implements UsersService {
 
                         int k = i + 1;
 
-                        //项目内容【1~N行】
+                        //专业技能【1~N行】
                         String content = "";
-                        //只要不是校园经历字样content
+                        //只要不是校园经历字样content，就添加一条记录
                         while (!(words.get(k)).get("words").equals("校园经历")) {
-                            content += (words.get(k).get("words")).toString() + "。";
+                            content = (words.get(k).get("words")).toString() + "。";
                             k++;
+
+                            //创建一个detail记录
+                            Date now2 = new Date(System.currentTimeMillis());
+                            resumesDetailRepository.addAProfessionalResumesDetailRecord(r_id, content, "专业技能", now2);
+                            int rd_id = resumesDetailRepository.findLatestResumesDetail();//最新的记录的rd_id
+
+                            //构造dto
+                            ResumeDetailDto dto = new ResumeDetailDto();
+                            dto.setTelephone(phone);
+                            dto.setR_id(r_id);
+                            dto.setRd_id(rd_id);
+                            dto.setR_id(r_id);
+                            dto.setContent(content);
+                            dto.setCategory("专业技能");
+                            dto.setHasContent(1);
+                            list.add(dto);//加到列表中
                         }
-
-                        //创建一个detail记录
-                        Date now2 = new Date(System.currentTimeMillis());
-                        resumesDetailRepository.addAProfessionalResumesDetailRecord(r_id, content, "专业技能", now2);
-                        int rd_id = resumesDetailRepository.findLatestResumesDetail();//最新的记录的rd_id
-
-                        //构造dto
-                        ResumeDetailDto dto = new ResumeDetailDto();
-                        dto.setTelephone(phone);
-                        dto.setR_id(r_id);
-                        dto.setRd_id(rd_id);
-                        dto.setR_id(r_id);
-                        dto.setContent(content);
-                        dto.setCategory("专业技能");
-                        dto.setHasContent(1);
-                        list.add(dto);//加到列表中
                         res.setProfessionalSkillList(list);//set到res中
                     }
 
@@ -609,9 +611,9 @@ public class UsersServiceImpl implements UsersService {
                         String end = (time.split("-"))[1];
                         while (isDate(start) == true && isDate(end) == true) {//当前的是时间格式，就继续循环，表示当前遇到的是一个项目的时间
                             //String转Date
-                            SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM");
-                            Date start_time = sdf.parse(start);//用于存到DB
-                            Date end_time = sdf.parse(end);//用于存到DB
+                            SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy.MM");
+                            Date start_time = sdf2.parse(start);//用于存到DB
+                            Date end_time = sdf2.parse(end);//用于存到DB
 
                             //标题
                             String title = (words.get(k + 1).get("words")).toString();
@@ -792,6 +794,202 @@ public class UsersServiceImpl implements UsersService {
                         logger.warn("该账号不存在简历信息或校园经历信息");
                         res.setTelephone(telephone);
                         res.setMemo("该账号不存在简历信息或校园经历信息");
+                    }
+                } else {//不存在账号
+                    logger.warn("该账号不存在");
+                    res.setTelephone(telephone);
+                    res.setMemo("该账号不存在");
+                }
+            } else {//手机号为空
+                logger.warn("请输入手机号");
+                res.setTelephone(telephone);
+                res.setMemo("请输入手机号");
+            }
+        }
+        return res;
+    }
+
+    @Override
+    public GetEducationDto editEducation(EditEducationDto editEducationDto) throws ParseException, Exception {
+        GetEducationDto res = new GetEducationDto();
+
+        if (editEducationDto != null) {
+            String telephone = editEducationDto.getTelephone();//手机号
+            int rd_id = editEducationDto.getRd_id();
+            String title = editEducationDto.getTitle();
+            String content = editEducationDto.getContent();
+            String start_time = editEducationDto.getStart_time();
+            String end_time = editEducationDto.getEnd_time();
+
+            if (telephone != null && !telephone.equals("")) {//手机号不为空
+                //根据手机号查找学生用户
+                Student student = stuInfoRepository.findStudentByTelephone(telephone);
+
+                if (student != null) {//存在学生
+                    //根据手机号找到该学生的简历、教育背景
+                    Resumes resumes = resumesInfoRepository.findResumesByStuId(telephone);
+                    Resumedetail resumedetail = resumesDetailRepository.findResumeDetailByRdId(rd_id);
+
+                    if (resumes != null && resumedetail != null) {//存在简历和教育背景
+                        int f1 = 0, f2 = 0;//判断是否为空
+                        //处理时间
+                        Date start = new Date(), end = new Date();
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM");
+                        if (start_time != null && !start_time.equals("")) {//开始日期非空
+                            start = sdf.parse(start_time);
+                        } else {//空
+                            f1 = 1;
+                        }
+                        if (end_time != null && !end_time.equals("")) {//结束日期非空
+                            end = sdf.parse(end_time);
+                        } else {//空
+                            f2 = 1;
+                        }
+
+                        //更新DB
+                        if (f1 == 1 && f2 == 1) {
+                            resumesDetailRepository.updateResumedetailInfo1(title, content, rd_id);
+                        } else if (f1 == 1 && f2 == 0) {
+                            resumesDetailRepository.updateResumedetailInfo2(title, content, end, rd_id);
+                        } else if (f1 == 0 && f2 == 1) {
+                            resumesDetailRepository.updateResumedetailInfo3(title, content, start, rd_id);
+                        } else {
+                            resumesDetailRepository.updateResumedetailInfo4(title, content, start, end, rd_id);
+                        }
+
+                        Resumedetail resumedetail2 = resumesDetailRepository.findResumeDetailByRdId(rd_id);
+                        //填充到res
+                        res.setTelephone(telephone);
+                        res.setRd_id(rd_id);
+                        res.setTitle(resumedetail2.getTitle());
+                        res.setContent(resumedetail2.getContent());
+                        res.setStart_time(resumedetail2.getStartTime());
+                        res.setEnd_time(resumedetail2.getEndTime());
+                    } else {//不存在简历/教育背景
+                        logger.warn("该账号不存在简历信息或教育背景信息");
+                        res.setTelephone(telephone);
+                        res.setMemo("该账号不存在简历信息或教育背景信息");
+                    }
+                } else {//不存在账号
+                    logger.warn("该账号不存在");
+                    res.setTelephone(telephone);
+                    res.setMemo("该账号不存在");
+                }
+            } else {//手机号为空
+                logger.warn("请输入手机号");
+                res.setTelephone(telephone);
+                res.setMemo("请输入手机号");
+            }
+        }
+        return res;
+    }
+
+    @Override
+    public GetProgramDto editProgram(EditProgramDto editProgramDto) throws ParseException, Exception {
+        GetProgramDto res = new GetProgramDto();
+
+        if (editProgramDto != null) {
+            String telephone = editProgramDto.getTelephone();//手机号
+            int rd_id = editProgramDto.getRd_id();
+            String title = editProgramDto.getTitle();
+            String content = editProgramDto.getContent();
+            String start_time = editProgramDto.getStart_time();
+            String end_time = editProgramDto.getEnd_time();
+
+            if (telephone != null && !telephone.equals("")) {//手机号不为空
+                //根据手机号查找学生用户
+                Student student = stuInfoRepository.findStudentByTelephone(telephone);
+
+                if (student != null) {//存在学生
+                    //根据手机号找到该学生的简历、项目经历
+                    Resumes resumes = resumesInfoRepository.findResumesByStuId(telephone);
+                    Resumedetail resumedetail = resumesDetailRepository.findResumeDetailByRdId(rd_id);
+
+                    if (resumes != null && resumedetail != null) {//存在简历和项目经历
+                        int f1 = 0, f2 = 0;//判断是否为空
+                        //处理时间
+                        Date start = new Date(), end = new Date();
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM");
+                        if (start_time != null && !start_time.equals("")) {//开始日期非空
+                            start = sdf.parse(start_time);
+                        } else {//空
+                            f1 = 1;
+                        }
+                        if (end_time != null && !end_time.equals("")) {//结束日期非空
+                            end = sdf.parse(end_time);
+                        } else {//空
+                            f2 = 1;
+                        }
+
+                        //更新DB
+                        if (f1 == 1 && f2 == 1) {
+                            resumesDetailRepository.updateResumedetailInfo1(title, content, rd_id);
+                        } else if (f1 == 1 && f2 == 0) {
+                            resumesDetailRepository.updateResumedetailInfo2(title, content, end, rd_id);
+                        } else if (f1 == 0 && f2 == 1) {
+                            resumesDetailRepository.updateResumedetailInfo3(title, content, start, rd_id);
+                        } else {
+                            resumesDetailRepository.updateResumedetailInfo4(title, content, start, end, rd_id);
+                        }
+
+                        Resumedetail resumedetail2 = resumesDetailRepository.findResumeDetailByRdId(rd_id);
+                        //填充到res
+                        res.setTelephone(telephone);
+                        res.setRd_id(rd_id);
+                        res.setTitle(resumedetail2.getTitle());
+                        res.setContent(resumedetail2.getContent());
+                        res.setStart_time(resumedetail2.getStartTime());
+                        res.setEnd_time(resumedetail2.getEndTime());
+                    } else {//不存在简历/项目经历
+                        logger.warn("该账号不存在简历信息或项目经历信息");
+                        res.setTelephone(telephone);
+                        res.setMemo("该账号不存在简历信息或项目经历信息");
+                    }
+                } else {//不存在账号
+                    logger.warn("该账号不存在");
+                    res.setTelephone(telephone);
+                    res.setMemo("该账号不存在");
+                }
+            } else {//手机号为空
+                logger.warn("请输入手机号");
+                res.setTelephone(telephone);
+                res.setMemo("请输入手机号");
+            }
+        }
+        return res;
+    }
+
+    @Override
+    public GetSkillsDto editSkills(EditSkillsDto editSkillsDto) throws ParseException, Exception {
+        GetSkillsDto res = new GetSkillsDto();
+
+        if (editSkillsDto != null) {
+            String telephone = editSkillsDto.getTelephone();//手机号
+            int rd_id = editSkillsDto.getRd_id();
+            String content = editSkillsDto.getContent();
+
+            if (telephone != null && !telephone.equals("")) {//手机号不为空
+                //根据手机号查找学生用户
+                Student student = stuInfoRepository.findStudentByTelephone(telephone);
+
+                if (student != null) {//存在学生
+                    //根据手机号找到该学生的简历、项目经历
+                    Resumes resumes = resumesInfoRepository.findResumesByStuId(telephone);
+                    Resumedetail resumedetail = resumesDetailRepository.findResumeDetailByRdId(rd_id);
+
+                    if (resumes != null && resumedetail != null) {//存在简历和项目经历
+                        //更新DB
+                        resumesDetailRepository.updateResumedetailInfo5(content, rd_id);
+
+                        Resumedetail resumedetail2 = resumesDetailRepository.findResumeDetailByRdId(rd_id);
+                        //填充到res
+                        res.setTelephone(telephone);
+                        res.setRd_id(rd_id);
+                        res.setContent(resumedetail2.getContent());
+                    } else {//不存在简历/项目经历
+                        logger.warn("该账号不存在简历信息或专业技能信息");
+                        res.setTelephone(telephone);
+                        res.setMemo("该账号不存在简历信息或专业技能信息");
                     }
                 } else {//不存在账号
                     logger.warn("该账号不存在");

@@ -71,7 +71,7 @@ public class UsersController {
     @RequestMapping(value = "/resumes/upload", method = RequestMethod.POST)
     @ResponseBody
     public ResponseData uploadResume(@RequestBody MultipartFile file, @RequestParam String telephone,
-                                     @RequestBody Date upload_time) throws ParseException, Exception {
+                                     @RequestParam String upload_time) throws ParseException, Exception {
         ResumeUploadCallbackDto res = usersService.uploadResume(file, telephone, upload_time);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
@@ -91,6 +91,38 @@ public class UsersController {
         GetCampusDto res = usersService.editCampus(editCampusDto);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
+
+    //TODO 简历编辑（教育背景）-学生
+    @RequestMapping(value = "/resumes/edit_education", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseData editEducation(@RequestBody EditEducationDto editEducationDto) throws ParseException, Exception {
+        GetEducationDto res = usersService.editEducation(editEducationDto);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
+    //TODO 简历编辑（项目经历）-学生
+    @RequestMapping(value = "/resumes/edit_program", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseData editProgram(@RequestBody EditProgramDto editProgramDto) throws ParseException, Exception {
+        GetProgramDto res = usersService.editProgram(editProgramDto);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
+    //TODO 简历编辑（专业技能）-学生
+    @RequestMapping(value = "/resumes/edit_skills", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseData editSkills(@RequestBody EditSkillsDto editSkillsDto) throws ParseException, Exception {
+        GetSkillsDto res = usersService.editSkills(editSkillsDto);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
+//    //TODO 简历详情删除-学生
+//    @RequestMapping(value = "/resumes/delete_detail", method = RequestMethod.POST)
+//    @ResponseBody
+//    public ResponseData deleteDetail(@RequestBody DeleteDetailDto deleteDetailDto) throws ParseException, Exception {
+//        DeleteDetailCallbackDto res = usersService.deleteDetail(deleteDetailDto);
+//        return new ResponseData(ExceptionMsg.SUCCESS, res);
+//    }
 
     //TODO minio创建桶
     @RequestMapping(value = "/minio/create_bucket", method = RequestMethod.POST)

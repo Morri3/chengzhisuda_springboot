@@ -34,7 +34,7 @@ public interface UsersService {
     ResumeInfoDto getResume(GetResumeDto getResumeDto) throws ParttimeServiceException;
 
     //简历上传-学生
-    ResumeUploadCallbackDto uploadResume(MultipartFile file, String telephone, Date upload_time)
+    ResumeUploadCallbackDto uploadResume(MultipartFile file, String telephone, String upload_time)
             throws ParttimeServiceException, Exception;
 
     //编辑简历（个人信息）——学生
@@ -42,6 +42,15 @@ public interface UsersService {
 
     //编辑简历（校园经历）——学生
     GetCampusDto editCampus(EditCampusDto editCampusDto) throws ParseException, Exception;
+
+    //编辑简历（教育背景）——学生
+    GetEducationDto editEducation(EditEducationDto editEducationDto) throws ParseException, Exception;
+
+    //编辑简历（项目经历）——学生
+    GetProgramDto editProgram(EditProgramDto editProgramDto) throws ParseException, Exception;
+
+    //编辑简历（专业技能）——学生
+    GetSkillsDto editSkills(EditSkillsDto editSkillsDto) throws ParseException, Exception;
 
     //minio创建桶
     Boolean createBucket(String bucketName) throws ParttimeServiceException, Exception;
