@@ -57,7 +57,9 @@ public class UsersController {
 
     //TODO 个人信息编辑-兼职发布者/管理员
 
+
     //TODO 修改密码-兼职发布者/管理员
+
 
     //TODO 简历查看-学生
     @RequestMapping(value = "/resumes/get", method = RequestMethod.GET)
@@ -116,13 +118,14 @@ public class UsersController {
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
-//    //TODO 简历详情删除-学生
-//    @RequestMapping(value = "/resumes/delete_detail", method = RequestMethod.POST)
-//    @ResponseBody
-//    public ResponseData deleteDetail(@RequestBody DeleteDetailDto deleteDetailDto) throws ParseException, Exception {
-//        DeleteDetailCallbackDto res = usersService.deleteDetail(deleteDetailDto);
-//        return new ResponseData(ExceptionMsg.SUCCESS, res);
-//    }
+    //TODO 简历详情删除-学生
+    @RequestMapping(value = "/resumes/delete_detail", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseData deleteDetail(@RequestBody DeleteDetailDto deleteDetailDto) throws ParseException, Exception {
+        DeleteDetailCallbackDto res = usersService.deleteDetail(deleteDetailDto);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
 
     //TODO minio创建桶
     @RequestMapping(value = "/minio/create_bucket", method = RequestMethod.POST)

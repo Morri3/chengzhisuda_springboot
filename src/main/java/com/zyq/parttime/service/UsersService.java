@@ -28,7 +28,9 @@ public interface UsersService {
 
     //个人信息编辑-兼职发布者/管理员
 
+
     //修改密码-兼职发布者/管理员
+
 
     //简历查看-学生
     ResumeInfoDto getResume(GetResumeDto getResumeDto) throws ParttimeServiceException;
@@ -51,6 +53,10 @@ public interface UsersService {
 
     //编辑简历（专业技能）——学生
     GetSkillsDto editSkills(EditSkillsDto editSkillsDto) throws ParseException, Exception;
+
+    //删除简历详情——学生
+    DeleteDetailCallbackDto deleteDetail(DeleteDetailDto deleteDetailDto) throws ParseException, Exception;
+
 
     //minio创建桶
     Boolean createBucket(String bucketName) throws ParttimeServiceException, Exception;
