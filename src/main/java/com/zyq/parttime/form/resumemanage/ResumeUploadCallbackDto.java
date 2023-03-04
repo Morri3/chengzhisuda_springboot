@@ -20,4 +20,5 @@ public class ResumeUploadCallbackDto implements Serializable {
     private List<ResumeDetailDto> professionalSkillList;
     private String memo;//若不存在简历，该字段为”请填写简历“
     private String pic_url;//简历图片的url
+    private String r_status;//简历状态
 }

@@ -16,5 +16,6 @@ public class ResumeDetailDto implements Serializable {
     private String content;
     private String category;
     private int hasContent;//0表示该DTO有内容，1表示该DTO无内容
+    private String status;
     private String memo;//若不存在简历，该字段为”请填写简历“
 }

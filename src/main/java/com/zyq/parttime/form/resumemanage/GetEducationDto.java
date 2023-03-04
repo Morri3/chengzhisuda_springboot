@@ -15,4 +15,5 @@ public class GetEducationDto implements Serializable {
     private Date start_time;
     private Date end_time;
     private String memo;
+    private String rd_status;
 }

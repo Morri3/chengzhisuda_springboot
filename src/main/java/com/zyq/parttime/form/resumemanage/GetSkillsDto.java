@@ -12,4 +12,5 @@ public class GetSkillsDto implements Serializable {
     private int rd_id;
     private String content;
     private String memo;
+    private String rd_status;
 }

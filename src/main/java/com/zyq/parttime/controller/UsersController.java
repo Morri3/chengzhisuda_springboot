@@ -126,6 +126,14 @@ public class UsersController {
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
+    //TODO 简历删除-学生
+    @RequestMapping(value = "/resumes/delete", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseData deleteResume(@RequestBody DeleteResumeDto deleteResumeDto) throws ParseException, Exception {
+        DeleteResumeCallbackDto res = usersService.deleteResume(deleteResumeDto);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
 
     //TODO minio创建桶
     @RequestMapping(value = "/minio/create_bucket", method = RequestMethod.POST)

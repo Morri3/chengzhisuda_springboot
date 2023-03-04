@@ -57,6 +57,8 @@ public interface UsersService {
     //删除简历详情——学生
     DeleteDetailCallbackDto deleteDetail(DeleteDetailDto deleteDetailDto) throws ParseException, Exception;
 
+    //删除简历——学生
+    DeleteResumeCallbackDto deleteResume(DeleteResumeDto deleteResumeDto) throws ParseException, Exception;
 
     //minio创建桶
     Boolean createBucket(String bucketName) throws ParttimeServiceException, Exception;

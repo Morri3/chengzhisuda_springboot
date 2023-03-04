@@ -36,6 +36,9 @@ public class Resumes {
     @Column(name = "create_time")
     private Date createTime;
 
+    @Column(name = "r_status")
+    private String rStatus;
+
     @OneToMany(mappedBy = "r")
     private Set<Resumedetail> resumedetails = new LinkedHashSet<>();
 
@@ -93,6 +96,14 @@ public class Resumes {
 
     public void setCreateTime(Date createTime) {
         this.createTime = createTime;
+    }
+
+    public String getrStatus() {
+        return rStatus;
+    }
+
+    public void setrStatus(String rStatus) {
+        this.rStatus = rStatus;
     }
 
     public int getId() {

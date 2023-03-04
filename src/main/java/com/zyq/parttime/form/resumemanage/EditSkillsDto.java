@@ -10,4 +10,5 @@ public class EditSkillsDto implements Serializable {
     private String telephone;
     private int rd_id;
     private String content;
+    private String old_content;
 }

@@ -261,6 +261,7 @@ public class UsersServiceImpl implements UsersService {
                         String start = sdf.format(start_time);
                         String end = sdf.format(end_time);
                         dto.setTime(start + '-' + end);
+                        dto.setStatus(item.getRdStatus());
                         list1.add(dto);
                     }
                 } else {//无内容
@@ -275,7 +276,7 @@ public class UsersServiceImpl implements UsersService {
                 List<ResumeDetailDto> list2 = new ArrayList<>();
                 if (educationBgList.size() > 0) {//有内容
                     //遍历列表
-                    for (Resumedetail item : campusExpList) {
+                    for (Resumedetail item : educationBgList) {
                         ResumeDetailDto dto = new ResumeDetailDto();
                         dto.setTelephone(telephone);
                         dto.setRd_id(item.getId());
@@ -291,6 +292,7 @@ public class UsersServiceImpl implements UsersService {
                         String start = sdf.format(start_time);
                         String end = sdf.format(end_time);
                         dto.setTime(start + '-' + end);
+                        dto.setStatus(item.getRdStatus());
                         list2.add(dto);
                     }
                 } else {//无内容
@@ -321,6 +323,7 @@ public class UsersServiceImpl implements UsersService {
                         String start = sdf.format(start_time);
                         String end = sdf.format(end_time);
                         dto.setTime(start + '-' + end);
+                        dto.setStatus(item.getRdStatus());
                         list3.add(dto);
                     }
                 } else {//无内容
@@ -344,6 +347,7 @@ public class UsersServiceImpl implements UsersService {
                         dto.setContent(item.getContent());
                         dto.setCategory("专业技能");
                         dto.setHasContent(1);//有内容
+                        dto.setStatus(item.getRdStatus());
                         list4.add(dto);
                     }
                 } else {//无内容
@@ -360,6 +364,9 @@ public class UsersServiceImpl implements UsersService {
                 res.setEducationBgList(list2);
                 res.setProjectExpList(list3);
                 res.setProfessionalSkillList(list4);
+
+                //状态
+                res.setStatus(resumes.getrStatus());
             } else {//不存在简历
                 logger.warn("获取简历失败");
                 res.setTelephone(telephone);
@@ -397,7 +404,7 @@ public class UsersServiceImpl implements UsersService {
 
                 //图片url存入DB，即创建resume记录
                 Date now = new Date(System.currentTimeMillis());//当前时间
-                resumesInfoRepository.createAResumeRecord(telephone, pic_url, uploadTime, now);
+                resumesInfoRepository.createAResumeRecord(telephone, pic_url, uploadTime, now, "已上传");
                 //获取刚刚创建的resume的id
                 int r_id = resumesInfoRepository.findLatestResumes();
 
@@ -481,7 +488,7 @@ public class UsersServiceImpl implements UsersService {
                         //添加一条resumesdetail记录
                         Date now2 = new Date(System.currentTimeMillis());
                         resumesDetailRepository.addAResumesDetailRecord(r_id, start_time, end_time, title,
-                                content, "教育背景", now2);
+                                content, "教育背景", now2, "已上传");
                         int rd_id = resumesDetailRepository.findLatestResumesDetail();
 
                         //把信息填充到dto中
@@ -494,6 +501,7 @@ public class UsersServiceImpl implements UsersService {
                         dto1.setTime(time);
                         dto1.setCategory("教育背景");
                         dto1.setHasContent(1);
+                        dto1.setStatus("已上传");
 
                         List<ResumeDetailDto> list = new ArrayList<>();
                         list.add(dto1);
@@ -536,7 +544,7 @@ public class UsersServiceImpl implements UsersService {
                             //创建一个detail记录
                             Date now2 = new Date(System.currentTimeMillis());
                             resumesDetailRepository.addAResumesDetailRecord(r_id, start_time, end_time, title,
-                                    content, "项目经历", now2);
+                                    content, "项目经历", now2, "已上传");
                             int rd_id = resumesDetailRepository.findLatestResumesDetail();//最新的记录的rd_id
 
                             //构造dto
@@ -550,6 +558,7 @@ public class UsersServiceImpl implements UsersService {
                             dto.setTime(time);
                             dto.setCategory("项目经历");
                             dto.setHasContent(1);
+                            dto.setStatus("已上传");
                             list.add(dto);//加到列表中
 
                             k = j;//更新k的值
@@ -580,7 +589,8 @@ public class UsersServiceImpl implements UsersService {
 
                             //创建一个detail记录
                             Date now2 = new Date(System.currentTimeMillis());
-                            resumesDetailRepository.addAProfessionalResumesDetailRecord(r_id, content, "专业技能", now2);
+                            resumesDetailRepository.addAProfessionalResumesDetailRecord(r_id,
+                                    content, "专业技能", now2, "已上传");
                             int rd_id = resumesDetailRepository.findLatestResumesDetail();//最新的记录的rd_id
 
                             //构造dto
@@ -592,6 +602,7 @@ public class UsersServiceImpl implements UsersService {
                             dto.setContent(content);
                             dto.setCategory("专业技能");
                             dto.setHasContent(1);
+                            dto.setStatus("已上传");
                             list.add(dto);//加到列表中
                         }
                         res.setProfessionalSkillList(list);//set到res中
@@ -639,7 +650,7 @@ public class UsersServiceImpl implements UsersService {
                             //创建一个detail记录
                             Date now2 = new Date(System.currentTimeMillis());
                             resumesDetailRepository.addAResumesDetailRecord(r_id, start_time, end_time, title,
-                                    content, "校园经历", now2);
+                                    content, "校园经历", now2, "已上传");
                             int rd_id = resumesDetailRepository.findLatestResumesDetail();//最新的记录的rd_id
 
                             //构造dto
@@ -653,6 +664,7 @@ public class UsersServiceImpl implements UsersService {
                             dto.setTime(time);
                             dto.setCategory("校园经历");
                             dto.setHasContent(1);
+                            dto.setStatus("已上传");
                             list.add(dto);//加到列表中
 
                             if (words.size() != j) {//下一个内容不是空对象，就更新k的值
@@ -670,6 +682,7 @@ public class UsersServiceImpl implements UsersService {
                             }
                         }
                         res.setCampusExpList(list);//set到res中
+                        res.setR_status("已上传");
                     }
                 }
             } else {//不存在学生
@@ -700,7 +713,7 @@ public class UsersServiceImpl implements UsersService {
 
                     if (resumes != null) {//存在简历
                         //更新DB
-                        resumesInfoRepository.updateResumesInfo(exp, current_area, telephone);
+                        resumesInfoRepository.updateResumesInfo(exp, current_area, "已修改", telephone);
 
                         //找到简历的详细信息
                         GetResumeDto request = new GetResumeDto();
@@ -708,6 +721,7 @@ public class UsersServiceImpl implements UsersService {
                         ResumeInfoDto dto = this.getResume(request);//返回的详细信息dto
                         dto.setExp(exp);
                         dto.setCurrent_area(current_area);
+                        dto.setStatus("已修改");
 
                         //填充到res
                         res.setTelephone(telephone);
@@ -750,9 +764,10 @@ public class UsersServiceImpl implements UsersService {
                 if (student != null) {//存在学生
                     //根据手机号找到该学生的简历、校园经历
                     Resumes resumes = resumesInfoRepository.findResumesByStuId(telephone);
-                    Resumedetail resumedetail = resumesDetailRepository.findResumeDetailByRdId(rd_id, resumes.getId());
+                    //根据r_id+类型找到校园经历
+                    Resumedetail resumedetail = resumesDetailRepository.findResumeDetailByRIdAndCategory(resumes.getId(), "校园经历");
 
-                    if (resumes != null && resumedetail != null) {//存在简历和校园经历
+                    if (resumes != null && resumedetail != null && resumedetail.getId() == rd_id) {//存在简历和校园经历
                         int f1 = 0, f2 = 0;//判断是否为空
                         //处理时间
                         Date start = new Date(), end = new Date();
@@ -770,14 +785,16 @@ public class UsersServiceImpl implements UsersService {
 
                         //更新DB
                         if (f1 == 1 && f2 == 1) {
-                            resumesDetailRepository.updateResumedetailInfo1(title, content, rd_id);
+                            resumesDetailRepository.updateResumedetailInfo1(title, content, "已修改", rd_id);
                         } else if (f1 == 1 && f2 == 0) {
-                            resumesDetailRepository.updateResumedetailInfo2(title, content, end, rd_id);
+                            resumesDetailRepository.updateResumedetailInfo2(title, content, end, "已修改", rd_id);
                         } else if (f1 == 0 && f2 == 1) {
-                            resumesDetailRepository.updateResumedetailInfo3(title, content, start, rd_id);
+                            resumesDetailRepository.updateResumedetailInfo3(title, content, start, "已修改", rd_id);
                         } else {
-                            resumesDetailRepository.updateResumedetailInfo4(title, content, start, end, rd_id);
+                            resumesDetailRepository.updateResumedetailInfo4(title, content, start, end, "已修改", rd_id);
                         }
+                        //更新简历表的状态
+                        resumesInfoRepository.updateResumesStatus("已修改", telephone);
 
                         Resumedetail resumedetail2 = resumesDetailRepository.findResumeDetailByRdId(rd_id, resumes.getId());
                         //填充到res
@@ -787,6 +804,7 @@ public class UsersServiceImpl implements UsersService {
                         res.setContent(resumedetail2.getContent());
                         res.setStart_time(resumedetail2.getStartTime());
                         res.setEnd_time(resumedetail2.getEndTime());
+                        res.setRd_status(resumedetail2.getRdStatus());
                     } else {//不存在简历/校园经历
                         logger.warn("该账号不存在简历信息或校园经历信息");
                         res.setTelephone(telephone);
@@ -825,9 +843,10 @@ public class UsersServiceImpl implements UsersService {
                 if (student != null) {//存在学生
                     //根据手机号找到该学生的简历、教育背景
                     Resumes resumes = resumesInfoRepository.findResumesByStuId(telephone);
-                    Resumedetail resumedetail = resumesDetailRepository.findResumeDetailByRdId(rd_id, resumes.getId());
+                    //根据r_id+类型找到教育背景
+                    Resumedetail resumedetail = resumesDetailRepository.findResumeDetailByRIdAndCategory(resumes.getId(), "教育背景");
 
-                    if (resumes != null && resumedetail != null) {//存在简历和教育背景
+                    if (resumes != null && resumedetail != null && resumedetail.getId() == rd_id) {//存在简历和教育背景
                         int f1 = 0, f2 = 0;//判断是否为空
                         //处理时间
                         Date start = new Date(), end = new Date();
@@ -845,14 +864,16 @@ public class UsersServiceImpl implements UsersService {
 
                         //更新DB
                         if (f1 == 1 && f2 == 1) {
-                            resumesDetailRepository.updateResumedetailInfo1(title, content, rd_id);
+                            resumesDetailRepository.updateResumedetailInfo1(title, content, "已修改", rd_id);
                         } else if (f1 == 1 && f2 == 0) {
-                            resumesDetailRepository.updateResumedetailInfo2(title, content, end, rd_id);
+                            resumesDetailRepository.updateResumedetailInfo2(title, content, end, "已修改", rd_id);
                         } else if (f1 == 0 && f2 == 1) {
-                            resumesDetailRepository.updateResumedetailInfo3(title, content, start, rd_id);
+                            resumesDetailRepository.updateResumedetailInfo3(title, content, start, "已修改", rd_id);
                         } else {
-                            resumesDetailRepository.updateResumedetailInfo4(title, content, start, end, rd_id);
+                            resumesDetailRepository.updateResumedetailInfo4(title, content, start, end, "已修改", rd_id);
                         }
+                        //更新简历表的状态
+                        resumesInfoRepository.updateResumesStatus("已修改", telephone);
 
                         Resumedetail resumedetail2 = resumesDetailRepository.findResumeDetailByRdId(rd_id, resumes.getId());
                         //填充到res
@@ -862,6 +883,7 @@ public class UsersServiceImpl implements UsersService {
                         res.setContent(resumedetail2.getContent());
                         res.setStart_time(resumedetail2.getStartTime());
                         res.setEnd_time(resumedetail2.getEndTime());
+                        res.setRd_status(resumedetail2.getRdStatus());
                     } else {//不存在简历/教育背景
                         logger.warn("该账号不存在简历信息或教育背景信息");
                         res.setTelephone(telephone);
@@ -889,6 +911,7 @@ public class UsersServiceImpl implements UsersService {
             String telephone = editProgramDto.getTelephone();//手机号
             int rd_id = editProgramDto.getRd_id();
             String title = editProgramDto.getTitle();
+            String old_title = editProgramDto.getOld_title();
             String content = editProgramDto.getContent();
             String start_time = editProgramDto.getStart_time();
             String end_time = editProgramDto.getEnd_time();
@@ -900,7 +923,16 @@ public class UsersServiceImpl implements UsersService {
                 if (student != null) {//存在学生
                     //根据手机号找到该学生的简历、项目经历
                     Resumes resumes = resumesInfoRepository.findResumesByStuId(telephone);
-                    Resumedetail resumedetail = resumesDetailRepository.findResumeDetailByRdId(rd_id, resumes.getId());
+                    //根据r_id+类型找到项目经历
+                    List<Resumedetail> list = resumesDetailRepository.findResumeDetailByRIdAndCategory2(resumes.getId(), "项目经历");
+
+                    //遍历列表，找到那个detail
+                    Resumedetail resumedetail = null;
+                    for (Resumedetail detail : list) {
+                        if (detail.getId() == rd_id && (old_title.equals(detail.getTitle()))) {//rd_id相同且标题相同
+                            resumedetail = detail;
+                        }
+                    }
 
                     if (resumes != null && resumedetail != null) {//存在简历和项目经历
                         int f1 = 0, f2 = 0;//判断是否为空
@@ -920,14 +952,16 @@ public class UsersServiceImpl implements UsersService {
 
                         //更新DB
                         if (f1 == 1 && f2 == 1) {
-                            resumesDetailRepository.updateResumedetailInfo1(title, content, rd_id);
+                            resumesDetailRepository.updateResumedetailInfo1(title, content, "已修改", rd_id);
                         } else if (f1 == 1 && f2 == 0) {
-                            resumesDetailRepository.updateResumedetailInfo2(title, content, end, rd_id);
+                            resumesDetailRepository.updateResumedetailInfo2(title, content, end, "已修改", rd_id);
                         } else if (f1 == 0 && f2 == 1) {
-                            resumesDetailRepository.updateResumedetailInfo3(title, content, start, rd_id);
+                            resumesDetailRepository.updateResumedetailInfo3(title, content, start, "已修改", rd_id);
                         } else {
-                            resumesDetailRepository.updateResumedetailInfo4(title, content, start, end, rd_id);
+                            resumesDetailRepository.updateResumedetailInfo4(title, content, start, end, "已修改", rd_id);
                         }
+                        //更新简历表的状态
+                        resumesInfoRepository.updateResumesStatus("已修改", telephone);
 
                         Resumedetail resumedetail2 = resumesDetailRepository.findResumeDetailByRdId(rd_id, resumes.getId());
                         //填充到res
@@ -937,6 +971,7 @@ public class UsersServiceImpl implements UsersService {
                         res.setContent(resumedetail2.getContent());
                         res.setStart_time(resumedetail2.getStartTime());
                         res.setEnd_time(resumedetail2.getEndTime());
+                        res.setRd_status(resumedetail2.getRdStatus());
                     } else {//不存在简历/项目经历
                         logger.warn("该账号不存在简历信息或项目经历信息");
                         res.setTelephone(telephone);
@@ -964,25 +999,39 @@ public class UsersServiceImpl implements UsersService {
             String telephone = editSkillsDto.getTelephone();//手机号
             int rd_id = editSkillsDto.getRd_id();
             String content = editSkillsDto.getContent();
+            String old_content = editSkillsDto.getOld_content();
 
             if (telephone != null && !telephone.equals("")) {//手机号不为空
                 //根据手机号查找学生用户
                 Student student = stuInfoRepository.findStudentByTelephone(telephone);
 
                 if (student != null) {//存在学生
-                    //根据手机号找到该学生的简历、项目经历
+                    //根据手机号找到该学生的简历、专业技能
                     Resumes resumes = resumesInfoRepository.findResumesByStuId(telephone);
-                    Resumedetail resumedetail = resumesDetailRepository.findResumeDetailByRdId(rd_id, resumes.getId());
+//                    Resumedetail resumedetail = resumesDetailRepository.findResumeDetailByRdId(rd_id, resumes.getId());
+                    //根据r_id+类型找到专业技能
+                    List<Resumedetail> list = resumesDetailRepository.findResumeDetailByRIdAndCategory2(resumes.getId(), "专业技能");
 
-                    if (resumes != null && resumedetail != null) {//存在简历和项目经历
+                    //遍历列表，找到那个detail
+                    Resumedetail resumedetail = null;
+                    for (Resumedetail detail : list) {
+                        if (detail.getId() == rd_id && (old_content.equals(detail.getContent()))) {//rd_id相同且内容相同
+                            resumedetail = detail;
+                        }
+                    }
+
+                    if (resumes != null && resumedetail != null) {//存在简历和专业技能
                         //更新DB
-                        resumesDetailRepository.updateResumedetailInfo5(content, rd_id);
+                        resumesDetailRepository.updateResumedetailInfo5(content, "已修改", rd_id);
+                        //更新简历表的状态
+                        resumesInfoRepository.updateResumesStatus("已修改", telephone);
 
                         Resumedetail resumedetail2 = resumesDetailRepository.findResumeDetailByRdId(rd_id, resumes.getId());
                         //填充到res
                         res.setTelephone(telephone);
                         res.setRd_id(rd_id);
                         res.setContent(resumedetail2.getContent());
+                        res.setRd_status(resumedetail2.getRdStatus());
                     } else {//不存在简历/项目经历
                         logger.warn("该账号不存在简历信息或专业技能信息");
                         res.setTelephone(telephone);
@@ -1036,6 +1085,50 @@ public class UsersServiceImpl implements UsersService {
                         logger.warn("该账号不存在简历信息或简历详情");
                         res.setTelephone(telephone);
                         res.setMemo("该账号不存在简历信息或简历详情");
+                    }
+                } else {//不存在账号
+                    logger.warn("该账号不存在");
+                    res.setTelephone(telephone);
+                    res.setMemo("该账号不存在");
+                }
+            } else {//手机号为空
+                logger.warn("请输入手机号");
+                res.setTelephone(telephone);
+                res.setMemo("请输入手机号");
+            }
+        }
+        return res;
+    }
+
+    @Override
+    public DeleteResumeCallbackDto deleteResume(DeleteResumeDto deleteResumeDto) throws ParseException, Exception {
+        DeleteResumeCallbackDto res = new DeleteResumeCallbackDto();
+
+        if (deleteResumeDto != null) {
+            String telephone = deleteResumeDto.getTelephone();//手机号
+
+            if (telephone != null && !telephone.equals("")) {//手机号不为空
+                //根据手机号查找学生用户
+                Student student = stuInfoRepository.findStudentByTelephone(telephone);
+
+                if (student != null) {//存在学生
+                    //根据手机号找到该学生的简历、项目经历
+                    Resumes resumes = resumesInfoRepository.findResumesByStuId(telephone);
+
+                    if (resumes != null) {//存在简历
+                        //判断是否存在简历详情，若存在，修改简历详情的状态
+
+
+                        //更新DB
+                        resumesInfoRepository.deleteResumeByRId(resumes.getId());
+
+                        //填充到res
+                        res.setTelephone(telephone);
+                        res.setMemo("删除成功！");
+                    } else {//不存在简历
+                        logger.warn("该账号不存在简历信息");
+                        res.setTelephone(telephone);
+                        res.setMemo("该账号不存在简历信息");
                     }
                 } else {//不存在账号
                     logger.warn("该账号不存在");

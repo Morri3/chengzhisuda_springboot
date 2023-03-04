@@ -30,6 +30,9 @@ public class Resumedetail {
     @Column(name = "category")
     private String category;
 
+    @Column(name = "rd_status")
+    private String rdStatus;
+
     public String getCategory() {
         return category;
     }
@@ -76,6 +79,14 @@ public class Resumedetail {
 
     public void setR(Resumes r) {
         this.r = r;
+    }
+
+    public String getRdStatus() {
+        return rdStatus;
+    }
+
+    public void setRdStatus(String rdStatus) {
+        this.rdStatus = rdStatus;
     }
 
     public int getId() {
