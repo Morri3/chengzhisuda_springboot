@@ -36,7 +36,7 @@ public interface ResumesInfoRepository extends JpaRepository<Resumes, Integer>, 
 
     @Transactional
     @Modifying
-    @Query(value = "delete from resumes where r_id=?1", nativeQuery = true)
+    @Query(value = "update resumes set r_status='已删除' where r_id=?1", nativeQuery = true)
     void deleteResumeByRId(int r_id);
 
 }

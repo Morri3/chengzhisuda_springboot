@@ -18,6 +18,9 @@ public interface ResumesDetailRepository extends JpaRepository<Resumedetail, Int
     @Query(value = "select * from resumedetail where r_id = ?1 and category =?2", nativeQuery = true)
     List<Resumedetail> findResumeDetailListByRIdAndCategory(int r_id, String category);
 
+    @Query(value = "select * from resumedetail where r_id = ?1", nativeQuery = true)
+    List<Resumedetail> getAllResumedetailByRId(int r_id);
+
     @Transactional
     @Modifying
     @Query(value = "insert into resumedetail(r_id, start_time, end_time, title, content, category, create_time, " +
@@ -67,7 +70,7 @@ public interface ResumesDetailRepository extends JpaRepository<Resumedetail, Int
 
     @Transactional
     @Modifying
-    @Query(value = "delete from resumedetail where rd_id=?1", nativeQuery = true)
+    @Query(value = "update resumedetail set rd_status='已删除' where rd_id=?1", nativeQuery = true)
     void deleteResumedetailByRdId(int rd_id);
 
 }

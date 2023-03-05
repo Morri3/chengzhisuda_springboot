@@ -1066,10 +1066,12 @@ public class UsersServiceImpl implements UsersService {
                 if (student != null) {//存在学生
                     //根据手机号找到该学生的简历、项目经历
                     Resumes resumes = resumesInfoRepository.findResumesByStuId(telephone);
-                    Resumedetail resumedetail = resumesDetailRepository.findResumeDetailByRdId(rd_id, resumes.getId());
+                    Resumedetail resumedetail = null;
+                    if (resumes != null)
+                        resumedetail = resumesDetailRepository.findResumeDetailByRdId(rd_id, resumes.getId());
 
                     if (resumes != null && resumedetail != null) {//存在简历和项目经历
-                        if (resumedetail.getId() == rd_id) {//当前的rd是该学生的id
+                        if (resumedetail.getId() == rd_id && !resumedetail.getRdStatus().equals("已删除")) {//当前的rd是该学生的简历详情id，且不是已删除的简历详情
                             //更新DB
                             resumesDetailRepository.deleteResumedetailByRdId(rd_id);
 
@@ -1117,14 +1119,34 @@ public class UsersServiceImpl implements UsersService {
 
                     if (resumes != null) {//存在简历
                         //判断是否存在简历详情，若存在，修改简历详情的状态
+                        List<Resumedetail> list = resumesDetailRepository.getAllResumedetailByRId(resumes.getId());
+                        if (list.size() > 0) {//存在简历详情
+                            int flag = 0;//判断能否删除，flag=1表示不能删除
+                            for (Resumedetail detail : list) {
+                                if (!detail.getRdStatus().equals("已删除")) {//有未删除的简历详情，就不能删除简历
+                                    flag = 1;
+                                }
+                            }
+                            if (flag == 1) {//不能删除简历
+                                logger.warn("当前无法删除该简历");
+                                res.setTelephone(telephone);
+                                res.setMemo("当前无法删除该简历");
+                            } else {
+                                //删除简历
+                                resumesInfoRepository.deleteResumeByRId(resumes.getId());
 
+                                //填充到res
+                                res.setTelephone(telephone);
+                                res.setMemo("删除成功！");
+                            }
+                        } else {//是空简历
+                            //直接删除简历
+                            resumesInfoRepository.deleteResumeByRId(resumes.getId());
 
-                        //更新DB
-                        resumesInfoRepository.deleteResumeByRId(resumes.getId());
-
-                        //填充到res
-                        res.setTelephone(telephone);
-                        res.setMemo("删除成功！");
+                            //填充到res
+                            res.setTelephone(telephone);
+                            res.setMemo("删除成功！");
+                        }
                     } else {//不存在简历
                         logger.warn("该账号不存在简历信息");
                         res.setTelephone(telephone);
