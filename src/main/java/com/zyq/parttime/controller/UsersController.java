@@ -1,5 +1,6 @@
 package com.zyq.parttime.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.zyq.parttime.exception.ParttimeServiceException;
 import com.zyq.parttime.form.resumemanage.*;
 import com.zyq.parttime.form.userinfomanage.*;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.io.InputStream;
 import java.text.ParseException;
 import java.util.Date;
@@ -26,8 +28,8 @@ public class UsersController {
     //TODO 个人信息查看-学生
     @RequestMapping(value = "/info/get_stu", method = RequestMethod.GET)
     @ResponseBody
-    public ResponseData getStuInfo(@RequestBody GetInfoDto getInfoDto) {
-        StuInfoDto res = usersService.getStuInfo(getInfoDto);
+    public ResponseData getStuInfo(@RequestParam String telephone) {
+        StuInfoDto res = usersService.getStuInfo(telephone);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
@@ -60,21 +62,34 @@ public class UsersController {
 
     //TODO 修改密码-兼职发布者/管理员
 
+//    //TODO 简历查看-学生
+//    @RequestMapping(value = "/resumes/get1", method = RequestMethod.GET)
+//    @ResponseBody
+//    public ResponseData getResumeByAdmin(@RequestBody GetResumeDto getResumeDto) throws ParseException {
+//        ResumeInfoDto res = usersService.getResume(getResumeDto);
+//        return new ResponseData(ExceptionMsg.SUCCESS, res);
+//    }
 
     //TODO 简历查看-学生
     @RequestMapping(value = "/resumes/get", method = RequestMethod.GET)
     @ResponseBody
-    public ResponseData getResume(@RequestBody GetResumeDto getResumeDto) throws ParseException {
-        ResumeInfoDto res = usersService.getResume(getResumeDto);
+    public ResponseData getResume(@RequestParam String telephone) throws ParseException {
+        ResumeInfoDto res = usersService.getResume(telephone);
+        System.out.println(JSON.toJSONString(res));
+        System.out.println(res);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
     //TODO 简历上传-学生
     @RequestMapping(value = "/resumes/upload", method = RequestMethod.POST)
     @ResponseBody
-    public ResponseData uploadResume(@RequestBody MultipartFile file, @RequestParam String telephone,
-                                     @RequestParam String upload_time) throws ParseException, Exception {
+        public ResponseData uploadResume( MultipartFile file,  String telephone,
+                                          String upload_time) throws ParseException, Exception {
         ResumeUploadCallbackDto res = usersService.uploadResume(file, telephone, upload_time);
+//    public ResponseData uploadResume(@RequestBody File file, @RequestParam String telephone,
+//                                     @RequestParam String upload_time) throws ParseException, Exception {
+
+//        ResumeUploadCallbackDto res = usersService.uploadResume(uploadInputDto);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 

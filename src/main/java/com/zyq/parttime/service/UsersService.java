@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.io.InputStream;
 import java.text.ParseException;
 import java.util.Date;
@@ -15,7 +16,7 @@ import java.util.Date;
 @Service
 public interface UsersService {
     //个人信息查看-学生
-    StuInfoDto getStuInfo(GetInfoDto getInfoDto) throws ParttimeServiceException;
+    StuInfoDto getStuInfo(String telephone) throws ParttimeServiceException;
 
     //个人信息查看-兼职发布者/管理员
     EmpInfoDto getEmpInfo(GetInfoDto getInfoDto) throws ParttimeServiceException;
@@ -33,10 +34,10 @@ public interface UsersService {
 
 
     //简历查看-学生
-    ResumeInfoDto getResume(GetResumeDto getResumeDto) throws ParttimeServiceException;
+    ResumeInfoDto getResume(String telephone) throws ParttimeServiceException;
 
     //简历上传-学生
-    ResumeUploadCallbackDto uploadResume(MultipartFile file, String telephone, String upload_time)
+    ResumeUploadCallbackDto uploadResume(MultipartFile file, String telephone,String upload_time)
             throws ParttimeServiceException, Exception;
 
     //编辑简历（个人信息）——学生

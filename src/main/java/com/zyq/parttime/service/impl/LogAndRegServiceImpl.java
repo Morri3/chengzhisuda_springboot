@@ -118,13 +118,22 @@ public class LogAndRegServiceImpl implements LogAndRegService {
                 Date graduation = sdf2.parse(graduation_date);
 
                 //计算年级
-                Calendar cal1 = Calendar.getInstance();
-                Calendar cal2 = Calendar.getInstance();
-                cal1.setTime(entrance);
-                cal2.setTime(graduation);
-                Integer y1 = cal1.get(Calendar.YEAR);//获取年
-                Integer y2 = cal2.get(Calendar.YEAR);//获取年
-                int diff = y2 - y1;//年数
+                Calendar c1 = Calendar.getInstance();
+                Calendar c2 = Calendar.getInstance();
+                c1.setTime(entrance);
+                c2.setTime(graduation);
+                int tmp1 = c2.get(Calendar.DATE) - c1.get(Calendar.DATE);
+                int tmp2 = c2.get(Calendar.MONTH) - c1.get(Calendar.MONTH);
+                int tmp3 = c2.get(Calendar.YEAR) - c1.get(Calendar.YEAR);
+                if (tmp2 > 0) {//月份更大
+                    tmp2 = 1;//最后要+1
+                } else if (tmp2 == 0) {//月份相同
+                    tmp2 = tmp1 <= 0 ? 0 : 1;//判断日期，前面日期更小，最后月份要+1
+                } else {//月份更小，不用+
+                    tmp2 = 0;
+                }
+                int diff = tmp3 + tmp2;
+
                 String grade = "";//把int转为字符串类型
                 if (diff == 1) grade = "大一";
                 else if (diff == 2) grade = "大二";
