@@ -15,6 +15,8 @@ public interface PositionRepository extends JpaRepository<Position, Integer>, Jp
     @Query(value = "select * from position", nativeQuery = true)
     List<Position> getAllPositions();
 
+    @Query(value = "select * from position where p_id=?1", nativeQuery = true)
+    Position getPosition(int p_id);
 //    @Transactional
 //    @Modifying
 //    @Query(value = "insert into resumes(stu_id, pic_url,upload_time,create_time,r_status) values(?1,?2,?3,?4,?5)", nativeQuery = true)

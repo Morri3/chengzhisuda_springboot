@@ -23,5 +23,5 @@ public class PositionInfoDto implements Serializable {
     private String position_status;
     private Date create_time;
     private Date update_time;
-
+    private String memo;
 }
