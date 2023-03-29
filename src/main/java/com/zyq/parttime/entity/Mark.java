@@ -19,7 +19,7 @@ public class Mark {
     private Signup s;
 
     @Column(name = "total_score")
-    private int totalScore;
+    private float totalScore;
 
     @Column(name = "pf")
     private int pf;
@@ -109,11 +109,11 @@ public class Mark {
         this.pf = pf;
     }
 
-    public int getTotalScore() {
+    public float getTotalScore() {
         return totalScore;
     }
 
-    public void setTotalScore(int totalScore) {
+    public void setTotalScore(float totalScore) {
         this.totalScore = totalScore;
     }
 

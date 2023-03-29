@@ -1,6 +1,8 @@
 package com.zyq.parttime.service;
 
 import com.zyq.parttime.exception.ParttimeServiceException;
+import com.zyq.parttime.form.intention.EditIntentionDto;
+import com.zyq.parttime.form.intention.IntentionDto;
 import com.zyq.parttime.form.resumemanage.*;
 import com.zyq.parttime.form.userinfomanage.*;
 import org.springframework.stereotype.Service;
@@ -12,6 +14,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.List;
 
 @Service
 public interface UsersService {
@@ -60,6 +63,12 @@ public interface UsersService {
 
     //删除简历——学生
     DeleteResumeCallbackDto deleteResume(DeleteResumeDto deleteResumeDto) throws ParseException, Exception;
+
+    //获取意向兼职——学生
+    List<IntentionDto> getIntention(String telephone) throws ParseException;
+
+    //编辑意向兼职——学生
+    List<IntentionDto> editIntention(EditIntentionDto editIntentionDto) throws ParseException;
 
     //minio创建桶
     Boolean createBucket(String bucketName) throws ParttimeServiceException, Exception;

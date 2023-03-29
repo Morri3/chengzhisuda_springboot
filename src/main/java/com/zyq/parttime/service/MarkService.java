@@ -2,6 +2,7 @@ package com.zyq.parttime.service;
 
 import com.zyq.parttime.exception.ParttimeServiceException;
 import com.zyq.parttime.form.mark.MarkDto;
+import com.zyq.parttime.form.mark.MarkPostDto;
 import com.zyq.parttime.form.position.PositionInfoDto;
 import org.springframework.stereotype.Service;
 
@@ -11,4 +12,7 @@ import java.util.List;
 public interface MarkService {
     //获取评分
     MarkDto getMark(int s_id) throws ParttimeServiceException;
+
+    //评分
+    MarkDto post(MarkPostDto markPostDto) throws ParttimeServiceException;
 }

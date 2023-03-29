@@ -1,7 +1,9 @@
 package com.zyq.parttime.controller;
 
 import com.zyq.parttime.form.comment.CommentDto;
+import com.zyq.parttime.form.comment.CommentPostDto;
 import com.zyq.parttime.form.mark.MarkDto;
+import com.zyq.parttime.form.mark.MarkPostDto;
 import com.zyq.parttime.result.ExceptionMsg;
 import com.zyq.parttime.result.ResponseData;
 import com.zyq.parttime.service.CommentService;
@@ -23,4 +25,11 @@ public class CommentController {
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
+    //TODO 评论-学生
+    @RequestMapping(value = "/stu/post", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseData post(@RequestBody CommentPostDto commentPostDto) {
+        CommentDto res = commentService.post(commentPostDto);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
 }

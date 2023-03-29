@@ -2,6 +2,8 @@ package com.zyq.parttime.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.zyq.parttime.exception.ParttimeServiceException;
+import com.zyq.parttime.form.intention.EditIntentionDto;
+import com.zyq.parttime.form.intention.IntentionDto;
 import com.zyq.parttime.form.resumemanage.*;
 import com.zyq.parttime.form.userinfomanage.*;
 import com.zyq.parttime.result.ExceptionMsg;
@@ -18,6 +20,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.List;
 
 @RestController
 @RequestMapping("/users")
@@ -83,8 +86,8 @@ public class UsersController {
     //TODO 简历上传-学生
     @RequestMapping(value = "/resumes/upload", method = RequestMethod.POST)
     @ResponseBody
-        public ResponseData uploadResume( MultipartFile file,  String telephone,
-                                          String upload_time) throws ParseException, Exception {
+    public ResponseData uploadResume(MultipartFile file, String telephone,
+                                     String upload_time) throws ParseException, Exception {
         ResumeUploadCallbackDto res = usersService.uploadResume(file, telephone, upload_time);
 //    public ResponseData uploadResume(@RequestBody File file, @RequestParam String telephone,
 //                                     @RequestParam String upload_time) throws ParseException, Exception {
@@ -149,6 +152,23 @@ public class UsersController {
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
+    //TODO 获取意向兼职-学生
+    @RequestMapping(value = "/intention/get", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseData getIntention(@RequestParam String telephone) throws ParseException, Exception {
+        List<IntentionDto> res = usersService.getIntention(telephone);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
+    //TODO 编辑意向兼职-学生
+    @RequestMapping(value = "/intention/edit", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseData editIntention(@RequestBody EditIntentionDto editIntentionDto) throws ParseException, Exception {
+        List<IntentionDto> res = usersService.editIntention(editIntentionDto);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
+    //下面是minio的相关操作
 
     //TODO minio创建桶
     @RequestMapping(value = "/minio/create_bucket", method = RequestMethod.POST)

@@ -2,21 +2,20 @@ package com.zyq.parttime.service.impl;
 
 import cn.dev33.satoken.secure.SaSecureUtil;
 import com.baidu.aip.ocr.AipOcr;
-import com.zyq.parttime.entity.Employer;
-import com.zyq.parttime.entity.Resumedetail;
-import com.zyq.parttime.entity.Resumes;
-import com.zyq.parttime.entity.Student;
+import com.zyq.parttime.entity.*;
 import com.zyq.parttime.exception.ParttimeServiceException;
+import com.zyq.parttime.form.intention.EditIntentionDto;
+import com.zyq.parttime.form.intention.IntentionDto;
 import com.zyq.parttime.form.resumemanage.*;
 import com.zyq.parttime.form.userinfomanage.*;
 import com.zyq.parttime.minio.MinIO;
+import com.zyq.parttime.repository.intention.IntentionRepository;
 import com.zyq.parttime.repository.resumemanage.ResumesDetailRepository;
 import com.zyq.parttime.repository.resumemanage.ResumesInfoRepository;
 import com.zyq.parttime.repository.userinfomanage.EmpInfoRepository;
 import com.zyq.parttime.repository.userinfomanage.StuInfoRepository;
 import com.zyq.parttime.service.UsersService;
 import com.zyq.parttime.utils.Constant;
-//import com.zyq.parttime.utils.FileUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -34,6 +33,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import static java.util.stream.Collectors.toList;
+
 @Service
 public class UsersServiceImpl implements UsersService {
     private final Logger logger = LoggerFactory.getLogger(LogAndRegServiceImpl.class);
@@ -46,6 +47,8 @@ public class UsersServiceImpl implements UsersService {
     private ResumesInfoRepository resumesInfoRepository;
     @Autowired
     private ResumesDetailRepository resumesDetailRepository;
+    @Autowired
+    private IntentionRepository intentionRepository;
     @Autowired
     private MinIO minIO;
 
@@ -378,7 +381,7 @@ public class UsersServiceImpl implements UsersService {
     }
 
     @Override
-    public ResumeUploadCallbackDto uploadResume(MultipartFile file, String telephone,String upload_time)
+    public ResumeUploadCallbackDto uploadResume(MultipartFile file, String telephone, String upload_time)
             throws ParttimeServiceException, Exception {
         ResumeUploadCallbackDto res = new ResumeUploadCallbackDto();
 
@@ -387,55 +390,55 @@ public class UsersServiceImpl implements UsersService {
 //            String telephone = uploadInputDto.getTelephone();
 //            String upload_time = uploadInputDto.getUpload_time();
 
-            //File转MultipartFile
+        //File转MultipartFile
 //        InputStream inputStream = new FileInputStream(file);
 //        MultipartFile multipartFile = new MockMultipartFile(file.getName(), inputStream);
 //            MultipartFile multipartFile = FileUtils.fileToMultipartFile(file);
 
-            if (ObjectUtils.isEmpty(file) || file.getSize() <= 0) {
-                res.setTelephone(telephone);
-                res.setMemo("上传文件大小为空");
-                return res;
-            }
+        if (ObjectUtils.isEmpty(file) || file.getSize() <= 0) {
+            res.setTelephone(telephone);
+            res.setMemo("上传文件大小为空");
+            return res;
+        }
 
-            if (telephone != null && !telephone.equals("")) {//手机号不为空
-                //根据手机号查找学生用户
-                Student student = stuInfoRepository.findStudentByTelephone(telephone);
+        if (telephone != null && !telephone.equals("")) {//手机号不为空
+            //根据手机号查找学生用户
+            Student student = stuInfoRepository.findStudentByTelephone(telephone);
 
-                if (student != null) {//存在学生
-                    //把图片存入minio，并返回图片的url
-                    String pic_url = this.upload(file);
-                    //填充照片url
-                    res.setPic_url(pic_url);
+            if (student != null) {//存在学生
+                //把图片存入minio，并返回图片的url
+                String pic_url = this.upload(file);
+                //填充照片url
+                res.setPic_url(pic_url);
 
-                    //填充上传时间
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                    Date uploadTime = sdf.parse(upload_time);
-                    res.setUpload_time(uploadTime);
+                //填充上传时间
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                Date uploadTime = sdf.parse(upload_time);
+                res.setUpload_time(uploadTime);
 
-                    //图片url存入DB，即创建resume记录
-                    Date now = new Date(System.currentTimeMillis());//当前时间
-                    resumesInfoRepository.createAResumeRecord(telephone, pic_url, uploadTime, now, "已上传");
-                    //获取刚刚创建的resume的id
-                    int r_id = resumesInfoRepository.findLatestResumes();
+                //图片url存入DB，即创建resume记录
+                Date now = new Date(System.currentTimeMillis());//当前时间
+                resumesInfoRepository.createAResumeRecord(telephone, pic_url, uploadTime, now, "已上传");
+                //获取刚刚创建的resume的id
+                int r_id = resumesInfoRepository.findLatestResumes();
 
-                    //调用api解析图片中的文字
-                    AipOcr client = new AipOcr(Constant.APP_ID, Constant.API_KEY, Constant.SECRET_KEY);//获取百度云OCR的客户端
-                    HashMap<String, String> options = new HashMap<>(4);//设置选项
-                    options.put("language_type", "CHN_ENG");//语言类型：中文+英语
-                    options.put("detect_direction", "true");
-                    options.put("detect_language", "true");
-                    options.put("probability", "true");
+                //调用api解析图片中的文字
+                AipOcr client = new AipOcr(Constant.APP_ID, Constant.API_KEY, Constant.SECRET_KEY);//获取百度云OCR的客户端
+                HashMap<String, String> options = new HashMap<>(4);//设置选项
+                options.put("language_type", "CHN_ENG");//语言类型：中文+英语
+                options.put("detect_direction", "true");
+                options.put("detect_language", "true");
+                options.put("probability", "true");
 
-                    // 参数为二进制数组
-                    byte[] buf = new byte[0];
-                    try {
-                        buf = file.getBytes();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        res.setMemo("获取文件字节数据异常" + e.getMessage());
-                    }
-                    JSONObject result = client.basicGeneral(buf, options);
+                // 参数为二进制数组
+                byte[] buf = new byte[0];
+                try {
+                    buf = file.getBytes();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    res.setMemo("获取文件字节数据异常" + e.getMessage());
+                }
+                JSONObject result = client.basicGeneral(buf, options);
 //                String jsonData = "";
 //                try {
 //                    jsonData = result.toString(2);//最终的json字符串结果
@@ -443,136 +446,243 @@ public class UsersServiceImpl implements UsersService {
 //                    res.setMemo("获取json数据异常" + e.getMessage());
 //                }
 
-                    //解析文字的处理
-                    ArrayList<JSONObject> words = new ArrayList<>();//存放识别出的文字的列表
-                    JSONArray arr = (JSONArray) result.get("words_result");//获取识别结果JSON数组
-                    //遍历JSON数组
-                    for (int i = 0; i < arr.length(); i++) {
-                        words.add((JSONObject) arr.get(i));//添加到words中
-                    }
+                //解析文字的处理
+                ArrayList<JSONObject> words = new ArrayList<>();//存放识别出的文字的列表
+                JSONArray arr = (JSONArray) result.get("words_result");//获取识别结果JSON数组
+                //遍历JSON数组
+                for (int i = 0; i < arr.length(); i++) {
+                    words.add((JSONObject) arr.get(i));//添加到words中
+                }
 
-                    //个人信息部分
+                //个人信息部分
 //                String stu_name = ((words.get(0).get("words")).toString().split("："))[1];//姓名
 //                String birth = ((words.get(1).get("words")).toString().split("："))[1];//出生年月
 //                String emails = ((words.get(2).get("words")).toString().split("："))[1];//邮箱
-                    String phone = ((words.get(3).get("words")).toString().split("："))[1];//联系方式
-                    String current_area = ((words.get(4).get("words")).toString().split("："))[1];//现居地
-                    String exp = ((words.get(5).get("words")).toString().split("："))[1];//工作经验
+                String phone = ((words.get(3).get("words")).toString().split("："))[1];//联系方式
+                String current_area = ((words.get(4).get("words")).toString().split("："))[1];//现居地
+                String exp = ((words.get(5).get("words")).toString().split("："))[1];//工作经验
 
-                    //把现居地、工作经验填充到res
-                    res.setTelephone(phone);
-                    res.setCurrent_area(current_area);
-                    res.setExp(exp);
+                //把现居地、工作经验填充到res
+                res.setTelephone(phone);
+                res.setCurrent_area(current_area);
+                res.setExp(exp);
 
-                    //求职意向
-                    String intended = "";//求职意向岗位
-                    if (words.get(6).get("words").equals("求职意向")) {
-                        intended = ((words.get(7).get("words")).toString().split("："))[1];
+                //求职意向
+                String intended = "";//求职意向岗位
+                if (words.get(6).get("words").equals("求职意向")) {
+                    intended = ((words.get(7).get("words")).toString().split("："))[1];
+                }
+                //把求职意向填充到res
+                res.setIntended(intended);
+
+                //其余部分
+                for (int i = 8; i < words.size(); i++) {//遍历列表
+                    //教育背景【以本科生为例，设定为只有本科一段教育经历】
+                    ResumeDetailDto dto1 = new ResumeDetailDto();
+                    if (words.get(i).get("words").equals("教育背景")) {
+                        String time = (words.get(i + 1).get("words")).toString();
+                        String start = (time.split("-"))[0];
+                        String end = (time.split("-"))[1];
+
+                        //String转Date
+                        SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy.MM");
+                        Date start_time = sdf2.parse(start);//用于存到DB
+                        Date end_time = sdf2.parse(end);//用于存到DB
+
+                        //标题
+                        String title = (words.get(i + 2).get("words")).toString();
+
+                        //内容
+                        int j = i + 3;
+                        String content = "";
+                        while (!(words.get(j)).get("words").equals("项目经历")) {
+                            content += (words.get(j).get("words")).toString() + "。";
+                            j++;
+                        }
+
+                        //添加一条resumesdetail记录
+                        Date now2 = new Date(System.currentTimeMillis());
+                        resumesDetailRepository.addAResumesDetailRecord(r_id, start_time, end_time, title,
+                                content, "教育背景", now2, "已上传");
+                        int rd_id = resumesDetailRepository.findLatestResumesDetail();
+
+                        //把信息填充到dto中
+                        dto1.setTelephone(phone);
+                        dto1.setR_id(r_id);
+                        dto1.setRd_id(rd_id);
+                        dto1.setR_id(r_id);
+                        dto1.setTitle(title);
+                        dto1.setContent(content);
+                        dto1.setTime(time);
+                        dto1.setCategory("教育背景");
+                        dto1.setHasContent(1);
+                        dto1.setStatus("已上传");
+
+                        List<ResumeDetailDto> list = new ArrayList<>();
+                        list.add(dto1);
+                        res.setEducationBgList(list);//set到res中
                     }
-                    //把求职意向填充到res
-                    res.setIntended(intended);
 
-                    //其余部分
-                    for (int i = 8; i < words.size(); i++) {//遍历列表
-                        //教育背景【以本科生为例，设定为只有本科一段教育经历】
-                        ResumeDetailDto dto1 = new ResumeDetailDto();
-                        if (words.get(i).get("words").equals("教育背景")) {
-                            String time = (words.get(i + 1).get("words")).toString();
-                            String start = (time.split("-"))[0];
-                            String end = (time.split("-"))[1];
+                    //项目经历【1~N个】
+                    if (words.get(i).get("words").equals("项目经历")) {
+                        List<ResumeDetailDto> list = new ArrayList();
 
+                        int k = i + 1;
+                        //将日期分割，分别进行判断是否是日期格式
+                        String time = (words.get(k).get("words")).toString();
+                        String start = (time.split("-"))[0];
+                        String end = (time.split("-"))[1];
+                        while (isDate(start) == true && isDate(end) == true) {//当前的是时间格式，就继续循环，表示当前遇到的是一个项目的时间
                             //String转Date
                             SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy.MM");
                             Date start_time = sdf2.parse(start);//用于存到DB
                             Date end_time = sdf2.parse(end);//用于存到DB
 
                             //标题
-                            String title = (words.get(i + 2).get("words")).toString();
+                            String title = (words.get(k + 1).get("words")).toString();
 
-                            //内容
-                            int j = i + 3;
+                            //项目内容【1~N行】
+                            int j = k + 2;
                             String content = "";
-                            while (!(words.get(j)).get("words").equals("项目经历")) {
-                                content += (words.get(j).get("words")).toString() + "。";
-                                j++;
+                            System.out.println(((words.get(j).get("words").toString())));//test
+                            //只要不是日期or专业技能字样就循环把内容加到content
+                            while (!(words.get(j)).get("words").equals("专业技能")) {
+                                if ((isDate(((words.get(j).get("words").toString()).split("-"))[0]) == true &&
+                                        isDate(((words.get(j).get("words").toString()).split("-"))[1]) == true)) {//是日期
+                                    break;
+                                } else {//不是日期，就加到内容
+                                    content += (words.get(j).get("words")).toString() + "。";
+                                    j++;
+                                }
                             }
 
-                            //添加一条resumesdetail记录
+                            //创建一个detail记录
                             Date now2 = new Date(System.currentTimeMillis());
                             resumesDetailRepository.addAResumesDetailRecord(r_id, start_time, end_time, title,
-                                    content, "教育背景", now2, "已上传");
-                            int rd_id = resumesDetailRepository.findLatestResumesDetail();
+                                    content, "项目经历", now2, "已上传");
+                            int rd_id = resumesDetailRepository.findLatestResumesDetail();//最新的记录的rd_id
 
-                            //把信息填充到dto中
-                            dto1.setTelephone(phone);
-                            dto1.setR_id(r_id);
-                            dto1.setRd_id(rd_id);
-                            dto1.setR_id(r_id);
-                            dto1.setTitle(title);
-                            dto1.setContent(content);
-                            dto1.setTime(time);
-                            dto1.setCategory("教育背景");
-                            dto1.setHasContent(1);
-                            dto1.setStatus("已上传");
+                            //构造dto
+                            ResumeDetailDto dto = new ResumeDetailDto();
+                            dto.setTelephone(phone);
+                            dto.setR_id(r_id);
+                            dto.setRd_id(rd_id);
+                            dto.setR_id(r_id);
+                            dto.setTitle(title);
+                            dto.setContent(content);
+                            dto.setTime(time);
+                            dto.setCategory("项目经历");
+                            dto.setHasContent(1);
+                            dto.setStatus("已上传");
+                            list.add(dto);//加到列表中
 
-                            List<ResumeDetailDto> list = new ArrayList<>();
-                            list.add(dto1);
-                            res.setEducationBgList(list);//set到res中
+                            k = j;//更新k的值
+                            if ((isDate(((words.get(k).get("words").toString()).split("-"))[0]) == true &&
+                                    isDate(((words.get(k).get("words").toString()).split("-"))[1]) == true)) {//是日期
+                                time = (words.get(k).get("words")).toString();
+                                start = (time.split("-"))[0];
+                                end = (time.split("-"))[1];
+                            } else {//不是日期，就退出循环
+                                break;
+                            }
                         }
+                        res.setProjectExpList(list);//set到res中
+                    }
 
-                        //项目经历【1~N个】
-                        if (words.get(i).get("words").equals("项目经历")) {
-                            List<ResumeDetailDto> list = new ArrayList();
+                    //专业技能【1~N个】
+                    if (words.get(i).get("words").equals("专业技能")) {
+                        List<ResumeDetailDto> list = new ArrayList();
 
-                            int k = i + 1;
-                            //将日期分割，分别进行判断是否是日期格式
-                            String time = (words.get(k).get("words")).toString();
-                            String start = (time.split("-"))[0];
-                            String end = (time.split("-"))[1];
-                            while (isDate(start) == true && isDate(end) == true) {//当前的是时间格式，就继续循环，表示当前遇到的是一个项目的时间
-                                //String转Date
-                                SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy.MM");
-                                Date start_time = sdf2.parse(start);//用于存到DB
-                                Date end_time = sdf2.parse(end);//用于存到DB
+                        int k = i + 1;
 
-                                //标题
-                                String title = (words.get(k + 1).get("words")).toString();
+                        //专业技能【1~N行】
+                        String content = "";
+                        //只要不是校园经历字样content，就添加一条记录
+                        while (!(words.get(k)).get("words").equals("校园经历")) {
+                            content = (words.get(k).get("words")).toString() + "。";
+                            k++;
 
-                                //项目内容【1~N行】
-                                int j = k + 2;
-                                String content = "";
-                                System.out.println(((words.get(j).get("words").toString())));//test
-                                //只要不是日期or专业技能字样就循环把内容加到content
-                                while (!(words.get(j)).get("words").equals("专业技能")) {
-                                    if ((isDate(((words.get(j).get("words").toString()).split("-"))[0]) == true &&
-                                            isDate(((words.get(j).get("words").toString()).split("-"))[1]) == true)) {//是日期
-                                        break;
-                                    } else {//不是日期，就加到内容
-                                        content += (words.get(j).get("words")).toString() + "。";
-                                        j++;
-                                    }
+                            //创建一个detail记录
+                            Date now2 = new Date(System.currentTimeMillis());
+                            resumesDetailRepository.addAProfessionalResumesDetailRecord(r_id,
+                                    content, "专业技能", now2, "已上传");
+                            int rd_id = resumesDetailRepository.findLatestResumesDetail();//最新的记录的rd_id
+
+                            //构造dto
+                            ResumeDetailDto dto = new ResumeDetailDto();
+                            dto.setTelephone(phone);
+                            dto.setR_id(r_id);
+                            dto.setRd_id(rd_id);
+                            dto.setR_id(r_id);
+                            dto.setContent(content);
+                            dto.setCategory("专业技能");
+                            dto.setHasContent(1);
+                            dto.setStatus("已上传");
+                            list.add(dto);//加到列表中
+                        }
+                        res.setProfessionalSkillList(list);//set到res中
+                    }
+
+                    //校园经历【1~N个，多为1个】
+                    if (words.get(i).get("words").equals("校园经历")) {
+                        List<ResumeDetailDto> list = new ArrayList();
+
+                        int k = i + 1;
+                        //将日期分割，分别进行判断是否是日期格式
+                        String time = (words.get(k).get("words")).toString();
+                        String start = (time.split("-"))[0];
+                        String end = (time.split("-"))[1];
+                        while (isDate(start) == true && isDate(end) == true) {//当前的是时间格式，就继续循环，表示当前遇到的是一个项目的时间
+                            //String转Date
+                            SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy.MM");
+                            Date start_time = sdf2.parse(start);//用于存到DB
+                            Date end_time = sdf2.parse(end);//用于存到DB
+
+                            //标题
+                            String title = (words.get(k + 1).get("words")).toString();
+
+                            //项目内容【1~N行】
+                            int j = k + 2;
+                            String content = "";
+                            System.out.println(((words.get(j).get("words").toString())));//test
+                            //只要不为空就循环把内容加到content
+                            String word = (String) words.get(j).get("words");
+                            while (word != null && !word.equals("")) {
+                                if (!(isDate(((words.get(j).get("words").toString()).split("-"))[0]) == true &&
+                                        isDate(((words.get(j).get("words").toString()).split("-"))[1]) == true)) {//不是日期，就加到内容
+                                    content += (words.get(j).get("words")).toString() + "。";
+                                    j++;
+                                } else {//是日期
+                                    break;
                                 }
+                                if (words.size() != j) {//下一个内容不是空对象，就获取内容
+                                    word = (String) words.get(j).get("words");
+                                } else {//否则退出while
+                                    break;
+                                }
+                            }
 
-                                //创建一个detail记录
-                                Date now2 = new Date(System.currentTimeMillis());
-                                resumesDetailRepository.addAResumesDetailRecord(r_id, start_time, end_time, title,
-                                        content, "项目经历", now2, "已上传");
-                                int rd_id = resumesDetailRepository.findLatestResumesDetail();//最新的记录的rd_id
+                            //创建一个detail记录
+                            Date now2 = new Date(System.currentTimeMillis());
+                            resumesDetailRepository.addAResumesDetailRecord(r_id, start_time, end_time, title,
+                                    content, "校园经历", now2, "已上传");
+                            int rd_id = resumesDetailRepository.findLatestResumesDetail();//最新的记录的rd_id
 
-                                //构造dto
-                                ResumeDetailDto dto = new ResumeDetailDto();
-                                dto.setTelephone(phone);
-                                dto.setR_id(r_id);
-                                dto.setRd_id(rd_id);
-                                dto.setR_id(r_id);
-                                dto.setTitle(title);
-                                dto.setContent(content);
-                                dto.setTime(time);
-                                dto.setCategory("项目经历");
-                                dto.setHasContent(1);
-                                dto.setStatus("已上传");
-                                list.add(dto);//加到列表中
+                            //构造dto
+                            ResumeDetailDto dto = new ResumeDetailDto();
+                            dto.setTelephone(phone);
+                            dto.setR_id(r_id);
+                            dto.setRd_id(rd_id);
+                            dto.setR_id(r_id);
+                            dto.setTitle(title);
+                            dto.setContent(content);
+                            dto.setTime(time);
+                            dto.setCategory("校园经历");
+                            dto.setHasContent(1);
+                            dto.setStatus("已上传");
+                            list.add(dto);//加到列表中
 
+                            if (words.size() != j) {//下一个内容不是空对象，就更新k的值
                                 k = j;//更新k的值
                                 if ((isDate(((words.get(k).get("words").toString()).split("-"))[0]) == true &&
                                         isDate(((words.get(k).get("words").toString()).split("-"))[1]) == true)) {//是日期
@@ -582,127 +692,20 @@ public class UsersServiceImpl implements UsersService {
                                 } else {//不是日期，就退出循环
                                     break;
                                 }
+                            } else {//否则退出if
+                                break;
                             }
-                            res.setProjectExpList(list);//set到res中
                         }
-
-                        //专业技能【1~N个】
-                        if (words.get(i).get("words").equals("专业技能")) {
-                            List<ResumeDetailDto> list = new ArrayList();
-
-                            int k = i + 1;
-
-                            //专业技能【1~N行】
-                            String content = "";
-                            //只要不是校园经历字样content，就添加一条记录
-                            while (!(words.get(k)).get("words").equals("校园经历")) {
-                                content = (words.get(k).get("words")).toString() + "。";
-                                k++;
-
-                                //创建一个detail记录
-                                Date now2 = new Date(System.currentTimeMillis());
-                                resumesDetailRepository.addAProfessionalResumesDetailRecord(r_id,
-                                        content, "专业技能", now2, "已上传");
-                                int rd_id = resumesDetailRepository.findLatestResumesDetail();//最新的记录的rd_id
-
-                                //构造dto
-                                ResumeDetailDto dto = new ResumeDetailDto();
-                                dto.setTelephone(phone);
-                                dto.setR_id(r_id);
-                                dto.setRd_id(rd_id);
-                                dto.setR_id(r_id);
-                                dto.setContent(content);
-                                dto.setCategory("专业技能");
-                                dto.setHasContent(1);
-                                dto.setStatus("已上传");
-                                list.add(dto);//加到列表中
-                            }
-                            res.setProfessionalSkillList(list);//set到res中
-                        }
-
-                        //校园经历【1~N个，多为1个】
-                        if (words.get(i).get("words").equals("校园经历")) {
-                            List<ResumeDetailDto> list = new ArrayList();
-
-                            int k = i + 1;
-                            //将日期分割，分别进行判断是否是日期格式
-                            String time = (words.get(k).get("words")).toString();
-                            String start = (time.split("-"))[0];
-                            String end = (time.split("-"))[1];
-                            while (isDate(start) == true && isDate(end) == true) {//当前的是时间格式，就继续循环，表示当前遇到的是一个项目的时间
-                                //String转Date
-                                SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy.MM");
-                                Date start_time = sdf2.parse(start);//用于存到DB
-                                Date end_time = sdf2.parse(end);//用于存到DB
-
-                                //标题
-                                String title = (words.get(k + 1).get("words")).toString();
-
-                                //项目内容【1~N行】
-                                int j = k + 2;
-                                String content = "";
-                                System.out.println(((words.get(j).get("words").toString())));//test
-                                //只要不为空就循环把内容加到content
-                                String word = (String) words.get(j).get("words");
-                                while (word != null && !word.equals("")) {
-                                    if (!(isDate(((words.get(j).get("words").toString()).split("-"))[0]) == true &&
-                                            isDate(((words.get(j).get("words").toString()).split("-"))[1]) == true)) {//不是日期，就加到内容
-                                        content += (words.get(j).get("words")).toString() + "。";
-                                        j++;
-                                    } else {//是日期
-                                        break;
-                                    }
-                                    if (words.size() != j) {//下一个内容不是空对象，就获取内容
-                                        word = (String) words.get(j).get("words");
-                                    } else {//否则退出while
-                                        break;
-                                    }
-                                }
-
-                                //创建一个detail记录
-                                Date now2 = new Date(System.currentTimeMillis());
-                                resumesDetailRepository.addAResumesDetailRecord(r_id, start_time, end_time, title,
-                                        content, "校园经历", now2, "已上传");
-                                int rd_id = resumesDetailRepository.findLatestResumesDetail();//最新的记录的rd_id
-
-                                //构造dto
-                                ResumeDetailDto dto = new ResumeDetailDto();
-                                dto.setTelephone(phone);
-                                dto.setR_id(r_id);
-                                dto.setRd_id(rd_id);
-                                dto.setR_id(r_id);
-                                dto.setTitle(title);
-                                dto.setContent(content);
-                                dto.setTime(time);
-                                dto.setCategory("校园经历");
-                                dto.setHasContent(1);
-                                dto.setStatus("已上传");
-                                list.add(dto);//加到列表中
-
-                                if (words.size() != j) {//下一个内容不是空对象，就更新k的值
-                                    k = j;//更新k的值
-                                    if ((isDate(((words.get(k).get("words").toString()).split("-"))[0]) == true &&
-                                            isDate(((words.get(k).get("words").toString()).split("-"))[1]) == true)) {//是日期
-                                        time = (words.get(k).get("words")).toString();
-                                        start = (time.split("-"))[0];
-                                        end = (time.split("-"))[1];
-                                    } else {//不是日期，就退出循环
-                                        break;
-                                    }
-                                } else {//否则退出if
-                                    break;
-                                }
-                            }
-                            res.setCampusExpList(list);//set到res中
-                            res.setR_status("已上传");
-                        }
+                        res.setCampusExpList(list);//set到res中
+                        res.setR_status("已上传");
                     }
-                } else {//不存在学生
-                    logger.warn("该账号不存在");
-                    res.setTelephone(telephone);
-                    res.setMemo("该账号不存在");
                 }
+            } else {//不存在学生
+                logger.warn("该账号不存在");
+                res.setTelephone(telephone);
+                res.setMemo("该账号不存在");
             }
+        }
 //        }
         return res;
     }
@@ -1180,6 +1183,128 @@ public class UsersServiceImpl implements UsersService {
         }
         return res;
     }
+
+    @Override
+    public List<IntentionDto> getIntention(String telephone) throws ParseException {
+        List<IntentionDto> res = new ArrayList<>();
+
+        if (telephone != null && !telephone.equals("")) {
+            //根据手机号查找学生用户
+            Student student = stuInfoRepository.findStudentByTelephone(telephone);
+            if (student != null) {//存在学生
+                //找到该用户的所有意向兼职
+                List<Intention> list = intentionRepository.getIntentionsByStuId(telephone);
+
+                if (list != null && list.size() > 0) {
+                    //有意向兼职
+                    for (Intention i : list) {
+                        IntentionDto dto = new IntentionDto();
+                        dto.setI_id(i.getId());
+                        dto.setContent(i.getContent());
+                        dto.setStu_id(i.getStu().getId());
+                        res.add(dto);
+                    }
+                } else {
+                    IntentionDto dto = new IntentionDto();
+                    logger.warn("暂无意向兼职");
+                    dto.setMemo("暂无意向兼职");
+                    res.add(dto);
+                }
+            } else {//不存在账号
+                logger.warn("该账号不存在");
+                IntentionDto dto = new IntentionDto();
+                dto.setStu_id(telephone);
+                dto.setMemo("该账号不存在");
+                res.add(dto);
+            }
+        } else {//手机号为空
+            logger.warn("请输入手机号");
+            IntentionDto dto = new IntentionDto();
+            dto.setStu_id(telephone);
+            dto.setMemo("请输入手机号");
+            res.add(dto);
+        }
+
+        return res;
+    }
+
+    @Override
+    public List<IntentionDto> editIntention(EditIntentionDto editIntentionDto) throws ParseException {
+        List<IntentionDto> res = new ArrayList<>();
+
+        if (editIntentionDto != null) {
+            //获取数据
+            String stu_id = editIntentionDto.getTelephone();
+            String[] input = editIntentionDto.getIntentions();
+            List<String> intentions = new ArrayList<>();
+            for (int i = 0; i < input.length; i++) {//String数组转List
+                intentions.add(input[i]);
+            }
+
+            //根据手机号查找学生用户
+            Student student = stuInfoRepository.findStudentByTelephone(stu_id);
+            if (student != null) {//存在学生
+                if (intentions != null && intentions.size() > 0) {//输入的不为空
+                    //获取该用户的所有意向兼职
+                    List<IntentionDto> all = getIntention(stu_id);
+                    //存放原来选择的意向兼职
+                    List<String> before = new ArrayList<>();
+                    //编辑之前有意向兼职
+                    if (all != null && all.size() > 0) {
+                        //遍历之前的,加入列表
+                        for (IntentionDto dto : all) {
+                            String str = dto.getContent();
+                            before.add(str);
+                        }
+                        System.out.println("before:" + before.toString());//test
+
+                        //获取两个List的差集
+                        List<String> reduce = intentions.stream().filter(item ->
+                                !before.contains(item)).collect(toList());
+
+                        //插入差集
+                        for (int i = 0; i < reduce.size(); i++) {
+                            intentionRepository.addIntention(stu_id, reduce.get(i));
+                        }
+                    } else {
+                        //之前没兼职
+                        for (int i = 0; i < intentions.size(); i++) {
+                            intentionRepository.addIntention(stu_id, intentions.get(i));
+                        }
+                    }
+                } else {
+                    //没选择兼职，就不动
+                }
+
+                //获取所有意向兼职
+                List<Intention> list = intentionRepository.getIntentionsByStuId(stu_id);
+
+                if (list != null && list.size() > 0) {
+                    //有意向兼职
+                    for (Intention i : list) {
+                        IntentionDto dto = new IntentionDto();
+                        dto.setI_id(i.getId());
+                        dto.setContent(i.getContent());
+                        dto.setStu_id(i.getStu().getId());
+                        res.add(dto);
+                    }
+                }
+            } else {
+                logger.warn("不存在该用户");
+                IntentionDto dto = new IntentionDto();
+                dto.setMemo("不存在该用户");
+                res.add(dto);
+            }
+        } else {
+            logger.warn("参数传入错误");
+            IntentionDto dto = new IntentionDto();
+            dto.setMemo("参数传入错误");
+            res.add(dto);
+        }
+        return res;
+    }
+
+    //下面是桶的操作
 
     @Override
     public Boolean createBucket(String bucketName) throws ParttimeServiceException, Exception {

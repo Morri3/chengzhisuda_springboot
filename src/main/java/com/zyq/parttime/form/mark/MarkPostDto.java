@@ -4,12 +4,9 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Date;
-
 @Data
-public class MarkDto implements Serializable {
-    private int m_id;
+public class MarkPostDto implements Serializable {
     private int s_id;
-    private float total_score;
     private int pf;
     private int pl;
     private int we;
@@ -18,5 +15,4 @@ public class MarkDto implements Serializable {
     private int ods;
     private int dsps;
     private Date create_time;
-    private String memo;
 }
