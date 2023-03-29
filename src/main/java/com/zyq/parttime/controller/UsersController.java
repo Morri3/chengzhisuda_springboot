@@ -83,18 +83,30 @@ public class UsersController {
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
-    //TODO 简历上传-学生
-    @RequestMapping(value = "/resumes/upload", method = RequestMethod.POST)
+    //TODO 简历上传stu_id-学生
+    @RequestMapping(value = "/resumes/upload/stu_info", method = RequestMethod.POST)
     @ResponseBody
-    public ResponseData uploadResume(MultipartFile file, String telephone,
-                                     String upload_time) throws ParseException, Exception {
-        ResumeUploadCallbackDto res = usersService.uploadResume(file, telephone, upload_time);
-//    public ResponseData uploadResume(@RequestBody File file, @RequestParam String telephone,
-//                                     @RequestParam String upload_time) throws ParseException, Exception {
-
-//        ResumeUploadCallbackDto res = usersService.uploadResume(uploadInputDto);
+    public ResponseData uploadResumeWithStuInfo(String telephone, String upload_time) throws ParseException, Exception {
+        String res = usersService.uploadResumeWithStuInfo(telephone, upload_time);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
+
+    //TODO 简历上传图片-学生
+    @RequestMapping(value = "/resumes/upload", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseData uploadResume(MultipartFile file) throws ParseException, Exception {
+        ResumeUploadCallbackDto res = usersService.uploadResume(file);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+//    public ResponseData uploadResume(MultipartFile file, String telephone,
+//                                     String upload_time) throws ParseException, Exception {
+//        ResumeUploadCallbackDto res = usersService.uploadResume(file, telephone, upload_time);
+////    public ResponseData uploadResume(@RequestBody File file, @RequestParam String telephone,
+////                                     @RequestParam String upload_time) throws ParseException, Exception {
+//
+////        ResumeUploadCallbackDto res = usersService.uploadResume(uploadInputDto);
+//        return new ResponseData(ExceptionMsg.SUCCESS, res);
+//    }
 
     //TODO 简历编辑（个人信息）-学生
     @RequestMapping(value = "/resumes/edit_personal", method = RequestMethod.POST)
