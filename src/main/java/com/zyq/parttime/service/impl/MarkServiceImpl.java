@@ -1,11 +1,14 @@
 package com.zyq.parttime.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.zyq.parttime.entity.Mark;
 import com.zyq.parttime.entity.Position;
 import com.zyq.parttime.entity.Signup;
 import com.zyq.parttime.exception.ParttimeServiceException;
 import com.zyq.parttime.form.mark.MarkDto;
 import com.zyq.parttime.form.mark.MarkPostDto;
+import com.zyq.parttime.form.mark.OneMark;
+import com.zyq.parttime.form.mark.OneMarkDto;
 import com.zyq.parttime.form.position.PositionInfoDto;
 import com.zyq.parttime.repository.mark.MarkRepository;
 import com.zyq.parttime.repository.position.PositionRepository;
@@ -20,6 +23,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class MarkServiceImpl implements MarkService {
@@ -46,6 +50,35 @@ public class MarkServiceImpl implements MarkService {
             res.setPt(mark.getPt());
             res.setS_id(mark.getS().getId());
             res.setTotal_score(mark.getTotalScore());
+            res.setWe(mark.getWe());
+            res.setMemo("获取成功");
+        } else {
+            logger.warn("获取失败");
+            res.setMemo("获取失败");
+        }
+        System.out.println(res.toString());
+
+        return res;
+    }
+
+    @Override
+    public OneMarkDto getMarkAll(int p_id) throws ParttimeServiceException {
+        OneMarkDto res = new OneMarkDto();
+        //数据
+        Map<String, Object> map = markRepository.getMarkByPId(p_id);
+        OneMark mark = JSON.parseObject(JSON.toJSONString(map), OneMark.class);//map转dto
+        //该岗位的第一个mark的时间作为该岗位所有mark的时间
+        Date create_time = markRepository.getMarkDateByPId(p_id);
+        if (mark != null) {
+            res.setP_id(p_id);
+            res.setDsps(mark.getDsps());
+            res.setCreate_time(create_time);
+            res.setLt(mark.getLt());
+            res.setOds(mark.getOds());
+            res.setPf(mark.getPf());
+            res.setPl(mark.getPl());
+            res.setPt(mark.getPt());
+            res.setTotal_score(mark.getTotal_score());
             res.setWe(mark.getWe());
         } else {
             logger.warn("获取失败");

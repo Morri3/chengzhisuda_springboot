@@ -2,6 +2,7 @@ package com.zyq.parttime.controller;
 
 import com.zyq.parttime.form.mark.MarkDto;
 import com.zyq.parttime.form.mark.MarkPostDto;
+import com.zyq.parttime.form.mark.OneMarkDto;
 import com.zyq.parttime.form.position.PositionInfoDto;
 import com.zyq.parttime.result.ExceptionMsg;
 import com.zyq.parttime.result.ResponseData;
@@ -23,6 +24,14 @@ public class MarkController {
     @ResponseBody
     public ResponseData getMark(@RequestParam int s_id) {
         MarkDto res = markService.getMark(s_id);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
+    //TODO 获取某个兼职的全部评分-学生
+    @RequestMapping(value = "/getAll", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseData getMarkAll(@RequestParam int p_id) {
+        OneMarkDto res = markService.getMarkAll(p_id);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 

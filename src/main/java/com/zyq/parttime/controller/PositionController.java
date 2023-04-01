@@ -30,7 +30,7 @@ public class PositionController {
     //TODO 获取指定兼职-学生
     @RequestMapping(value = "/stu/get_one", method = RequestMethod.GET)
     @ResponseBody
-    public ResponseData getPosition(@RequestBody int p_id) {
+    public ResponseData getPosition(@RequestParam int p_id) {
         PositionInfoDto res = positionService.getPosition(p_id);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
@@ -56,6 +56,14 @@ public class PositionController {
     @ResponseBody
     public ResponseData history(@RequestBody HistoryDto historyDto) throws ParseException {
         List<SignupReturnDto> res = positionService.history(historyDto);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
+    //TODO 查看指定状态的报名-学生
+    @RequestMapping(value = "/stu/signup_one", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseData getOneStatus(@RequestParam String telephone,@RequestParam String signup_status) throws ParseException {
+        List<SignupReturnDto> res = positionService.getOneStatus(telephone,signup_status);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 }

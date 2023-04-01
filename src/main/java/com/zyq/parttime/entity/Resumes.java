@@ -113,4 +113,19 @@ public class Resumes {
     public void setId(int id) {
         this.id = id;
     }
+
+    @Override
+    public String toString() {
+        return "Resumes{" +
+                "id=" + id +
+                ", stu=" + stu +
+                ", currentArea='" + currentArea + '\'' +
+                ", uploadTime=" + uploadTime +
+                ", exp='" + exp + '\'' +
+                ", picUrl='" + picUrl + '\'' +
+                ", createTime=" + createTime +
+                ", rStatus='" + rStatus + '\'' +
+                ", resumedetails=" + resumedetails +
+                '}';
+    }
 }

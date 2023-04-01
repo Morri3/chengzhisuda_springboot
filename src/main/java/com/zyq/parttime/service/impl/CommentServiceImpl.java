@@ -39,6 +39,7 @@ public class CommentServiceImpl implements CommentService {
             res.setCreate_time(comment.getCreateTime());
             res.setS_id(comment.getS().getId());
             res.setContent(comment.getContent());
+            res.setMemo("获取成功");
         } else {
             res.setMemo("获取失败");
         }

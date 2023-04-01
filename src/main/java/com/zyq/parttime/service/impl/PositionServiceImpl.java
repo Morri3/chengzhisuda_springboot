@@ -238,4 +238,48 @@ public class PositionServiceImpl implements PositionService {
         }
         return res;
     }
+
+    @Override
+    public List<SignupReturnDto> getOneStatus(String telephone,String signup_status) throws ParttimeServiceException, ParseException{
+        List<SignupReturnDto> res = new ArrayList<>();
+
+        if (telephone != null) {
+            //查找该用户是否存在
+            Student stu = stuInfoRepository.findStudentByTelephone(telephone);
+            if (stu != null) {//存在
+                //查询该用户所有报名
+                List<Signup> list = signupRepository.getSignupByStatus(telephone,signup_status);
+                if (list != null && list.size() > 0) {
+                    for (Signup item : list) {
+                        SignupReturnDto dto = new SignupReturnDto();
+                        dto.setS_id(item.getId());
+                        dto.setStu_id(item.getStu().getId());
+                        dto.setP_id(item.getP().getId());
+                        dto.setSignup_status(item.getSignupStatus());
+                        dto.setCreate_time(item.getCreateTime());
+                        dto.setUpdate_time(item.getUpdateTime());
+                        res.add(dto);
+                    }
+                } else {
+                    logger.warn("获取历史记录失败");
+                    SignupReturnDto dto = new SignupReturnDto();
+                    dto.setStu_id(telephone);
+                    dto.setMemo("获取历史记录失败");
+                    res.add(dto);
+                }
+            } else {
+                logger.warn("该账号不存在");
+                SignupReturnDto dto = new SignupReturnDto();
+                dto.setStu_id(telephone);
+                dto.setMemo("该账号不存在");
+                res.add(dto);
+            }
+        } else {
+            logger.warn("输入有误");
+            SignupReturnDto dto = new SignupReturnDto();
+            dto.setMemo("输入有误");
+            res.add(dto);
+        }
+        return res;
+    }
 }

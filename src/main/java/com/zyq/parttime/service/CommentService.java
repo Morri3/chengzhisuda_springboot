@@ -11,6 +11,6 @@ public interface CommentService {
     //获取评分
     CommentDto getComment(int s_id) throws ParttimeServiceException;
 
-    //获取评分
+    //评分
     CommentDto post(CommentPostDto commentPostDto) throws ParttimeServiceException;
 }

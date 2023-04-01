@@ -24,6 +24,8 @@ public interface SignupRepository extends JpaRepository<Signup, Integer>, JpaSpe
     @Query(value = "select * from signup where stu_id=?1", nativeQuery = true)
     List<Signup> getAllSignup(String stu_id);
 
+    @Query(value = "select * from signup where stu_id=?1 and signup_status=?2", nativeQuery = true)
+    List<Signup> getSignupByStatus(String stu_id, String signup_status);
 
     @Transactional
     @Modifying
@@ -32,7 +34,7 @@ public interface SignupRepository extends JpaRepository<Signup, Integer>, JpaSpe
 
     @Transactional
     @Modifying
-    @Query(value = "update signup set signup_status='已删除' where s_id=?1", nativeQuery = true)
+    @Query(value = "update signup set signup_status='已结束' where s_id=?1", nativeQuery = true)
     void cancelSignup(int s_id);
 
 }

@@ -22,7 +22,7 @@ public interface UsersService {
     StuInfoDto getStuInfo(String telephone) throws ParttimeServiceException;
 
     //个人信息查看-兼职发布者/管理员
-    EmpInfoDto getEmpInfo(GetInfoDto getInfoDto) throws ParttimeServiceException;
+    EmpInfoDto getEmpInfo(String telephone) throws ParttimeServiceException;
 
     //个人信息编辑-学生
     StuInfoDto editStuInfo(EditInfoDto editInfoDto) throws ParttimeServiceException, ParseException;
@@ -39,8 +39,12 @@ public interface UsersService {
     //简历查看-学生
     ResumeInfoDto getResume(String telephone) throws ParttimeServiceException;
 
+    //创建简历
+    ResumeInfoDto createResume(String telephone, String upload_time) throws ParttimeServiceException, Exception;
     //简历上传-学生
-    ResumeUploadCallbackDto uploadResume(MultipartFile file, String telephone,String upload_time)
+    String uploadResumeWithStuInfo(String telephone, String upload_time)
+            throws ParttimeServiceException, Exception;
+    ResumeUploadCallbackDto uploadResume(MultipartFile file)
             throws ParttimeServiceException, Exception;
 
     //编辑简历（个人信息）——学生

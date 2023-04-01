@@ -24,4 +24,8 @@ public interface PositionService {
 
     //获取所有报名
     List<SignupReturnDto> history(HistoryDto historyDto) throws ParttimeServiceException, ParseException;
+
+    //获取指定状态的报名
+    List<SignupReturnDto> getOneStatus(String telephone,String signup_status) throws ParttimeServiceException, ParseException;
+
 }

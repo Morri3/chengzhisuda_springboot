@@ -39,8 +39,8 @@ public class UsersController {
     //TODO 个人信息查看-兼职发布者/管理员
     @RequestMapping(value = "/info/get_emp", method = RequestMethod.GET)
     @ResponseBody
-    public ResponseData getEmpInfo(@RequestBody GetInfoDto getInfoDto) {
-        EmpInfoDto res = usersService.getEmpInfo(getInfoDto);
+    public ResponseData getEmpInfo(@RequestParam String telephone) {
+        EmpInfoDto res = usersService.getEmpInfo(telephone);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
@@ -73,6 +73,16 @@ public class UsersController {
 //        return new ResponseData(ExceptionMsg.SUCCESS, res);
 //    }
 
+    //TODO 简历上传stu_id-学生
+    @RequestMapping(value = "/resumes/create", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseData createResume(@RequestParam String telephone,
+                                     @RequestParam String upload_time)
+            throws ParseException, Exception {
+        ResumeInfoDto res = usersService.createResume(telephone, upload_time);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
     //TODO 简历查看-学生
     @RequestMapping(value = "/resumes/get", method = RequestMethod.GET)
     @ResponseBody
@@ -86,7 +96,9 @@ public class UsersController {
     //TODO 简历上传stu_id-学生
     @RequestMapping(value = "/resumes/upload/stu_info", method = RequestMethod.POST)
     @ResponseBody
-    public ResponseData uploadResumeWithStuInfo(String telephone, String upload_time) throws ParseException, Exception {
+    public ResponseData uploadResumeWithStuInfo(@RequestParam String telephone,
+                                                @RequestParam String upload_time)
+            throws ParseException, Exception {
         String res = usersService.uploadResumeWithStuInfo(telephone, upload_time);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
