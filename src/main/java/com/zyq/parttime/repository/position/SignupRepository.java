@@ -34,7 +34,7 @@ public interface SignupRepository extends JpaRepository<Signup, Integer>, JpaSpe
 
     @Transactional
     @Modifying
-    @Query(value = "update signup set signup_status='已结束' where s_id=?1", nativeQuery = true)
+    @Query(value = "update signup set signup_status='已取消' where s_id=?1", nativeQuery = true)
     void cancelSignup(int s_id);
 
 }

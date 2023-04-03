@@ -101,7 +101,6 @@ public class PositionServiceImpl implements PositionService {
         return res;
     }
 
-
     @Override
     public SignupReturnDto signup(SignupDto signupDto) throws ParttimeServiceException, ParseException {
         SignupReturnDto res = new SignupReturnDto();
@@ -118,8 +117,8 @@ public class PositionServiceImpl implements PositionService {
                 //判断该用户是否已经报名过该兼职
                 Signup find = signupRepository.findExistsSignup(stu.getId(), p_id);
                 if (find == null) {
+                    //没报名过
                     System.out.println(dto.toString());
-                    System.out.println(dto.getMemo());
                     if (dto != null && (dto.getMemo()).equals("存在兼职")) {
                         //添加signup记录
                         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -135,6 +134,7 @@ public class PositionServiceImpl implements PositionService {
                             res.setSignup_status(signup.getSignupStatus());
                             res.setCreate_time(signup.getCreateTime());
                             res.setUpdate_time(signup.getUpdateTime());
+                            res.setMemo("报名成功");
                         } else {
                             logger.warn("报名失败");
                             res.setStu_id(telephone);
@@ -146,9 +146,40 @@ public class PositionServiceImpl implements PositionService {
                         res.setMemo("不存在该兼职");
                     }
                 } else {
-                    logger.warn("该用户已报名");
-                    res.setStu_id(telephone);
-                    res.setMemo("该用户已报名");
+                    if (find.getSignupStatus().equals("已结束") || find.getSignupStatus().equals("已取消")) {
+                        //已结束或已取消，可以再报名
+                        System.out.println(dto.toString());
+                        if (dto != null && (dto.getMemo()).equals("存在兼职")) {
+                            //添加signup记录
+                            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                            Date now = sdf.parse(sdf.format(new Date()));
+                            signupRepository.createASignupRecord(telephone, p_id, "已报名", now, now);
+
+                            //查询最新的记录
+                            Signup signup = signupRepository.getLatestSignup(now);
+                            if (signup != null) {
+                                res.setS_id(signup.getId());
+                                res.setStu_id(signup.getStu().getId());
+                                res.setP_id(signup.getP().getId());
+                                res.setSignup_status(signup.getSignupStatus());
+                                res.setCreate_time(signup.getCreateTime());
+                                res.setUpdate_time(signup.getUpdateTime());
+                                res.setMemo("报名成功");
+                            } else {
+                                logger.warn("报名失败");
+                                res.setStu_id(telephone);
+                                res.setMemo("报名失败");
+                            }
+                        } else {
+                            logger.warn("不存在该兼职");
+                            res.setStu_id(telephone);
+                            res.setMemo("不存在该兼职");
+                        }
+                    } else {
+                        logger.warn("该用户已报名");
+                        res.setStu_id(telephone);
+                        res.setMemo("该用户已报名");
+                    }
                 }
             } else {//不存在
                 logger.warn("该账号不存在");
@@ -240,7 +271,7 @@ public class PositionServiceImpl implements PositionService {
     }
 
     @Override
-    public List<SignupReturnDto> getOneStatus(String telephone,String signup_status) throws ParttimeServiceException, ParseException{
+    public List<SignupReturnDto> getOneStatus(String telephone, String signup_status) throws ParttimeServiceException, ParseException {
         List<SignupReturnDto> res = new ArrayList<>();
 
         if (telephone != null) {
@@ -248,7 +279,7 @@ public class PositionServiceImpl implements PositionService {
             Student stu = stuInfoRepository.findStudentByTelephone(telephone);
             if (stu != null) {//存在
                 //查询该用户所有报名
-                List<Signup> list = signupRepository.getSignupByStatus(telephone,signup_status);
+                List<Signup> list = signupRepository.getSignupByStatus(telephone, signup_status);
                 if (list != null && list.size() > 0) {
                     for (Signup item : list) {
                         SignupReturnDto dto = new SignupReturnDto();

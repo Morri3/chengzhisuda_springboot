@@ -6,7 +6,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 public class ResumeStuIdDto implements Serializable {
-    public static final String KEY_PREFIX = "Screenshot";//缓存前缀
+    public static final String KEY_PREFIX = "Resumes";//缓存前缀
 
     private long id;
     private String telephone;

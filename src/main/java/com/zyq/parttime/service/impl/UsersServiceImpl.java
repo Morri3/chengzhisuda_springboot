@@ -81,6 +81,8 @@ public class UsersServiceImpl implements UsersService {
                 String school_name = stu.getSchoolName();
                 String sno = stu.getSno();
                 String grade = stu.getGrade();
+                Date entrance_date = stu.getEntranceDate();
+                Date graduation_date = stu.getGraduationDate();
 
                 res.setStu_name(stu_name);
                 res.setGender(gender);
@@ -89,6 +91,8 @@ public class UsersServiceImpl implements UsersService {
                 res.setAge(age);
                 res.setSchool_name(school_name);
                 res.setSno(sno);
+                res.setEntrance_date(entrance_date);
+                res.setGraduation_date(graduation_date);
                 res.setGrade(grade);
             } else {//不存在
                 logger.warn("该账号不存在");
@@ -151,18 +155,52 @@ public class UsersServiceImpl implements UsersService {
             String graduation_date = editInfoDto.getGraduation_date();
 
             //入学年月、毕业年月
-            SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy年MM月");
+            SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy-MM");
             Date entrance = sdf2.parse(entrance_date);
             Date graduation = sdf2.parse(graduation_date);
+
+            Calendar c1 = Calendar.getInstance();
+            Calendar c2 = Calendar.getInstance();
+            c1.setTime(entrance);
+            c2.setTime(graduation);
+            int plus = c2.get(Calendar.DATE) - c1.get(Calendar.DATE);
+            int res2 = c2.get(Calendar.MONTH) - c1.get(Calendar.MONTH);
+            int year = c2.get(Calendar.YEAR) - c1.get(Calendar.YEAR);
+            if (res2 > 0) {
+                res2 = 1;
+            } else if (res2 == 0) {
+                if (plus <= 0) res2 = 0;
+                else res2 = 1;
+            } else {
+                res2 = 0;
+            }
+            int diff = year + res2;
+
+            //把int转为字符串类型
+            String grade = "";
+            if (diff == 1) grade = "大一";
+            else if (diff == 2) grade = "大二";
+            else if (diff == 3) grade = "大三";
+            else if (diff == 4) grade = "大四";
+            else if (diff == 5) grade = "大五（五年制）";
+            else if (diff > 5) grade = null;
+            System.out.println("年级:" + grade);
 
             //查找该用户是否存在
             Student stu = stuInfoRepository.findStudentByTelephone(telephone);
             if (stu != null) {//存在
                 //修改用户信息
-                stuInfoRepository.editStuInfo(gender, age, emails, entrance, graduation, telephone);
+                stuInfoRepository.editStuInfo(gender, age, emails, entrance,
+                        graduation, grade, telephone);
 
                 //填充返回的dto
                 res.setTelephone(telephone);
+                res.setAge(age);
+                res.setGender(gender);
+                res.setEmails(emails);
+                res.setEntrance_date(entrance);
+                res.setGraduation_date(graduation);
+                res.setGrade(grade);
                 res.setMemo("修改个人信息成功");
             } else {//不存在
                 logger.warn("该账号不存在");

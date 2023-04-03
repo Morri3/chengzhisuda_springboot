@@ -21,7 +21,7 @@ public class LogAndRegController {
     //TODO 登录-学生
     @RequestMapping(value = "/login/stu", method = RequestMethod.POST)
     @ResponseBody
-    public ResponseData loginByStu(@RequestBody LoginDto loginDto) {
+    public ResponseData loginByStu(@RequestBody LoginDto loginDto) throws ParseException {
         LogAndRegInfoDto res = logAndRegService.loginByStu(loginDto);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
@@ -51,10 +51,10 @@ public class LogAndRegController {
     }
 
     //TODO 退出登录-学生
-    @RequestMapping(value = "/logout/stu/{token}", method = RequestMethod.POST)
+    @RequestMapping(value = "/logout/stu", method = RequestMethod.POST)
     @ResponseBody
-    public ResponseData logoutByStu(@PathVariable("token") String token) {
-        String res = logAndRegService.logoutByStu(token);
+    public ResponseData logoutByStu(@RequestParam String input_telephone) {
+        String res = logAndRegService.logoutByStu(input_telephone);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 

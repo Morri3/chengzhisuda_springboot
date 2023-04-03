@@ -15,9 +15,9 @@ public interface StuInfoRepository extends JpaRepository<Student, Integer>, JpaS
 
     @Transactional
     @Modifying
-    @Query(value = "update student set gender=?1,age=?2,emails=?3,entrance_date=?4, graduation_date=?5 where telephone=?6",
-            nativeQuery = true)
-    void editStuInfo(int gender, int age, String emails, Date entrance, Date graduation, String telephone);
+    @Query(value = "update student set gender=?1,age=?2,emails=?3,entrance_date=?4, graduation_date=?5,grade=?6 " +
+            "where telephone=?7", nativeQuery = true)
+    void editStuInfo(int gender, int age, String emails, Date entrance, Date graduation, String grade, String telephone);
 
     @Transactional
     @Modifying

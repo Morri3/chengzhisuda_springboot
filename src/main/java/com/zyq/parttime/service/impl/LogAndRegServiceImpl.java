@@ -3,21 +3,24 @@ package com.zyq.parttime.service.impl;
 import cn.dev33.satoken.secure.SaSecureUtil;
 import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
+import com.alibaba.fastjson.JSON;
 import com.zyq.parttime.entity.Employer;
 import com.zyq.parttime.entity.Student;
 import com.zyq.parttime.entity.Unit;
 import com.zyq.parttime.exception.ParttimeServiceException;
-import com.zyq.parttime.form.logandreg.EmpRegisterDto;
-import com.zyq.parttime.form.logandreg.LoginDto;
-import com.zyq.parttime.form.logandreg.StuRegisterDto;
-import com.zyq.parttime.form.logandreg.LogAndRegInfoDto;
+import com.zyq.parttime.form.logandreg.*;
+import com.zyq.parttime.form.resumemanage.ResumeCacheDto;
+import com.zyq.parttime.form.resumemanage.ResumeStuIdDto;
 import com.zyq.parttime.repository.logandreg.LogAndRegByEmpRepository;
 import com.zyq.parttime.repository.logandreg.LogAndRegByStuRepository;
 import com.zyq.parttime.repository.UnitRepository;
 import com.zyq.parttime.service.LogAndRegService;
+import org.apache.tomcat.util.json.JSONParser;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
@@ -30,14 +33,19 @@ public class LogAndRegServiceImpl implements LogAndRegService {
     private final Logger logger = LoggerFactory.getLogger(LogAndRegServiceImpl.class);
 
     @Autowired
+    private RedisTemplate redisTemplate;//redis缓存
+
+    @Autowired
     private LogAndRegByStuRepository logAndRegByStuRepository;
     @Autowired
     private LogAndRegByEmpRepository logAndRegByEmpRepository;
     @Autowired
     private UnitRepository unitRepository;
 
+    private static int idx = 0;//用户用户登录登出
+
     @Override
-    public LogAndRegInfoDto loginByStu(LoginDto loginDto) throws ParttimeServiceException {
+    public LogAndRegInfoDto loginByStu(LoginDto loginDto) throws ParttimeServiceException, ParseException {
         LogAndRegInfoDto res = new LogAndRegInfoDto();//存结果
 
         if (loginDto != null) {
@@ -58,15 +66,29 @@ public class LogAndRegServiceImpl implements LogAndRegService {
 
                     res.setTelephone(stu.getId());//学生手机号
                     res.setToken(token);//填充token信息
+                    res.setMemo("登录成功");
+
+                    //token存入缓存
+                    UsersTokenDto dto = new UsersTokenDto();
+                    dto.setTelephone(stu.getId());
+                    dto.setToken(token);
+                    dto.setLogin(true);
+                    SimpleDateFormat sdf = new SimpleDateFormat();
+                    Date now = sdf.parse(sdf.format(new Date()));
+                    dto.setTime(now);
+                    redisTemplate.opsForValue().set(UsersTokenDto.cacheKey(idx), JSON.toJSONString(dto));
+                    logger.warn("存储该学生的token等信息[{}]", UsersTokenDto.cacheKey(idx));
+                    idx++;
+
                 } else {//密码错误
                     logger.warn("密码或账号错误，请检查后重新输入");
                     res.setTelephone(stu.getId());//学生手机号
-                    res.setToken("密码或账号错误，请检查后重新输入");//填充错误提示
+                    res.setMemo("密码或账号错误，请检查后重新输入");//填充错误提示
                 }
             } else {//不存在该学生
                 logger.warn("不存在该学生");
                 res.setTelephone(telephone);//学生手机号
-                res.setToken("不存在该学生");//填充错误提示
+                res.setMemo("不存在该学生");//填充错误提示
             }
         }
         return res;
@@ -104,16 +126,16 @@ public class LogAndRegServiceImpl implements LogAndRegService {
             if (stu != null) {//该手机号已注册过，用户在登录界面直接登录
                 logger.warn("该手机号已注册，请直接登录");
                 res.setTelephone(telephone);
-                res.setToken("该手机号已注册，请直接登录");
+                res.setMemo("该手机号已注册，请直接登录");
             } else {//注册
                 String md5pwd = SaSecureUtil.md5BySalt(pwd, "stu");//md5加盐加密后的密码
 
                 //注册时间
-                SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy年MM月dd日HH:mm:ss");
+                SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 Date reg = sdf1.parse(reg_date);
 
                 //入学年月、毕业年月
-                SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy年MM月");
+                SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy-MM");
                 Date entrance = sdf2.parse(entrance_date);
                 Date graduation = sdf2.parse(graduation_date);
 
@@ -148,7 +170,7 @@ public class LogAndRegServiceImpl implements LogAndRegService {
 
                 //填充返回给android的dto
                 res.setTelephone(telephone);
-                res.setToken("注册成功");
+                res.setMemo("注册成功");
             }
         }
         return res;
@@ -175,16 +197,16 @@ public class LogAndRegServiceImpl implements LogAndRegService {
                     String token = saTokenInfo.getTokenValue();
 
                     res.setTelephone(emp.getId());//兼职发布者/管理员手机号
-                    res.setToken(token);//填充token信息
+                    res.setMemo(token);//填充token信息
                 } else {//密码错误
                     logger.warn("密码或账号错误，请检查后重新输入");
                     res.setTelephone(emp.getId());//兼职发布者/管理员手机号
-                    res.setToken("密码或账号错误，请检查后重新输入");//填充错误提示
+                    res.setMemo("密码或账号错误，请检查后重新输入");//填充错误提示
                 }
             } else {//不存在该兼职发布者
                 logger.warn("不存在该兼职发布者");
                 res.setTelephone(telephone);//兼职发布者/管理员手机号
-                res.setToken("不存在该兼职发布者");//填充错误提示
+                res.setMemo("不存在该兼职发布者");//填充错误提示
             }
         }
         return res;
@@ -221,7 +243,7 @@ public class LogAndRegServiceImpl implements LogAndRegService {
             if (emp != null) {//该手机号已注册过，用户在登录界面直接登录
                 logger.warn("该手机号已注册，请直接登录");
                 res.setTelephone(telephone);
-                res.setToken("该手机号已注册，请直接登录");
+                res.setMemo("该手机号已注册，请直接登录");
             } else {//注册
                 String md5pwd = SaSecureUtil.md5BySalt(pwd, "emp");//md5加盐加密后的密码
 
@@ -245,30 +267,37 @@ public class LogAndRegServiceImpl implements LogAndRegService {
 
                 //填充返回给android的dto
                 res.setTelephone(telephone);
-                res.setToken("注册成功");
+                res.setMemo("注册成功");
             }
         }
         return res;
     }
 
     @Override
-    public String logoutByStu(String token) throws ParttimeServiceException {
+    public String logoutByStu(String input_telephone) throws ParttimeServiceException {
         String res = "";
 
-        if (token != "" || token != null) {
-            //获取token
-            String usertoken = token;
+        //缓存取token
+        String cur_token = "";
+        for (int i = 0; i < idx; i++) {
+            String str = (String) redisTemplate.opsForValue().get(UsersTokenDto.cacheKey(idx));
+            UsersTokenDto dto = com.alibaba.fastjson.JSONObject.parseObject(str, UsersTokenDto.class);//json转dto
+            logger.warn("存储该学生的token[{}]", UsersTokenDto.cacheKey(idx));
+            if (dto != null && dto.getTelephone().equals(input_telephone)) {
+                //账号符合、token符合
+                cur_token = dto.getToken();
+                break;
+            }
+        }
 
-            //根据token找用户id
-            if (StpUtil.getLoginIdByToken(usertoken) != null) {
-                String telephone = (String) StpUtil.getLoginIdByToken(usertoken);
-
-                //查找该用户
-                Student student = logAndRegByStuRepository.findStudentByTelephone(telephone);
-                if (student != null) {
-                    StpUtil.logout();//用户登出
-                    res = "用户登出成功";
-                }
+        if (cur_token != "" || cur_token != null) {
+            //查找该用户
+            Student student = logAndRegByStuRepository.findStudentByTelephone(input_telephone);
+            if (student != null) {
+                StpUtil.logout();//用户登出
+                res = "用户登出成功";
+            } else {
+                res = "用户登出失败";
             }
         }
         return res;
