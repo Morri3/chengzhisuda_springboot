@@ -65,6 +65,7 @@ public class UsersController {
 
     //TODO 修改密码-兼职发布者/管理员
 
+
 //    //TODO 简历查看-学生
 //    @RequestMapping(value = "/resumes/get1", method = RequestMethod.GET)
 //    @ResponseBody

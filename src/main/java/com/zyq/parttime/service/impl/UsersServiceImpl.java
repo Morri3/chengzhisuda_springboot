@@ -67,9 +67,6 @@ public class UsersServiceImpl implements UsersService {
         StuInfoDto res = new StuInfoDto();
 
         if (telephone != null) {
-//            //获取传入的手机号
-//            String telephone = getInfoDto.getTelephone();
-
             //查找该用户是否存在
             Student stu = stuInfoRepository.findStudentByTelephone(telephone);
             if (stu != null) {//存在
@@ -83,6 +80,7 @@ public class UsersServiceImpl implements UsersService {
                 String grade = stu.getGrade();
                 Date entrance_date = stu.getEntranceDate();
                 Date graduation_date = stu.getGraduationDate();
+                String head = stu.getHead();
 
                 res.setStu_name(stu_name);
                 res.setGender(gender);
@@ -94,6 +92,7 @@ public class UsersServiceImpl implements UsersService {
                 res.setEntrance_date(entrance_date);
                 res.setGraduation_date(graduation_date);
                 res.setGrade(grade);
+                res.setHead(head);
             } else {//不存在
                 logger.warn("该账号不存在");
                 res.setTelephone(telephone);
@@ -1595,6 +1594,7 @@ public class UsersServiceImpl implements UsersService {
                         dto.setI_id(i.getId());
                         dto.setContent(i.getContent());
                         dto.setStu_id(i.getStu().getId());
+                        dto.setMemo("存在意向兼职");
                         res.add(dto);
                     }
                 } else {
@@ -1644,20 +1644,21 @@ public class UsersServiceImpl implements UsersService {
                     List<String> before = new ArrayList<>();
                     //编辑之前有意向兼职
                     if (all != null && all.size() > 0) {
-                        //遍历之前的,加入列表
+                        //遍历之前的，从DB中删除
                         for (IntentionDto dto : all) {
                             String str = dto.getContent();
                             before.add(str);
+                            intentionRepository.removeOneIntention(stu_id, str);
                         }
-                        System.out.println("before:" + before.toString());//test
+                        System.out.println("删除的意向兼职:" + before.toString());//test
 
-                        //获取两个List的差集
-                        List<String> reduce = intentions.stream().filter(item ->
-                                !before.contains(item)).collect(toList());
+//                        //获取两个List的差集
+//                        List<String> reduce = intentions.stream().filter(item ->
+//                                !before.contains(item)).collect(toList());
 
-                        //插入差集
-                        for (int i = 0; i < reduce.size(); i++) {
-                            intentionRepository.addIntention(stu_id, reduce.get(i));
+                        //DB中插入元素
+                        for (int i = 0; i < intentions.size(); i++) {
+                            intentionRepository.addIntention(stu_id, intentions.get(i));
                         }
                     } else {
                         //之前没兼职
@@ -1679,6 +1680,7 @@ public class UsersServiceImpl implements UsersService {
                         dto.setI_id(i.getId());
                         dto.setContent(i.getContent());
                         dto.setStu_id(i.getStu().getId());
+                        dto.setMemo("存在意向兼职");
                         res.add(dto);
                     }
                 }
@@ -1697,8 +1699,7 @@ public class UsersServiceImpl implements UsersService {
         return res;
     }
 
-    //下面是桶的操作
-
+    /* ↓下面是桶的操作↓ */
     @Override
     public Boolean createBucket(String bucketName) throws ParttimeServiceException, Exception {
         return minIO.createBucket(bucketName);

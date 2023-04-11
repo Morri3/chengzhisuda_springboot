@@ -18,5 +18,6 @@ public class StuInfoDto implements Serializable {
     private String grade;
     private Date entrance_date;
     private Date graduation_date;
+    private String head;//头像
     private String memo;//备注
 }
