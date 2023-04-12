@@ -27,6 +27,14 @@ public class PositionController {
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
+    //TODO 获取所有兼职，按意向兼职排序-学生
+    @RequestMapping(value = "/stu/get_intention", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseData getAllPositionByIntentions(@RequestBody GetPositionDto getPositionDto) {
+        List<PositionInfoDto> res = positionService.getAllPositionByIntentions(getPositionDto);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
     //TODO 获取指定兼职-学生
     @RequestMapping(value = "/stu/get_one", method = RequestMethod.GET)
     @ResponseBody
@@ -62,8 +70,16 @@ public class PositionController {
     //TODO 查看指定状态的报名-学生
     @RequestMapping(value = "/stu/signup_one", method = RequestMethod.GET)
     @ResponseBody
-    public ResponseData getOneStatus(@RequestParam String telephone,@RequestParam String signup_status) throws ParseException {
-        List<SignupReturnDto> res = positionService.getOneStatus(telephone,signup_status);
+    public ResponseData getOneStatus(@RequestParam String telephone, @RequestParam String signup_status) throws ParseException {
+        List<SignupReturnDto> res = positionService.getOneStatus(telephone, signup_status);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
+    //TODO 查看学生是否有报名某个兼职-学生
+    @RequestMapping(value = "/stu/signup_special", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseData getSpecialSignup(@RequestParam String telephone, @RequestParam int p_id) throws ParseException {
+        CanSignupDto res = positionService.getSpecialSignup(telephone, p_id);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 }

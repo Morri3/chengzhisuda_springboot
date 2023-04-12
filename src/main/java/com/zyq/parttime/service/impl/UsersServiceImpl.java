@@ -1644,19 +1644,20 @@ public class UsersServiceImpl implements UsersService {
                     List<String> before = new ArrayList<>();
                     //编辑之前有意向兼职
                     if (all != null && all.size() > 0) {
-                        //遍历之前的，从DB中删除
-                        for (IntentionDto dto : all) {
-                            String str = dto.getContent();
-                            before.add(str);
-                            intentionRepository.removeOneIntention(stu_id, str);
-                        }
-                        System.out.println("删除的意向兼职:" + before.toString());//test
+                        //从DB中删除该学生所有的
+                        intentionRepository.removeAllIntention(stu_id);
+//                        for (IntentionDto dto : all) {
+//                            String str = dto.getContent();
+//                            before.add(str);
+//                            intentionRepository.removeOneIntention(stu_id, str);
+//                        }
+//                        System.out.println("删除的意向兼职:" + before.toString());//test
 
 //                        //获取两个List的差集
 //                        List<String> reduce = intentions.stream().filter(item ->
 //                                !before.contains(item)).collect(toList());
 
-                        //DB中插入元素
+                        //DB插入元素
                         for (int i = 0; i < intentions.size(); i++) {
                             intentionRepository.addIntention(stu_id, intentions.get(i));
                         }

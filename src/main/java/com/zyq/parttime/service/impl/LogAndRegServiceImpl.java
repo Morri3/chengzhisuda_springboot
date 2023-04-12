@@ -274,31 +274,37 @@ public class LogAndRegServiceImpl implements LogAndRegService {
     }
 
     @Override
-    public String logoutByStu(String input_telephone) throws ParttimeServiceException {
+    public String logoutByStu(LogoutDto logoutDto) throws ParttimeServiceException {
         String res = "";
 
-        //缓存取token
-        String cur_token = "";
-        for (int i = 0; i < idx; i++) {
-            String str = (String) redisTemplate.opsForValue().get(UsersTokenDto.cacheKey(idx));
-            UsersTokenDto dto = com.alibaba.fastjson.JSONObject.parseObject(str, UsersTokenDto.class);//json转dto
-            logger.warn("存储该学生的token[{}]", UsersTokenDto.cacheKey(idx));
-            if (dto != null && dto.getTelephone().equals(input_telephone)) {
-                //账号符合、token符合
-                cur_token = dto.getToken();
-                break;
-            }
-        }
+        if (logoutDto != null) {
+            String input_telephone = logoutDto.getInput_telephone();//手机号
 
-        if (cur_token != "" || cur_token != null) {
-            //查找该用户
-            Student student = logAndRegByStuRepository.findStudentByTelephone(input_telephone);
-            if (student != null) {
-                StpUtil.logout();//用户登出
-                res = "用户登出成功";
-            } else {
-                res = "用户登出失败";
+            //缓存取token
+            String cur_token = "";
+            for (int i = 0; i < idx; i++) {
+                String str = (String) redisTemplate.opsForValue().get(UsersTokenDto.cacheKey(idx));
+                UsersTokenDto dto = com.alibaba.fastjson.JSONObject.parseObject(str, UsersTokenDto.class);//json转dto
+                logger.warn("存储该学生的token[{}]", UsersTokenDto.cacheKey(idx));
+                if (dto != null && dto.getTelephone().equals(input_telephone)) {
+                    //账号符合、token符合
+                    cur_token = dto.getToken();
+                    break;
+                }
             }
+
+            if (cur_token != "" || cur_token != null) {
+                //查找该用户
+                Student student = logAndRegByStuRepository.findStudentByTelephone(input_telephone);
+                if (student != null) {
+                    StpUtil.logout();//用户登出
+                    res = "用户登出成功";
+                } else {
+                    res = "用户登出失败";
+                }
+            }
+        }else{
+            res = "用户登出失败";
         }
         return res;
     }

@@ -1,10 +1,7 @@
 package com.zyq.parttime.service;
 
 import com.zyq.parttime.exception.ParttimeServiceException;
-import com.zyq.parttime.form.logandreg.EmpRegisterDto;
-import com.zyq.parttime.form.logandreg.LoginDto;
-import com.zyq.parttime.form.logandreg.StuRegisterDto;
-import com.zyq.parttime.form.logandreg.LogAndRegInfoDto;
+import com.zyq.parttime.form.logandreg.*;
 import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
@@ -24,7 +21,7 @@ public interface LogAndRegService {
     LogAndRegInfoDto registerByEmp(EmpRegisterDto empRegisterDto) throws ParttimeServiceException, ParseException;
 
     //退出登录-学生
-    String logoutByStu(String input_telephone) throws ParttimeServiceException;
+    String logoutByStu(LogoutDto logoutDto) throws ParttimeServiceException;
 
     //退出登录-兼职发布者/管理员
     String logoutByEmp(String token) throws ParttimeServiceException;

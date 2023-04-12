@@ -25,4 +25,9 @@ public interface IntentionRepository extends JpaRepository<Intention, Integer>, 
     @Query(value = "delete from intention where stu_id=?1 and content=?2", nativeQuery = true)
     void removeOneIntention(String stu_id, String content);
 
+    @Transactional
+    @Modifying
+    @Query(value = "delete from intention where stu_id=?1", nativeQuery = true)
+    void removeAllIntention(String stu_id);
+
 }

@@ -1,9 +1,6 @@
 package com.zyq.parttime.controller;
 
-import com.zyq.parttime.form.logandreg.EmpRegisterDto;
-import com.zyq.parttime.form.logandreg.LoginDto;
-import com.zyq.parttime.form.logandreg.StuRegisterDto;
-import com.zyq.parttime.form.logandreg.LogAndRegInfoDto;
+import com.zyq.parttime.form.logandreg.*;
 import com.zyq.parttime.result.ExceptionMsg;
 import com.zyq.parttime.result.ResponseData;
 import com.zyq.parttime.service.LogAndRegService;
@@ -53,8 +50,8 @@ public class LogAndRegController {
     //TODO 退出登录-学生
     @RequestMapping(value = "/logout/stu", method = RequestMethod.POST)
     @ResponseBody
-    public ResponseData logoutByStu(@RequestParam String input_telephone) {
-        String res = logAndRegService.logoutByStu(input_telephone);
+    public ResponseData logoutByStu(@RequestBody LogoutDto logoutDto) {
+        String res = logAndRegService.logoutByStu(logoutDto);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 

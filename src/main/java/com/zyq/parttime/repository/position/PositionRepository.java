@@ -15,6 +15,12 @@ public interface PositionRepository extends JpaRepository<Position, Integer>, Jp
     @Query(value = "select * from position", nativeQuery = true)
     List<Position> getAllPositions();
 
+//    @Query(value = "select * from position", nativeQuery = true)
+//    List<Position> getAllPositionsByIntentions(String[] intentions);
+
+    @Query(value = "select * from position where category=?1", nativeQuery = true)
+    List<Position> getPositionByIntention(String intention);
+
     @Query(value = "select * from position where p_id=?1", nativeQuery = true)
     Position getPosition(int p_id);
 //    @Transactional

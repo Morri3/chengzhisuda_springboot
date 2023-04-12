@@ -17,6 +17,9 @@ public interface CommentRepository extends JpaRepository<Comment, Integer>, JpaS
     @Query(value = "select * from comments order by create_time limit 0,1", nativeQuery = true)
     Comment getLatestComment();
 
+    @Query(value = "select * from comments where p_id=?1", nativeQuery = true)
+    Comment getCommentByPId(int p_id);
+
     @Transactional
     @Modifying
     @Query(value = "insert into comments(s_id,content,create_time) values(?1,?2,?3)", nativeQuery = true)
