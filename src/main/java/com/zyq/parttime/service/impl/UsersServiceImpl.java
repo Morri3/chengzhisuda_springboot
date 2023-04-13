@@ -739,6 +739,8 @@ public class UsersServiceImpl implements UsersService {
                 //解析文字的处理
                 ArrayList<JSONObject> words = new ArrayList<>();//存放识别出的文字的列表
                 JSONArray arr = (JSONArray) result.get("words_result");//获取识别结果JSON数组
+                System.out.println(arr.toString());//输出识别结果
+
                 //遍历JSON数组
                 for (int i = 0; i < arr.length(); i++) {
                     words.add((JSONObject) arr.get(i));//添加到words中

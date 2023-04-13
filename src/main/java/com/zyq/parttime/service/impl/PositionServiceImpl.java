@@ -61,11 +61,15 @@ public class PositionServiceImpl implements PositionService {
                 dto.setUpdate_time(i.getUpdateTime());
                 dto.setOp_id(i.getOp().getId());
                 dto.setWork_time(i.getWorkTime());
+                dto.setMemo("兼职获取成功");
                 res.add(dto);
             }
             System.out.println(list.toString());
         } else {
             logger.warn("该账号不存在");
+            PositionInfoDto dto = new PositionInfoDto();
+            dto.setMemo("该账号不存在");
+            res.add(dto);
         }
         System.out.println(res.toString());
 
@@ -104,6 +108,7 @@ public class PositionServiceImpl implements PositionService {
                             dto.setUpdate_time(position.getUpdateTime());
                             dto.setOp_id(position.getOp().getId());
                             dto.setWork_time(position.getWorkTime());
+                            dto.setMemo("兼职获取成功");
                             res.add(dto);
                         }
                     }
@@ -143,6 +148,7 @@ public class PositionServiceImpl implements PositionService {
                             dto.setUpdate_time(position.getUpdateTime());
                             dto.setOp_id(position.getOp().getId());
                             dto.setWork_time(position.getWorkTime());
+                            dto.setMemo("兼职获取成功");
                             res.add(dto);
                         }
                     }
@@ -150,6 +156,9 @@ public class PositionServiceImpl implements PositionService {
             } else {
                 //兼职查找失败
                 logger.warn("兼职信息获取失败");
+                PositionInfoDto dto = new PositionInfoDto();
+                dto.setMemo("兼职信息获取失败");
+                res.add(dto);
             }
 
 //            //数据
@@ -436,6 +445,7 @@ public class PositionServiceImpl implements PositionService {
                         dto.setSignup_status(item.getSignupStatus());
                         dto.setCreate_time(item.getCreateTime());
                         dto.setUpdate_time(item.getUpdateTime());
+                        dto.setMemo("获取历史记录成功");
                         res.add(dto);
                     }
                 } else {
@@ -480,6 +490,7 @@ public class PositionServiceImpl implements PositionService {
                         dto.setSignup_status(item.getSignupStatus());
                         dto.setCreate_time(item.getCreateTime());
                         dto.setUpdate_time(item.getUpdateTime());
+                        dto.setMemo("获取历史记录成功");
                         res.add(dto);
                     }
                 } else {
@@ -553,6 +564,56 @@ public class PositionServiceImpl implements PositionService {
             res.setMemo("输入有误");
             res.setFlag(false);
         }
+        return res;
+    }
+
+    @Override
+    public List<PositionInfoDto> getPositionByCategory(String category) throws ParttimeServiceException {
+        List<PositionInfoDto> res = new ArrayList<>();
+
+        //输入的有数据
+        if (category != null && !category.equals("")) {
+            //找到该种类的所有兼职
+            List<Position> list = positionRepository.getAllPositionsByCategory(category);
+            if (list != null && list.size() > 0) {
+                for (Position i : list) {
+                    PositionInfoDto dto = new PositionInfoDto();
+                    dto.setP_id(i.getId());
+                    dto.setCategory(i.getCategory());
+                    dto.setContent(i.getContent());
+                    dto.setExp(i.getExp());
+                    dto.setPosition_name(i.getPositionName());
+                    dto.setPosition_status(i.getPositionStatus());
+                    dto.setArea(i.getArea());
+                    dto.setCreate_time(i.getCreateTime());
+                    dto.setRequirement(i.getRequirement());
+                    dto.setSalary(i.getSalary());
+                    dto.setSettlement(i.getSettlement());
+                    dto.setSignup_ddl(i.getSignupDdl());
+                    dto.setSlogan(i.getSlogan());
+                    dto.setUpdate_time(i.getUpdateTime());
+                    dto.setOp_id(i.getOp().getId());
+                    dto.setWork_time(i.getWorkTime());
+                    dto.setMemo("兼职获取成功");
+                    res.add(dto);
+                }
+                System.out.println(list.toString());
+            } else {
+                logger.warn("暂无该类型兼职");
+                PositionInfoDto dto = new PositionInfoDto();
+                dto.setMemo("暂无该类型兼职");
+                dto.setCategory(category);
+                res.add(dto);
+            }
+        } else {
+            logger.warn("请选择兼职种类后再筛选");
+            PositionInfoDto dto = new PositionInfoDto();
+            dto.setMemo("请选择兼职种类后再筛选");
+            dto.setCategory(category);
+            res.add(dto);
+        }
+        System.out.println(res.toString());
+
         return res;
     }
 }

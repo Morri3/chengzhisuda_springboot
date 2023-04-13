@@ -33,4 +33,7 @@ public interface PositionService {
 
     //查看学生是否有报名某个兼职
     CanSignupDto getSpecialSignup(String telephone,int p_id) throws ParttimeServiceException, ParseException;
+
+    //按种类筛选兼职
+    List<PositionInfoDto> getPositionByCategory(String category) throws ParttimeServiceException;
 }

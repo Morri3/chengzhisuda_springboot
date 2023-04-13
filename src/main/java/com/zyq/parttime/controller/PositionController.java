@@ -82,4 +82,12 @@ public class PositionController {
         CanSignupDto res = positionService.getSpecialSignup(telephone, p_id);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
+
+    //TODO 按种类筛选兼职-学生
+    @RequestMapping(value = "/stu/get_category", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseData getPositionByCategory(@RequestParam String category) {
+        List<PositionInfoDto> res = positionService.getPositionByCategory(category);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
 }
