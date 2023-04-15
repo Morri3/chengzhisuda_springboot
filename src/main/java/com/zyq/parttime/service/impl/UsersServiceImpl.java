@@ -933,7 +933,7 @@ public class UsersServiceImpl implements UsersService {
                             //标题
                             String title = (words.get(k + 1).get("words")).toString();
 
-                            //项目内容【1~N行】
+                            //校园经历【1~N行】
                             int j = k + 2;
                             String content = "";
                             System.out.println(((words.get(j).get("words").toString())));//test

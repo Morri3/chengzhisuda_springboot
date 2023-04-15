@@ -14,6 +14,7 @@ import java.text.ParseException;
 import java.util.List;
 
 @RestController
+@CrossOrigin
 @RequestMapping("/parttime")
 public class PositionController {
     @Autowired

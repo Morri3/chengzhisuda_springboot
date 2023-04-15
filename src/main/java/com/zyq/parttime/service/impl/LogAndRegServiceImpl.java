@@ -172,12 +172,15 @@ public class LogAndRegServiceImpl implements LogAndRegService {
                 res.setTelephone(telephone);
                 res.setMemo("注册成功");
             }
+        } else {
+            logger.warn("请输入表单信息");
+            res.setMemo("请输入表单信息");
         }
         return res;
     }
 
     @Override
-    public LogAndRegInfoDto loginByEmp(LoginDto loginDto) throws ParttimeServiceException {
+    public LogAndRegInfoDto loginByEmp(LoginDto loginDto) throws ParttimeServiceException, ParseException {
         LogAndRegInfoDto res = new LogAndRegInfoDto();//存结果
 
         if (loginDto != null) {
@@ -197,7 +200,20 @@ public class LogAndRegServiceImpl implements LogAndRegService {
                     String token = saTokenInfo.getTokenValue();
 
                     res.setTelephone(emp.getId());//兼职发布者/管理员手机号
-                    res.setMemo(token);//填充token信息
+                    res.setToken(token);//填充token信息
+                    res.setMemo("登录成功");
+
+                    //token存入缓存
+                    UsersTokenDto dto = new UsersTokenDto();
+                    dto.setTelephone(emp.getId());
+                    dto.setToken(token);
+                    dto.setLogin(true);
+                    SimpleDateFormat sdf = new SimpleDateFormat();
+                    Date now = sdf.parse(sdf.format(new Date()));
+                    dto.setTime(now);
+                    redisTemplate.opsForValue().set(UsersTokenDto.cacheKey(idx), JSON.toJSONString(dto));
+                    logger.warn("存储该兼职发布者的token等信息[{}]", UsersTokenDto.cacheKey(idx));
+                    idx++;
                 } else {//密码错误
                     logger.warn("密码或账号错误，请检查后重新输入");
                     res.setTelephone(emp.getId());//兼职发布者/管理员手机号
@@ -248,7 +264,7 @@ public class LogAndRegServiceImpl implements LogAndRegService {
                 String md5pwd = SaSecureUtil.md5BySalt(pwd, "emp");//md5加盐加密后的密码
 
                 //注册时间
-                SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy年MM月dd日HH:mm:ss");
+                SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 Date reg = sdf1.parse(reg_date);
 
                 //若单位名称存在DB中，找到该单位的id；若不存在，则在unit表新增一条记录，并返回该记录id
@@ -269,6 +285,9 @@ public class LogAndRegServiceImpl implements LogAndRegService {
                 res.setTelephone(telephone);
                 res.setMemo("注册成功");
             }
+        } else {
+            logger.warn("请输入表单信息");
+            res.setMemo("请输入表单信息");
         }
         return res;
     }
@@ -303,7 +322,7 @@ public class LogAndRegServiceImpl implements LogAndRegService {
                     res = "用户登出失败";
                 }
             }
-        }else{
+        } else {
             res = "用户登出失败";
         }
         return res;

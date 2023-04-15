@@ -15,7 +15,7 @@ public interface LogAndRegService {
     LogAndRegInfoDto registerByStu(StuRegisterDto stuRegisterDto) throws ParttimeServiceException, ParseException;
 
     //登录-兼职发布者/管理员
-    LogAndRegInfoDto loginByEmp(LoginDto loginDto) throws ParttimeServiceException;
+    LogAndRegInfoDto loginByEmp(LoginDto loginDto) throws ParttimeServiceException, ParseException;
 
     //注册-兼职发布者/管理员
     LogAndRegInfoDto registerByEmp(EmpRegisterDto empRegisterDto) throws ParttimeServiceException, ParseException;

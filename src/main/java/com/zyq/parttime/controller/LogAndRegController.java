@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.text.ParseException;
 
 @RestController
+@CrossOrigin
 @RequestMapping("/")
 public class LogAndRegController {
     @Autowired
@@ -34,7 +35,7 @@ public class LogAndRegController {
     //TODO 登录-兼职发布者/管理员
     @RequestMapping(value = "/login/emp", method = RequestMethod.POST)
     @ResponseBody
-    public ResponseData loginByEmp(@RequestBody LoginDto loginDto) {
+    public ResponseData loginByEmp(@RequestBody LoginDto loginDto) throws ParseException {
         LogAndRegInfoDto res = logAndRegService.loginByEmp(loginDto);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
