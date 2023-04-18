@@ -57,10 +57,11 @@ public class LogAndRegController {
     }
 
     //TODO 退出登录-兼职发布者/管理员
-    @RequestMapping(value = "/logout/emp/{token}", method = RequestMethod.POST)
+    @RequestMapping(value = "/logout/emp", method = RequestMethod.POST)
     @ResponseBody
-    public ResponseData logoutByEmp(@PathVariable("token") String token) {
-        String res = logAndRegService.logoutByEmp(token);
+    public ResponseData logoutByEmp(@RequestBody LogoutDto logoutDto) {
+        String res = logAndRegService.logoutByEmp(logoutDto);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
+
 }

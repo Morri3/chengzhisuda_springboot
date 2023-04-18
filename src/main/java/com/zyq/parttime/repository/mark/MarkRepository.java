@@ -1,9 +1,6 @@
 package com.zyq.parttime.repository.mark;
 
 import com.zyq.parttime.entity.Mark;
-import com.zyq.parttime.entity.Position;
-import com.zyq.parttime.form.mark.OneMark;
-import com.zyq.parttime.form.mark.OneMarkDto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -11,7 +8,6 @@ import org.springframework.data.jpa.repository.Query;
 
 import javax.transaction.Transactional;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 public interface MarkRepository extends JpaRepository<Mark, Integer>, JpaSpecificationExecutor<Mark> {

@@ -1,8 +1,5 @@
 package com.zyq.parttime.entity;
 
-import com.zyq.parttime.entity.Position;
-import com.zyq.parttime.entity.Student;
-
 import javax.persistence.*;
 
 @Entity
@@ -19,13 +16,13 @@ public class Behavior {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "p_id", nullable = false)
-    private Position p;
+    private Parttimes p;
 
-    public Position getP() {
+    public Parttimes getP() {
         return p;
     }
 
-    public void setP(Position p) {
+    public void setP(Parttimes p) {
         this.p = p;
     }
 

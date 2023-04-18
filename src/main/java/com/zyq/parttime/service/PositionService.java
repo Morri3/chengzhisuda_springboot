@@ -3,6 +3,7 @@ package com.zyq.parttime.service;
 import com.zyq.parttime.entity.Signup;
 import com.zyq.parttime.exception.ParttimeServiceException;
 import com.zyq.parttime.form.position.*;
+import com.zyq.parttime.form.unit.UnitInfoDto;
 import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
@@ -36,4 +37,19 @@ public interface PositionService {
 
     //按种类筛选兼职
     List<PositionInfoDto> getPositionByCategory(String category) throws ParttimeServiceException;
+
+    //获取所有兼职
+    List<PositionInfoToEmpDto> getAllPositionByEmp() throws ParttimeServiceException;
+
+    //获取所有兼职
+    List<PositionInfoToEmpDto> getAllPositionByEmpId(String emp_id) throws ParttimeServiceException;
+
+    //根据unit_name获取单位信息
+    UnitInfoDto getUnitInfoByUnitName(String op_id) throws ParttimeServiceException;
+
+    //根据unit_name获取单位信息
+    PositionInfoToEmpDto publishParttime(PublishInputDto input) throws ParttimeServiceException, ParseException;
+
+    //下架兼职
+    PositionInfoToEmpDto undercarriageParttime(UndercarriageInputDto undercarriageInputDto) throws ParttimeServiceException, ParseException;
 }

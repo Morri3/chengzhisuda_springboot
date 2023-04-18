@@ -1,12 +1,10 @@
 package com.zyq.parttime.controller;
 
-import com.zyq.parttime.entity.Signup;
 import com.zyq.parttime.form.position.*;
-import com.zyq.parttime.form.userinfomanage.StuInfoDto;
+import com.zyq.parttime.form.unit.UnitInfoDto;
 import com.zyq.parttime.result.ExceptionMsg;
 import com.zyq.parttime.result.ResponseData;
 import com.zyq.parttime.service.PositionService;
-import com.zyq.parttime.service.UsersService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -89,6 +87,46 @@ public class PositionController {
     @ResponseBody
     public ResponseData getPositionByCategory(@RequestParam String category) {
         List<PositionInfoDto> res = positionService.getPositionByCategory(category);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
+    //TODO 获取所有兼职-管理员
+    @RequestMapping(value = "/emp/get", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseData getAllPositionByEmp() {
+        List<PositionInfoToEmpDto> res = positionService.getAllPositionByEmp();
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
+    //TODO 获取所有兼职-兼职发布者
+    @RequestMapping(value = "/emp/get_own", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseData getAllPositionByEmpId(@RequestParam String emp_id) {
+        List<PositionInfoToEmpDto> res = positionService.getAllPositionByEmpId(emp_id);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
+    //TODO 根据op_id获取单位信息-管理员
+    @RequestMapping(value = "/unit/get", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseData getUnitInfoByUnitName(@RequestParam String op_id) {
+        UnitInfoDto res = positionService.getUnitInfoByUnitName(op_id);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
+    //TODO 发布兼职-管理员
+    @RequestMapping(value = "/publish", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseData publishParttime(@RequestBody PublishInputDto input) throws ParseException {
+        PositionInfoToEmpDto res = positionService.publishParttime(input);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
+    //TODO 下架兼职-管理员
+    @RequestMapping(value = "/undercarriage", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseData undercarriageParttime(@RequestBody UndercarriageInputDto undercarriageInputDto) throws ParseException {
+        PositionInfoToEmpDto res = positionService.undercarriageParttime(undercarriageInputDto);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 }

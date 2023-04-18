@@ -1,4 +1,4 @@
-package com.zyq.parttime.repository;
+package com.zyq.parttime.repository.unit;
 
 import com.zyq.parttime.entity.Employer;
 import com.zyq.parttime.entity.Unit;
@@ -14,6 +14,9 @@ public interface UnitRepository extends JpaRepository<Unit, Integer>, JpaSpecifi
     @Query(value = "select * from unit where unit_name = ?1", nativeQuery = true)
     Unit findUnitByUnitName(String unit_name);
 
+    @Query(value = "select * from unit where u_id = ?1", nativeQuery = true)
+    Unit findUnitByUnitId(int u_id);
+
     @Transactional
     @Modifying
     @Query(value = "insert into unit(unit_name,job_nums) values(?1,?2)", nativeQuery = true)
@@ -21,4 +24,5 @@ public interface UnitRepository extends JpaRepository<Unit, Integer>, JpaSpecifi
 
     @Query(value = "select u_id from unit where unit_name = ?1", nativeQuery = true)
     int findUnitByUnitNameWithUId(String unit_name);
+
 }

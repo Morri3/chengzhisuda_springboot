@@ -9,14 +9,10 @@ import com.zyq.parttime.entity.Student;
 import com.zyq.parttime.entity.Unit;
 import com.zyq.parttime.exception.ParttimeServiceException;
 import com.zyq.parttime.form.logandreg.*;
-import com.zyq.parttime.form.resumemanage.ResumeCacheDto;
-import com.zyq.parttime.form.resumemanage.ResumeStuIdDto;
 import com.zyq.parttime.repository.logandreg.LogAndRegByEmpRepository;
 import com.zyq.parttime.repository.logandreg.LogAndRegByStuRepository;
-import com.zyq.parttime.repository.UnitRepository;
+import com.zyq.parttime.repository.unit.UnitRepository;
 import com.zyq.parttime.service.LogAndRegService;
-import org.apache.tomcat.util.json.JSONParser;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -201,6 +197,16 @@ public class LogAndRegServiceImpl implements LogAndRegService {
 
                     res.setTelephone(emp.getId());//兼职发布者/管理员手机号
                     res.setToken(token);//填充token信息
+                    //同时把username等信息传回去
+                    res.setAge(emp.getAge());
+                    res.setEmails(emp.getEmails());
+                    res.setEmp_grade(emp.getEmpGrade());
+                    res.setGender(emp.getGender());
+                    res.setHead(emp.getHead());
+                    res.setJno(emp.getJno());
+                    res.setReg_date(emp.getRegDate());
+                    res.setEmp_name(emp.getEmpName());
+                    res.setU_id(emp.getU().getId());
                     res.setMemo("登录成功");
 
                     //token存入缓存
@@ -329,25 +335,40 @@ public class LogAndRegServiceImpl implements LogAndRegService {
     }
 
     @Override
-    public String logoutByEmp(String token) throws ParttimeServiceException {
+    public String logoutByEmp(LogoutDto logoutDto) throws ParttimeServiceException {
         String res = "";
 
-        if (token != "" || token != null) {
-            //获取token
-            String usertoken = token;
+        if (logoutDto != null) {
+            String input_telephone = logoutDto.getInput_telephone();//手机号
 
-            //根据token找用户id
-            if (StpUtil.getLoginIdByToken(usertoken) != null) {
-                String telephone = (String) StpUtil.getLoginIdByToken(usertoken);
+            //缓存取token
+            String cur_token = "";
+            for (int i = 0; i < idx; i++) {
+                String str = (String) redisTemplate.opsForValue().get(UsersTokenDto.cacheKey(idx));
+                UsersTokenDto dto = com.alibaba.fastjson.JSONObject.parseObject(str, UsersTokenDto.class);//json转dto
+                logger.warn("存储该兼职发布者/管理员的token[{}]", UsersTokenDto.cacheKey(idx));
+                if (dto != null && dto.getTelephone().equals(input_telephone)) {
+                    //账号符合、token符合
+                    cur_token = dto.getToken();
+                    break;
+                }
+            }
 
+            if (cur_token != "" || cur_token != null) {
                 //查找该用户
-                Employer employer = logAndRegByEmpRepository.findEmployerByTelephone(telephone);
+                Employer employer = logAndRegByEmpRepository.findEmployerByTelephone(input_telephone);
                 if (employer != null) {
                     StpUtil.logout();//用户登出
                     res = "用户登出成功";
+                } else {
+                    res = "用户登出失败";
                 }
             }
+        } else {
+            res = "用户登出失败";
         }
         return res;
     }
+
+
 }

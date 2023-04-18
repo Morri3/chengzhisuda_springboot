@@ -2,27 +2,21 @@ package com.zyq.parttime.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.zyq.parttime.entity.Mark;
-import com.zyq.parttime.entity.Position;
 import com.zyq.parttime.entity.Signup;
 import com.zyq.parttime.exception.ParttimeServiceException;
 import com.zyq.parttime.form.mark.MarkDto;
 import com.zyq.parttime.form.mark.MarkPostDto;
 import com.zyq.parttime.form.mark.OneMark;
 import com.zyq.parttime.form.mark.OneMarkDto;
-import com.zyq.parttime.form.position.PositionInfoDto;
 import com.zyq.parttime.repository.mark.MarkRepository;
-import com.zyq.parttime.repository.position.PositionRepository;
 import com.zyq.parttime.repository.position.SignupRepository;
 import com.zyq.parttime.service.MarkService;
-import com.zyq.parttime.service.PositionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 @Service
@@ -80,6 +74,7 @@ public class MarkServiceImpl implements MarkService {
             res.setPt(mark.getPt());
             res.setTotal_score(mark.getTotal_score());
             res.setWe(mark.getWe());
+            res.setMemo("获取成功");
         } else {
             logger.warn("获取失败");
             res.setMemo("获取失败");

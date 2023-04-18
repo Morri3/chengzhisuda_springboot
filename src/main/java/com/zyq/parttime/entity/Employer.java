@@ -1,7 +1,6 @@
 package com.zyq.parttime.entity;
 
 import javax.persistence.*;
-import java.time.Instant;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -39,35 +38,35 @@ public class Employer {
     private Date regDate;
 
     @Column(name = "head")
-    private long head;
+    private String head;
 
     @Column(name = "emp_grade")
-    private boolean empGrade;
+    private int empGrade;
 
     @OneToMany(mappedBy = "op")
-    private Set<Position> positions = new LinkedHashSet<>();
+    private Set<Parttimes> parttimes = new LinkedHashSet<>();
 
-    public Set<Position> getPositions() {
-        return positions;
+    public Set<Parttimes> getPositions() {
+        return parttimes;
     }
 
-    public void setPositions(Set<Position> positions) {
-        this.positions = positions;
+    public void setPositions(Set<Parttimes> parttimes) {
+        this.parttimes = parttimes;
     }
 
-    public boolean getEmpGrade() {
+    public int getEmpGrade() {
         return empGrade;
     }
 
-    public void setEmpGrade(boolean empGrade) {
+    public void setEmpGrade(int empGrade) {
         this.empGrade = empGrade;
     }
 
-    public long getHead() {
+    public String getHead() {
         return head;
     }
 
-    public void setHead(long head) {
+    public void setHead(String head) {
         this.head = head;
     }
 

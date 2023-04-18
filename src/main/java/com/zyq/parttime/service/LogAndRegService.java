@@ -24,5 +24,5 @@ public interface LogAndRegService {
     String logoutByStu(LogoutDto logoutDto) throws ParttimeServiceException;
 
     //退出登录-兼职发布者/管理员
-    String logoutByEmp(String token) throws ParttimeServiceException;
+    String logoutByEmp(LogoutDto logoutDto) throws ParttimeServiceException;
 }

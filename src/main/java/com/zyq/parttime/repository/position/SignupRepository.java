@@ -1,6 +1,5 @@
 package com.zyq.parttime.repository.position;
 
-import com.zyq.parttime.entity.Position;
 import com.zyq.parttime.entity.Signup;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -41,4 +40,9 @@ public interface SignupRepository extends JpaRepository<Signup, Integer>, JpaSpe
     @Query(value = "update signup set signup_status='已取消',update_time=?1 where s_id=?2", nativeQuery = true)
     void cancelSignup(Date now, int s_id);
 
+    @Query(value = "select count(*) from signup where p_id=?1 and signup_status='已报名'", nativeQuery = true)
+    int getNumOfSignup(int p_id);
+
+    @Query(value = "select count(*) from signup where p_id=?1 and signup_status='已录取'", nativeQuery = true)
+    int getNumOfEmployment(int p_id);
 }

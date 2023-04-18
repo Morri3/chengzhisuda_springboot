@@ -1,12 +1,12 @@
 package com.zyq.parttime.service.impl;
 
 import cn.hutool.crypto.asymmetric.Sign;
-import com.zyq.parttime.controller.UsersController;
-import com.zyq.parttime.entity.Position;
-import com.zyq.parttime.entity.Signup;
-import com.zyq.parttime.entity.Student;
+import com.zyq.parttime.entity.*;
 import com.zyq.parttime.exception.ParttimeServiceException;
 import com.zyq.parttime.form.position.*;
+import com.zyq.parttime.form.unit.UnitInfoDto;
+import com.zyq.parttime.repository.logandreg.LogAndRegByEmpRepository;
+import com.zyq.parttime.repository.unit.UnitRepository;
 import com.zyq.parttime.repository.position.PositionRepository;
 import com.zyq.parttime.repository.position.SignupRepository;
 import com.zyq.parttime.repository.userinfomanage.StuInfoRepository;
@@ -16,13 +16,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.awt.*;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import static java.util.stream.Collectors.toList;
 
@@ -36,14 +33,18 @@ public class PositionServiceImpl implements PositionService {
     private StuInfoRepository stuInfoRepository;
     @Autowired
     private SignupRepository signupRepository;
+    @Autowired
+    private UnitRepository unitRepository;
+    @Autowired
+    private LogAndRegByEmpRepository logAndRegByEmpRepository;
 
     @Override
     public List<PositionInfoDto> getAllPosition() throws ParttimeServiceException {
         List<PositionInfoDto> res = new ArrayList<>();
         //数据
-        List<Position> list = positionRepository.getAllPositions();
+        List<Parttimes> list = positionRepository.getAllPositions();
         if (list != null) {
-            for (Position i : list) {
+            for (Parttimes i : list) {
                 PositionInfoDto dto = new PositionInfoDto();
                 dto.setP_id(i.getId());
                 dto.setCategory(i.getCategory());
@@ -87,27 +88,27 @@ public class PositionServiceImpl implements PositionService {
             //遍历意向兼职数组，先后找到这些类型的兼职，按照兼职种类在数组中的顺序先后加入到res中
             if (intentions != null && intentions.size() > 0) {//有意向兼职
                 for (String i : intentions) {
-                    List<Position> curList = positionRepository.getPositionByIntention(i);
+                    List<Parttimes> curList = positionRepository.getPositionByIntention(i);
                     if (curList != null && curList.size() > 0) {
                         //有数据
-                        for (Position position : curList) {
+                        for (Parttimes parttimes : curList) {
                             PositionInfoDto dto = new PositionInfoDto();
-                            dto.setP_id(position.getId());
-                            dto.setCategory(position.getCategory());
-                            dto.setContent(position.getContent());
-                            dto.setExp(position.getExp());
-                            dto.setPosition_name(position.getPositionName());
-                            dto.setPosition_status(position.getPositionStatus());
-                            dto.setArea(position.getArea());
-                            dto.setCreate_time(position.getCreateTime());
-                            dto.setRequirement(position.getRequirement());
-                            dto.setSalary(position.getSalary());
-                            dto.setSettlement(position.getSettlement());
-                            dto.setSignup_ddl(position.getSignupDdl());
-                            dto.setSlogan(position.getSlogan());
-                            dto.setUpdate_time(position.getUpdateTime());
-                            dto.setOp_id(position.getOp().getId());
-                            dto.setWork_time(position.getWorkTime());
+                            dto.setP_id(parttimes.getId());
+                            dto.setCategory(parttimes.getCategory());
+                            dto.setContent(parttimes.getContent());
+                            dto.setExp(parttimes.getExp());
+                            dto.setPosition_name(parttimes.getPositionName());
+                            dto.setPosition_status(parttimes.getPositionStatus());
+                            dto.setArea(parttimes.getArea());
+                            dto.setCreate_time(parttimes.getCreateTime());
+                            dto.setRequirement(parttimes.getRequirement());
+                            dto.setSalary(parttimes.getSalary());
+                            dto.setSettlement(parttimes.getSettlement());
+                            dto.setSignup_ddl(parttimes.getSignupDdl());
+                            dto.setSlogan(parttimes.getSlogan());
+                            dto.setUpdate_time(parttimes.getUpdateTime());
+                            dto.setOp_id(parttimes.getOp().getId());
+                            dto.setWork_time(parttimes.getWorkTime());
                             dto.setMemo("兼职获取成功");
                             res.add(dto);
                         }
@@ -127,27 +128,27 @@ public class PositionServiceImpl implements PositionService {
             if (others != null && others.size() > 0) {
                 //有兼职可以查找
                 for (String i : others) {
-                    List<Position> curList = positionRepository.getPositionByIntention(i);
+                    List<Parttimes> curList = positionRepository.getPositionByIntention(i);
                     if (curList != null && curList.size() > 0) {
                         //有数据
-                        for (Position position : curList) {
+                        for (Parttimes parttimes : curList) {
                             PositionInfoDto dto = new PositionInfoDto();
-                            dto.setP_id(position.getId());
-                            dto.setCategory(position.getCategory());
-                            dto.setContent(position.getContent());
-                            dto.setExp(position.getExp());
-                            dto.setPosition_name(position.getPositionName());
-                            dto.setPosition_status(position.getPositionStatus());
-                            dto.setArea(position.getArea());
-                            dto.setCreate_time(position.getCreateTime());
-                            dto.setRequirement(position.getRequirement());
-                            dto.setSalary(position.getSalary());
-                            dto.setSettlement(position.getSettlement());
-                            dto.setSignup_ddl(position.getSignupDdl());
-                            dto.setSlogan(position.getSlogan());
-                            dto.setUpdate_time(position.getUpdateTime());
-                            dto.setOp_id(position.getOp().getId());
-                            dto.setWork_time(position.getWorkTime());
+                            dto.setP_id(parttimes.getId());
+                            dto.setCategory(parttimes.getCategory());
+                            dto.setContent(parttimes.getContent());
+                            dto.setExp(parttimes.getExp());
+                            dto.setPosition_name(parttimes.getPositionName());
+                            dto.setPosition_status(parttimes.getPositionStatus());
+                            dto.setArea(parttimes.getArea());
+                            dto.setCreate_time(parttimes.getCreateTime());
+                            dto.setRequirement(parttimes.getRequirement());
+                            dto.setSalary(parttimes.getSalary());
+                            dto.setSettlement(parttimes.getSettlement());
+                            dto.setSignup_ddl(parttimes.getSignupDdl());
+                            dto.setSlogan(parttimes.getSlogan());
+                            dto.setUpdate_time(parttimes.getUpdateTime());
+                            dto.setOp_id(parttimes.getOp().getId());
+                            dto.setWork_time(parttimes.getWorkTime());
                             dto.setMemo("兼职获取成功");
                             res.add(dto);
                         }
@@ -198,24 +199,24 @@ public class PositionServiceImpl implements PositionService {
     public PositionInfoDto getPosition(int p_id) throws ParttimeServiceException {
         PositionInfoDto res = new PositionInfoDto();
         //数据
-        Position position = positionRepository.getPosition(p_id);
-        if (position != null) {
-            res.setP_id(position.getId());
-            res.setCategory(position.getCategory());
-            res.setContent(position.getContent());
-            res.setExp(position.getExp());
-            res.setPosition_name(position.getPositionName());
-            res.setPosition_status(position.getPositionStatus());
-            res.setArea(position.getArea());
-            res.setCreate_time(position.getCreateTime());
-            res.setRequirement(position.getRequirement());
-            res.setSalary(position.getSalary());
-            res.setSettlement(position.getSettlement());
-            res.setSignup_ddl(position.getSignupDdl());
-            res.setSlogan(position.getSlogan());
-            res.setUpdate_time(position.getUpdateTime());
-            res.setOp_id(position.getOp().getId());
-            res.setWork_time(position.getWorkTime());
+        Parttimes parttimes = positionRepository.getPosition(p_id);
+        if (parttimes != null) {
+            res.setP_id(parttimes.getId());
+            res.setCategory(parttimes.getCategory());
+            res.setContent(parttimes.getContent());
+            res.setExp(parttimes.getExp());
+            res.setPosition_name(parttimes.getPositionName());
+            res.setPosition_status(parttimes.getPositionStatus());
+            res.setArea(parttimes.getArea());
+            res.setCreate_time(parttimes.getCreateTime());
+            res.setRequirement(parttimes.getRequirement());
+            res.setSalary(parttimes.getSalary());
+            res.setSettlement(parttimes.getSettlement());
+            res.setSignup_ddl(parttimes.getSignupDdl());
+            res.setSlogan(parttimes.getSlogan());
+            res.setUpdate_time(parttimes.getUpdateTime());
+            res.setOp_id(parttimes.getOp().getId());
+            res.setWork_time(parttimes.getWorkTime());
             res.setMemo("存在兼职");
         } else {
             logger.warn("该兼职不存在");
@@ -240,13 +241,14 @@ public class PositionServiceImpl implements PositionService {
                 //判断兼职是否存在
                 PositionInfoDto dto = getPosition(p_id);
                 //判断该用户是否已经报名过该兼职
-//                Signup find = signupRepository.findExistsSignup(stu.getId(), p_id);
                 List<Signup> find = signupRepository.findExistsSignup(stu.getId(), p_id);
 
-                //没报名过，就可以直接报名
+                //没报名过，继续后续操作
                 if (find == null || find.size() == 0) {
                     System.out.println("兼职：" + dto.toString());
-                    if (dto != null && (dto.getMemo()).equals("存在兼职")) {
+                    // 状态不是已招满和已结束，就可以报名
+                    if (dto != null && (dto.getMemo()).equals("存在兼职")
+                            && dto.getPosition_status().equals("已发布")) {
                         //添加signup记录
                         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                         Date now = sdf.parse(sdf.format(new Date()));
@@ -574,9 +576,9 @@ public class PositionServiceImpl implements PositionService {
         //输入的有数据
         if (category != null && !category.equals("")) {
             //找到该种类的所有兼职
-            List<Position> list = positionRepository.getAllPositionsByCategory(category);
+            List<Parttimes> list = positionRepository.getAllPositionsByCategory(category);
             if (list != null && list.size() > 0) {
-                for (Position i : list) {
+                for (Parttimes i : list) {
                     PositionInfoDto dto = new PositionInfoDto();
                     dto.setP_id(i.getId());
                     dto.setCategory(i.getCategory());
@@ -616,4 +618,272 @@ public class PositionServiceImpl implements PositionService {
 
         return res;
     }
+
+    @Override
+    public List<PositionInfoToEmpDto> getAllPositionByEmp() throws ParttimeServiceException {
+        List<PositionInfoToEmpDto> res = new ArrayList<>();
+        //数据
+        List<Parttimes> list = positionRepository.getAllPositions();
+        if (list != null) {
+            for (Parttimes i : list) {
+                //获取该兼职的报名人数，从signup中找
+                int num_signup = signupRepository.getNumOfSignup(i.getId());//根据p_id找
+                int num_employment = signupRepository.getNumOfEmployment(i.getId());//根据p_id找
+
+                PositionInfoToEmpDto dto = new PositionInfoToEmpDto();
+                dto.setP_id(i.getId());
+                dto.setCategory(i.getCategory());
+                dto.setContent(i.getContent());
+                dto.setNum_signup(num_signup);//已报名数
+                dto.setNum_employment(num_employment);//已录取数
+                dto.setNum_total(i.getNum());//名额数
+                dto.setExp(i.getExp());
+                dto.setPosition_name(i.getPositionName());
+                dto.setPosition_status(i.getPositionStatus());
+                dto.setArea(i.getArea());
+                dto.setCreate_time(i.getCreateTime());
+                dto.setRequirement(i.getRequirement());
+                dto.setSalary(i.getSalary());
+                dto.setSettlement(i.getSettlement());
+                dto.setSignup_ddl(i.getSignupDdl());
+                dto.setSlogan(i.getSlogan());
+                dto.setUpdate_time(i.getUpdateTime());
+                dto.setOp_id(i.getOp().getId());
+                dto.setWork_time(i.getWorkTime());
+                dto.setMemo("兼职获取成功");
+                res.add(dto);
+            }
+            System.out.println(list.toString());
+        } else {
+            logger.warn("该账号不存在");
+            PositionInfoToEmpDto dto = new PositionInfoToEmpDto();
+            dto.setMemo("该账号不存在");
+            res.add(dto);
+        }
+        System.out.println(res.toString());
+
+        return res;
+    }
+
+    @Override
+    public List<PositionInfoToEmpDto> getAllPositionByEmpId(String emp_id) throws ParttimeServiceException {
+        List<PositionInfoToEmpDto> res = new ArrayList<>();
+
+        //有输入
+        if (emp_id != null && !emp_id.equals("")) {
+            //数据
+            List<Parttimes> list = positionRepository.getAllPositionsByEmpId(emp_id);
+            if (list != null) {
+                for (Parttimes i : list) {
+                    //获取该兼职的报名人数，从signup中找
+                    int num_signup = signupRepository.getNumOfSignup(i.getId());//根据p_id找
+                    int num_employment = signupRepository.getNumOfEmployment(i.getId());//根据p_id找
+
+                    PositionInfoToEmpDto dto = new PositionInfoToEmpDto();
+                    dto.setP_id(i.getId());
+                    dto.setCategory(i.getCategory());
+                    dto.setContent(i.getContent());
+                    dto.setNum_signup(num_signup);//已报名数
+                    dto.setNum_employment(num_employment);//已录取数
+                    dto.setNum_total(i.getNum());//名额数
+                    dto.setExp(i.getExp());
+                    dto.setPosition_name(i.getPositionName());
+                    dto.setPosition_status(i.getPositionStatus());
+                    dto.setArea(i.getArea());
+                    dto.setCreate_time(i.getCreateTime());
+                    dto.setRequirement(i.getRequirement());
+                    dto.setSalary(i.getSalary());
+                    dto.setSettlement(i.getSettlement());
+                    dto.setSignup_ddl(i.getSignupDdl());
+                    dto.setSlogan(i.getSlogan());
+                    dto.setUpdate_time(i.getUpdateTime());
+                    dto.setOp_id(i.getOp().getId());
+                    dto.setWork_time(i.getWorkTime());
+                    dto.setMemo("兼职获取成功");
+                    res.add(dto);
+                }
+                System.out.println(list.toString());
+            } else {
+                logger.warn("该账号不存在");
+                PositionInfoToEmpDto dto = new PositionInfoToEmpDto();
+                dto.setMemo("该账号不存在");
+                res.add(dto);
+            }
+        } else {
+            logger.warn("请检查输入");
+            PositionInfoToEmpDto dto = new PositionInfoToEmpDto();
+            dto.setMemo("请检查输入");
+            res.add(dto);
+        }
+
+        System.out.println(res.toString());
+
+        return res;
+    }
+
+    @Override
+    public UnitInfoDto getUnitInfoByUnitName(String op_id) throws ParttimeServiceException {
+        UnitInfoDto res = new UnitInfoDto();
+        if (op_id != null && !op_id.equals("")) {
+            //根据op_id找到u_id
+            Employer emp = logAndRegByEmpRepository.findEmployerByTelephone(op_id);
+            if (emp != null) {
+                //从emp实体中找到unit实体
+                Unit unit = emp.getU();
+                if (unit != null) {
+                    //找到了，构造res
+                    res.setU_id(unit.getId());
+                    res.setUnit_name(unit.getUnitName());
+                    res.setDescriptions(unit.getDescriptions());
+                    res.setJob_nums(unit.getJobNums());
+                    res.setLoc(unit.getLoc());
+                    res.setMemo("获取单位信息成功");
+                } else {
+                    logger.warn("不存在该单位");
+                    res.setU_id(0);
+                    res.setMemo("不存在该单位");
+                }
+            } else {
+                logger.warn("不存在该兼职发布者");
+                res.setU_id(0);
+                res.setMemo("不存在该兼职发布者");
+            }
+        } else {
+            logger.warn("请检查输入信息");
+            res.setU_id(0);
+            res.setMemo("请检查输入信息");
+        }
+        return res;
+    }
+
+    @Override
+    public PositionInfoToEmpDto publishParttime(PublishInputDto input) throws ParttimeServiceException, ParseException {
+        PositionInfoToEmpDto res = new PositionInfoToEmpDto();
+
+        if (input != null) {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+            String op_id = input.getOp_id();
+            String position_name = input.getPosition_name();
+            String category = input.getCategory();
+            String salary = input.getSalary();
+            String area = input.getArea();
+            String exp = input.getExp();
+            String content = input.getContent();
+            String requirement = input.getRequirement();
+            String signup_ddl_input = input.getSignup_ddl();
+            String slogan = input.getSlogan();
+            String work_time = input.getWork_time();
+            String settlement = input.getSettlement();
+            String create_time_input = input.getCreate_time();
+            //string转Date
+            Date signup_ddl = sdf.parse(signup_ddl_input);
+            Date create_time = sdf.parse(create_time_input);
+            int num = input.getNum_total();//名额数
+
+            //找到这个操作者
+            Employer emp = logAndRegByEmpRepository.findEmployerByTelephone(op_id);
+            if (emp != null) {
+                //存在操作者，更新数据库
+                positionRepository.publishAParttime(op_id, position_name, num, category, salary,
+                        area, exp, content, requirement, signup_ddl, slogan, work_time, settlement,
+                        "已发布", create_time, create_time);//更新时间设置为创建时间
+
+                //找到刚创建的兼职
+                Parttimes createdParttimes = positionRepository.getLatestPosition();
+                if (createdParttimes != null) {
+                    //构造返回的res
+                    res.setP_id(createdParttimes.getId());
+                    res.setOp_id(createdParttimes.getOp().getId());
+                    res.setPosition_name(createdParttimes.getPositionName());
+                    res.setCategory(createdParttimes.getCategory());
+                    res.setSalary(createdParttimes.getSalary());
+                    res.setArea(createdParttimes.getArea());
+                    res.setExp(createdParttimes.getExp());
+                    res.setContent(createdParttimes.getContent());
+                    res.setRequirement(createdParttimes.getRequirement());
+                    res.setSignup_ddl(createdParttimes.getSignupDdl());
+                    res.setSlogan(createdParttimes.getSlogan());
+                    res.setWork_time(createdParttimes.getWorkTime());
+                    res.setSettlement(createdParttimes.getSettlement());
+                    res.setPosition_status(createdParttimes.getPositionStatus());
+                    res.setCreate_time(createdParttimes.getCreateTime());
+                    res.setUpdate_time(createdParttimes.getUpdateTime());
+                    res.setNum_total(createdParttimes.getNum());
+                    res.setMemo("发布成功");
+                } else {
+                    logger.warn("发布中发生异常");
+                    res.setP_id(0);
+                    res.setMemo("发布中发生异常");
+                }
+            } else {
+                logger.warn("不存在该兼职发布者");
+                res.setP_id(0);
+                res.setMemo("不存在该兼职发布者");
+            }
+        } else {
+            logger.warn("请检查输入的表单信息是否完整");
+            res.setP_id(0);
+            res.setMemo("请检查输入的表单信息是否完整");
+        }
+        return res;
+    }
+
+    @Override
+    public PositionInfoToEmpDto undercarriageParttime(UndercarriageInputDto undercarriageInputDto) throws ParttimeServiceException, ParseException {
+        PositionInfoToEmpDto res = new PositionInfoToEmpDto();
+
+        if (undercarriageInputDto != null) {
+            //获取输入的内容
+            String telephone = undercarriageInputDto.getOp_id();
+            int p_id = undercarriageInputDto.getP_id();
+
+            //根据telephone找用户，判断是否存在
+            Employer emp = logAndRegByEmpRepository.findEmployerByTelephone(telephone);
+
+            if (emp != null) {
+                //存在该操作者，去找该操作员是否是该兼职的管理者
+                Parttimes hasAuthority = positionRepository.checkIsTheManager(telephone, p_id);
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+                //是负责人,且兼职不是已结束状态
+                if (hasAuthority != null && !hasAuthority.getPositionStatus().equals("已结束")) {
+                    //1.先判断是否有用户报名了改兼职，若有，将报名状态改为”已取消“，再下架
+                    List<Signup> list = signupRepository.getAllSignupByPId(p_id);//根据p_id找到所有报名该兼职的记录
+                    if (list.size() > 0) {
+                        //有人报名了该兼职
+                        for (Signup signup : list) {
+                            if (signup.getSignupStatus().equals("已报名")) {
+                                signupRepository.cancelSignup(sdf.parse(sdf.format(new Date())), signup.getId());//取消该兼职
+                            }
+                        }
+                        //此时，都取消了，就下架
+                        positionRepository.updatePositionStatus("已结束", sdf.parse(sdf.format(new Date())), hasAuthority.getId());
+                    } else {
+                        //2.若没有报名该兼职的直接下架
+                        positionRepository.updatePositionStatus("已结束", sdf.parse(sdf.format(new Date())), hasAuthority.getId());
+                    }
+                    //构造res
+                    res.setP_id(hasAuthority.getId());
+                    res.setPosition_status("已结束");
+                    res.setMemo("下架成功");
+                } else {
+                    //不是负责人，不能操作
+                    logger.warn("非兼职负责人不能操作");
+                    res.setP_id(0);
+                    res.setMemo("非兼职负责人不能操作");
+                }
+            } else {
+                logger.warn("不存在该兼职发布者");
+                res.setP_id(0);
+                res.setMemo("不存在该兼职发布者");
+            }
+        } else {
+            logger.warn("请检查输入的信息是否完整");
+            res.setP_id(0);
+            res.setMemo("请检查输入的信息是否完整");
+        }
+        return res;
+    }
+
 }

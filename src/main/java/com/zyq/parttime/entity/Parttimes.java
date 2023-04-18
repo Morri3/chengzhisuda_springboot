@@ -1,14 +1,13 @@
 package com.zyq.parttime.entity;
 
 import javax.persistence.*;
-import java.time.Instant;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "position")
-public class Position {
+@Table(name = "parttimes")
+public class Parttimes {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "p_id", nullable = false)
@@ -23,6 +22,9 @@ public class Position {
 
     @Column(name = "category")
     private String category;
+
+    @Column(name = "num")
+    private int num;
 
     @Column(name = "salary")
     private String salary;
@@ -54,6 +56,8 @@ public class Position {
     @Column(name = "position_status")
     private String positionStatus;
 
+//    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+//    @JSONField(format = "yyyy-MM-dd HH:mm:ss")
     @Column(name = "create_time")
     private Date createTime;
 
@@ -200,6 +204,14 @@ public class Position {
 
     public void setOp(Employer op) {
         this.op = op;
+    }
+
+    public int getNum() {
+        return num;
+    }
+
+    public void setNum(int num) {
+        this.num = num;
     }
 
     public int getId() {

@@ -1,7 +1,6 @@
 package com.zyq.parttime.entity;
 
 import javax.persistence.*;
-import java.time.Instant;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -20,7 +19,7 @@ public class Signup {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "p_id", nullable = false)
-    private Position p;
+    private Parttimes p;
 
     @Column(name = "signup_status")
     private String signupStatus;
@@ -77,11 +76,11 @@ public class Signup {
         this.signupStatus = signupStatus;
     }
 
-    public Position getP() {
+    public Parttimes getP() {
         return p;
     }
 
-    public void setP(Position p) {
+    public void setP(Parttimes p) {
         this.p = p;
     }
 
