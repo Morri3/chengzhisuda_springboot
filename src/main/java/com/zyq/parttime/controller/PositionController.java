@@ -98,7 +98,7 @@ public class PositionController {
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
-    //TODO 获取所有兼职-兼职发布者
+    //TODO 获取自己管理的所有兼职-兼职发布者
     @RequestMapping(value = "/emp/get_own", method = RequestMethod.GET)
     @ResponseBody
     public ResponseData getAllPositionByEmpId(@RequestParam String emp_id) {
@@ -127,6 +127,38 @@ public class PositionController {
     @ResponseBody
     public ResponseData undercarriageParttime(@RequestBody UndercarriageInputDto undercarriageInputDto) throws ParseException {
         PositionInfoToEmpDto res = positionService.undercarriageParttime(undercarriageInputDto);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
+    //TODO 获取自己管理的所有兼职的所有报名信息-兼职发布者/管理员
+    @RequestMapping(value = "/signup/get_info", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseData getSignupInfoByEmp(@RequestParam String emp_id) throws ParseException {
+        List<SignupInfoToEmpDto> res = positionService.getSignupInfoByEmp(emp_id);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
+    //TODO 获取某个兼职的某个报名信息-兼职发布者/管理员
+    @RequestMapping(value = "/signup/get_one_info", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseData getASpecialSignupInfoByEmp(@RequestParam String emp_id, @RequestParam int p_id) throws ParseException {
+        SignupInfoToEmpDto res = positionService.getASpecialSignupInfoByEmp(emp_id, p_id);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
+    //TODO 录取-兼职发布者/管理员
+    @RequestMapping(value = "/signup/confirm", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseData confrimSignup(@RequestBody ConfirmInputDto confirmInputDto) throws ParseException {
+        List<SignupInfoToEmpDto> res = positionService.confirmSignup(confirmInputDto);//录取后返回报名的信息
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
+    //TODO 婉拒-兼职发布者/管理员
+    @RequestMapping(value = "/signup/reject", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseData rejectSignup(@RequestBody RejectInputDto rejectInputDto) throws ParseException {
+        List<SignupInfoToEmpDto> res = positionService.rejectSignup(rejectInputDto);//录取后返回报名的信息
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 }

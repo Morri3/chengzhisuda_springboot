@@ -50,6 +50,9 @@ public interface PositionRepository extends JpaRepository<Parttimes, Integer>, J
     Parttimes getLatestPosition();
 
     @Query(value = "select * from parttimes where op_id=?1 and p_id=?2", nativeQuery = true)
-    Parttimes checkIsTheManager(String op_id,int p_id);
+    Parttimes checkIsTheManager(String op_id, int p_id);
+
+    @Query(value = "select * from parttimes where op_id=?1", nativeQuery = true)
+    List<Parttimes> getAllPositionManagedByEmp( String op_id);
 
 }

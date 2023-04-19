@@ -3,6 +3,7 @@ package com.zyq.parttime.service.impl;
 import cn.hutool.crypto.asymmetric.Sign;
 import com.zyq.parttime.entity.Comment;
 import com.zyq.parttime.entity.Mark;
+import com.zyq.parttime.entity.Parttimes;
 import com.zyq.parttime.entity.Signup;
 import com.zyq.parttime.exception.ParttimeServiceException;
 import com.zyq.parttime.form.comment.CommentDto;
@@ -12,6 +13,7 @@ import com.zyq.parttime.form.mark.MarkDto;
 import com.zyq.parttime.form.mark.MarkPostDto;
 import com.zyq.parttime.repository.comment.CommentRepository;
 import com.zyq.parttime.repository.mark.MarkRepository;
+import com.zyq.parttime.repository.position.PositionRepository;
 import com.zyq.parttime.repository.position.SignupRepository;
 import com.zyq.parttime.service.CommentService;
 import com.zyq.parttime.service.MarkService;
@@ -33,6 +35,8 @@ public class CommentServiceImpl implements CommentService {
     private CommentRepository commentRepository;
     @Autowired
     private SignupRepository signupRepository;
+    @Autowired
+    private PositionRepository positionRepository;
 
     @Override
     public CommentDto getComment(int s_id) throws ParttimeServiceException {
@@ -193,6 +197,73 @@ public class CommentServiceImpl implements CommentService {
 //            res.add(dto);
 //        }
         System.out.println("兼职" + p_id + "的评论数据为：" + res.getContent());
+
+        return res;
+    }
+
+    @Override
+    public List<CommentDto> getAllSpecialComment(String emp_id) throws ParttimeServiceException {
+        List<CommentDto> res = new ArrayList<>();
+
+        if (emp_id != null && !emp_id.equals("")) {
+            //有输入,根据emp_id找到管理的所有兼职
+            List<Parttimes> parttimes = positionRepository.getAllPositionManagedByEmp(emp_id);
+            if (parttimes.size() > 0) {
+
+                //有负责的兼职,遍历每个兼职
+                for (Parttimes item : parttimes) {
+
+                    //遍历每个兼职，找到报名该兼职的signup
+                    List<Signup> signups = signupRepository.getAllSignupByPId(item.getId());
+                    if (signups.size() > 0) {
+                        //存在报名
+
+                        for (Signup item2 : signups) {
+                            //找到该signup的comment记录
+                            Comment comment = commentRepository.getComment(item2.getId());
+                            if (comment != null) {
+                                //存在该评论记录，构造dto，加入res
+                                CommentDto commentDto = new CommentDto();
+                                commentDto.setC_id(comment.getId());
+                                commentDto.setS_id(item2.getId());
+                                commentDto.setContent(comment.getContent());
+                                commentDto.setCreate_time(comment.getCreateTime());
+                                commentDto.setMemo("获取成功");
+                                res.add(commentDto);
+                            } else {
+                                logger.warn("该报名尚未评分");
+                                CommentDto dto = new CommentDto();
+                                dto.setC_id(0);
+                                dto.setS_id(item2.getId());
+                                dto.setMemo("该报名尚未评分");
+                                res.add(dto);
+                            }
+                        }
+                    } else {
+                        logger.warn("该兼职尚未报名");
+                        CommentDto dto = new CommentDto();
+                        dto.setC_id(0);
+                        dto.setS_id(0);
+                        dto.setMemo("该兼职尚未报名");
+                        res.add(dto);
+                    }
+                }
+            } else {
+                logger.warn("暂无负责的兼职");
+                CommentDto dto = new CommentDto();
+                dto.setC_id(0);
+                dto.setS_id(0);
+                dto.setMemo("暂无负责的兼职");
+                res.add(dto);
+            }
+        } else {
+            logger.warn("请检出输入");
+            CommentDto dto = new CommentDto();
+            dto.setC_id(0);
+            dto.setS_id(0);
+            dto.setMemo("请检出输入");
+            res.add(dto);
+        }
 
         return res;
     }

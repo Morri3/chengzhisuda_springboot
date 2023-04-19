@@ -44,4 +44,11 @@ public class MarkController {
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
+    //TODO 获取自己负责的所有兼职的所有评分记录-兼职发布者/管理员
+    @RequestMapping(value = "/emp/getSome", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseData getAllSpecialMark(@RequestParam String emp_id) {
+        List<MarkDto> res = markService.getAllSpecialMark(emp_id);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
 }

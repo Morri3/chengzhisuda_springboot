@@ -15,7 +15,6 @@ public interface SignupRepository extends JpaRepository<Signup, Integer>, JpaSpe
     Signup getLatestSignup(Date update_time);
 
     @Query(value = "select * from signup where stu_id=?1 and p_id=?2", nativeQuery = true)
-//    Signup findExistsSignup(String stu_id, int p_id);
     List<Signup> findExistsSignup(String stu_id, int p_id);
 
     @Query(value = "select * from signup where s_id=?1", nativeQuery = true)
@@ -45,4 +44,14 @@ public interface SignupRepository extends JpaRepository<Signup, Integer>, JpaSpe
 
     @Query(value = "select count(*) from signup where p_id=?1 and signup_status='已录取'", nativeQuery = true)
     int getNumOfEmployment(int p_id);
+
+    @Transactional
+    @Modifying
+    @Query(value = "update signup set signup_status='已录取',update_time=?1 where s_id=?2", nativeQuery = true)
+    void confirmSignup(Date update_time, int s_id);
+
+    @Transactional
+    @Modifying
+    @Query(value = "update signup set signup_status='已取消',update_time=?1 where s_id=?2", nativeQuery = true)
+    void rejectSignup(Date update_time, int s_id);
 }

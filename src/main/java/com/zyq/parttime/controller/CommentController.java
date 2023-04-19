@@ -45,4 +45,12 @@ public class CommentController {
         OneCommentDto res = commentService.getCommentThree(p_id);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
+
+    //TODO 获取自己负责的所有兼职的所有评论记录-兼职发布者/管理员
+    @RequestMapping(value = "/emp/getSome", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseData getAllSpecialComment(@RequestParam String emp_id) {
+        List<CommentDto> res = commentService.getAllSpecialComment(emp_id);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
 }

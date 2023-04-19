@@ -20,4 +20,6 @@ public interface CommentService {
     //获取某一兼职的所有学生的评论（前3条）
     OneCommentDto getCommentThree(int p_id) throws ParttimeServiceException;
 
+    //获取自己负责的所有兼职的所有评论记录
+    List<CommentDto> getAllSpecialComment(String emp_id) throws ParttimeServiceException;
 }

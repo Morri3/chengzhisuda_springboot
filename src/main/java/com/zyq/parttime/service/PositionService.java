@@ -30,10 +30,10 @@ public interface PositionService {
     List<SignupReturnDto> history(HistoryDto historyDto) throws ParttimeServiceException, ParseException;
 
     //获取指定状态的报名
-    List<SignupReturnDto> getOneStatus(String telephone,String signup_status) throws ParttimeServiceException, ParseException;
+    List<SignupReturnDto> getOneStatus(String telephone, String signup_status) throws ParttimeServiceException, ParseException;
 
     //查看学生是否有报名某个兼职
-    CanSignupDto getSpecialSignup(String telephone,int p_id) throws ParttimeServiceException, ParseException;
+    CanSignupDto getSpecialSignup(String telephone, int p_id) throws ParttimeServiceException, ParseException;
 
     //按种类筛选兼职
     List<PositionInfoDto> getPositionByCategory(String category) throws ParttimeServiceException;
@@ -41,7 +41,7 @@ public interface PositionService {
     //获取所有兼职
     List<PositionInfoToEmpDto> getAllPositionByEmp() throws ParttimeServiceException;
 
-    //获取所有兼职
+    //获取所有兼职String emp_id, int p_id
     List<PositionInfoToEmpDto> getAllPositionByEmpId(String emp_id) throws ParttimeServiceException;
 
     //根据unit_name获取单位信息
@@ -52,4 +52,16 @@ public interface PositionService {
 
     //下架兼职
     PositionInfoToEmpDto undercarriageParttime(UndercarriageInputDto undercarriageInputDto) throws ParttimeServiceException, ParseException;
+
+    //获取报名信息
+    List<SignupInfoToEmpDto> getSignupInfoByEmp(String emp_id) throws ParttimeServiceException, ParseException;
+
+    //获取指定的一个报名信息
+    SignupInfoToEmpDto getASpecialSignupInfoByEmp(String emp_id, int p_id) throws ParttimeServiceException, ParseException;
+
+    //录取
+    List<SignupInfoToEmpDto> confirmSignup(ConfirmInputDto confirmInputDto) throws ParttimeServiceException, ParseException;
+
+    //婉拒
+    List<SignupInfoToEmpDto> rejectSignup(RejectInputDto rejectInputDto) throws ParttimeServiceException, ParseException;
 }

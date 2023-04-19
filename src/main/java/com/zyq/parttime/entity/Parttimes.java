@@ -56,8 +56,6 @@ public class Parttimes {
     @Column(name = "position_status")
     private String positionStatus;
 
-//    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-//    @JSONField(format = "yyyy-MM-dd HH:mm:ss")
     @Column(name = "create_time")
     private Date createTime;
 

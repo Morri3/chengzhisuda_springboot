@@ -4,13 +4,17 @@ import cn.hutool.crypto.asymmetric.Sign;
 import com.zyq.parttime.entity.*;
 import com.zyq.parttime.exception.ParttimeServiceException;
 import com.zyq.parttime.form.position.*;
+import com.zyq.parttime.form.resumemanage.ResumeDetailDto;
+import com.zyq.parttime.form.resumemanage.ResumeInfoDto;
 import com.zyq.parttime.form.unit.UnitInfoDto;
 import com.zyq.parttime.repository.logandreg.LogAndRegByEmpRepository;
+import com.zyq.parttime.repository.resumemanage.ResumesInfoRepository;
 import com.zyq.parttime.repository.unit.UnitRepository;
 import com.zyq.parttime.repository.position.PositionRepository;
 import com.zyq.parttime.repository.position.SignupRepository;
 import com.zyq.parttime.repository.userinfomanage.StuInfoRepository;
 import com.zyq.parttime.service.PositionService;
+import io.minio.messages.Part;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +41,10 @@ public class PositionServiceImpl implements PositionService {
     private UnitRepository unitRepository;
     @Autowired
     private LogAndRegByEmpRepository logAndRegByEmpRepository;
+    @Autowired
+    private ResumesInfoRepository resumesInfoRepository;
+    @Autowired
+    private UsersServiceImpl usersServiceImpl;
 
     @Override
     public List<PositionInfoDto> getAllPosition() throws ParttimeServiceException {
@@ -792,25 +800,37 @@ public class PositionServiceImpl implements PositionService {
                 //找到刚创建的兼职
                 Parttimes createdParttimes = positionRepository.getLatestPosition();
                 if (createdParttimes != null) {
-                    //构造返回的res
-                    res.setP_id(createdParttimes.getId());
-                    res.setOp_id(createdParttimes.getOp().getId());
-                    res.setPosition_name(createdParttimes.getPositionName());
-                    res.setCategory(createdParttimes.getCategory());
-                    res.setSalary(createdParttimes.getSalary());
-                    res.setArea(createdParttimes.getArea());
-                    res.setExp(createdParttimes.getExp());
-                    res.setContent(createdParttimes.getContent());
-                    res.setRequirement(createdParttimes.getRequirement());
-                    res.setSignup_ddl(createdParttimes.getSignupDdl());
-                    res.setSlogan(createdParttimes.getSlogan());
-                    res.setWork_time(createdParttimes.getWorkTime());
-                    res.setSettlement(createdParttimes.getSettlement());
-                    res.setPosition_status(createdParttimes.getPositionStatus());
-                    res.setCreate_time(createdParttimes.getCreateTime());
-                    res.setUpdate_time(createdParttimes.getUpdateTime());
-                    res.setNum_total(createdParttimes.getNum());
-                    res.setMemo("发布成功");
+                    //更新该操作员的unit中的job_nums字段值
+                    Unit unit = unitRepository.findUnitByUnitId(emp.getU().getId());
+
+                    if (unit != null) {
+                        //存在
+                        unitRepository.addJobNums(unit.getId());//更新job_nums
+
+                        //构造返回的res
+                        res.setP_id(createdParttimes.getId());
+                        res.setOp_id(createdParttimes.getOp().getId());
+                        res.setPosition_name(createdParttimes.getPositionName());
+                        res.setCategory(createdParttimes.getCategory());
+                        res.setSalary(createdParttimes.getSalary());
+                        res.setArea(createdParttimes.getArea());
+                        res.setExp(createdParttimes.getExp());
+                        res.setContent(createdParttimes.getContent());
+                        res.setRequirement(createdParttimes.getRequirement());
+                        res.setSignup_ddl(createdParttimes.getSignupDdl());
+                        res.setSlogan(createdParttimes.getSlogan());
+                        res.setWork_time(createdParttimes.getWorkTime());
+                        res.setSettlement(createdParttimes.getSettlement());
+                        res.setPosition_status(createdParttimes.getPositionStatus());
+                        res.setCreate_time(createdParttimes.getCreateTime());
+                        res.setUpdate_time(createdParttimes.getUpdateTime());
+                        res.setNum_total(createdParttimes.getNum());
+                        res.setMemo("发布成功");
+                    } else {
+                        logger.warn("该兼职发布者不存在单位");
+                        res.setP_id(0);
+                        res.setMemo("该兼职发布者不存在单位");
+                    }
                 } else {
                     logger.warn("发布中发生异常");
                     res.setP_id(0);
@@ -863,10 +883,23 @@ public class PositionServiceImpl implements PositionService {
                         //2.若没有报名该兼职的直接下架
                         positionRepository.updatePositionStatus("已结束", sdf.parse(sdf.format(new Date())), hasAuthority.getId());
                     }
-                    //构造res
-                    res.setP_id(hasAuthority.getId());
-                    res.setPosition_status("已结束");
-                    res.setMemo("下架成功");
+
+                    //更新该操作员的unit中的job_nums字段值
+                    Unit unit = unitRepository.findUnitByUnitId(emp.getU().getId());
+
+                    if (unit != null) {
+                        //存在
+                        unitRepository.minusJobNums(unit.getId());//更新job_nums
+
+                        //构造res
+                        res.setP_id(hasAuthority.getId());
+                        res.setPosition_status("已结束");
+                        res.setMemo("下架成功");
+                    } else {
+                        logger.warn("该兼职发布者不存在单位");
+                        res.setP_id(0);
+                        res.setMemo("该兼职发布者不存在单位");
+                    }
                 } else {
                     //不是负责人，不能操作
                     logger.warn("非兼职负责人不能操作");
@@ -886,4 +919,385 @@ public class PositionServiceImpl implements PositionService {
         return res;
     }
 
+    @Override
+    public List<SignupInfoToEmpDto> getSignupInfoByEmp(String emp_id) throws ParttimeServiceException, ParseException {
+        List<SignupInfoToEmpDto> res = new ArrayList<>();
+
+        if (emp_id != null && !emp_id.equals("")) {
+            //有输入
+
+            //1.找到该管理员所负责的所有兼职
+            List<Parttimes> parttimes = positionRepository.getAllPositionManagedByEmp(emp_id);
+            if (parttimes.size() > 0) {
+
+                //有负责的兼职,遍历每个兼职
+                for (Parttimes item : parttimes) {
+                    //2.获取兼职信息
+                    String p_name = item.getPositionName();
+                    int num_employment = signupRepository.getNumOfEmployment(item.getId());//根据p_id找已录取数
+                    int num_signup = signupRepository.getNumOfSignup(item.getId());
+                    int num_total = item.getNum();
+
+                    //3.遍历每个兼职，找到报名该兼职的signup
+                    List<Signup> signups = signupRepository.getAllSignupByPId(item.getId());
+                    if (signups.size() > 0) {
+
+                        //存在报名数据
+                        for (Signup item2 : signups) {
+
+                            //4.遍历每个signup，获取报名的信息
+                            String stu_id = item2.getStu().getId();//手机号
+                            String signup_status = item2.getSignupStatus();//报名状态
+                            Date signup_time = item2.getCreateTime();//报名时间
+
+                            //5.找该报名的学生信息
+                            Student student = stuInfoRepository.findStudentByTelephone(stu_id);
+                            if (student != null) {
+                                //存在该学生
+                                String username = student.getStuName();
+                                String gender = (student.getGender() == 1) ? "男" : "女";
+                                String head = student.getHead();//头像
+                                int age = student.getAge();
+                                String grade = student.getGrade();
+
+                                //6.获取该学生的简历信息
+                                ResumeInfoDto resumeInfoDto = usersServiceImpl.getResume(student.getId());
+                                if (resumeInfoDto != null && resumeInfoDto.getMemo().equals("存在简历")) {
+                                    //存在简历，获取
+                                    String current_area = resumeInfoDto.getCurrent_area();
+                                    String exp = resumeInfoDto.getExp();
+                                    Date upload_time = resumeInfoDto.getUpload_time();
+                                    List<ResumeDetailDto> campusList = resumeInfoDto.getCampusExpList();
+                                    List<ResumeDetailDto> educationBgList = resumeInfoDto.getEducationBgList();
+                                    List<ResumeDetailDto> projectExpList = resumeInfoDto.getProjectExpList();
+                                    List<ResumeDetailDto> professionalSkillList = resumeInfoDto.getProfessionalSkillList();
+
+                                    //6-2.找到该简历的id
+                                    Resumes resumes = resumesInfoRepository.findResumesByStuId(student.getId());
+                                    //这里可以不用判断是否存在简历，因为resumesInfoDto此时存在
+                                    String url = resumesInfoRepository.getUrlOfResumePhoto(resumes.getId());//根据r_id找到简历照片url
+                                    if (url != null && !url.equals("")) {
+                                        //存在简历照片，什么事都不做
+                                    } else {
+                                        //不存在简历照片，也就表示上面得到的4个list是空的
+                                        System.out.println("学生" + student.getId() + "的简历已创建但尚未上传");
+                                    }
+
+                                    //7.构造返回的res
+                                    SignupInfoToEmpDto dto = new SignupInfoToEmpDto();
+                                    //兼职信息部分
+                                    dto.setP_id(item.getId());
+                                    dto.setP_name(p_name);
+                                    dto.setNum_signup(num_signup);
+                                    dto.setNum_employment(num_employment);
+                                    dto.setNum_total(num_total);
+                                    //用户信息部分
+                                    dto.setStu_id(student.getId());
+                                    dto.setUsername(username);
+                                    dto.setGender(gender);
+                                    dto.setHead(head);
+                                    dto.setAge(age);
+                                    dto.setGrade(grade);
+                                    //简历部分
+                                    dto.setExp(exp);
+                                    dto.setCurrent_area(current_area);
+                                    dto.setUrl(url);
+                                    dto.setCampusExpList(campusList);
+                                    dto.setEducationBgList(educationBgList);
+                                    dto.setProjectExpList(projectExpList);
+                                    dto.setProfessionalSkillList(professionalSkillList);
+                                    //报名部分
+                                    dto.setS_id(item2.getId());
+                                    dto.setSignup_status(signup_status);
+                                    dto.setSignup_time(signup_time);
+                                    //备忘录
+                                    dto.setMemo("获取报名信息成功");
+                                    res.add(dto);//加到res列表中
+                                } else {
+                                    //不存在简历
+                                    logger.warn("不存在简历");
+                                    SignupInfoToEmpDto dto = new SignupInfoToEmpDto();
+                                    dto.setP_id(item.getId());
+                                    dto.setMemo("不存在简历");
+                                    res.add(dto);
+                                }
+                            } else {
+                                //不存在该学生
+                                logger.warn("存在非法报名");
+                                SignupInfoToEmpDto dto = new SignupInfoToEmpDto();
+                                dto.setP_id(item.getId());
+                                dto.setMemo("存在非法报名");
+                                res.add(dto);
+                            }
+                        }
+                    } else {
+                        //无报名数据
+                        logger.warn("暂时无人报名该兼职");
+                        SignupInfoToEmpDto dto = new SignupInfoToEmpDto();
+                        dto.setP_id(item.getId());
+                        dto.setMemo("暂时无人报名该兼职");
+                        res.add(dto);
+                    }
+                }
+            } else {
+                //无负责的兼职
+                logger.warn("暂时无负责的兼职");
+                SignupInfoToEmpDto dto = new SignupInfoToEmpDto();
+                dto.setP_id(0);
+                dto.setMemo("暂时无负责的兼职");
+                res.add(dto);
+            }
+        } else {
+            logger.warn("请检查输入的信息是否完整");
+            SignupInfoToEmpDto dto = new SignupInfoToEmpDto();
+            dto.setP_id(0);
+            dto.setMemo("请检查输入的信息是否完整");
+            res.add(dto);
+        }
+        System.out.println("操作员" + emp_id + "所负责的所有兼职的报名数据："
+                + res.toString());
+
+        return res;
+    }
+
+    @Override
+    public SignupInfoToEmpDto getASpecialSignupInfoByEmp(String emp_id, int s_id) throws ParttimeServiceException, ParseException {
+        SignupInfoToEmpDto res = new SignupInfoToEmpDto();
+
+        if (emp_id != null && !emp_id.equals("") && s_id > 0) {
+            //有输入
+
+            //1.找到指定报名对应的兼职
+            Signup signup = signupRepository.findSignup(s_id);
+            if (signup != null) {
+                //存在该报名
+                Parttimes parttimes = positionRepository.checkIsTheManager(emp_id, signup.getP().getId());
+                if (parttimes != null) {
+                    //是该兼职的负责人
+
+                    //2.获取兼职信息
+                    String p_name = parttimes.getPositionName();
+                    int num_employment = signupRepository.getNumOfEmployment(signup.getP().getId());//根据p_id找已录取数
+                    int num_signup = signupRepository.getNumOfSignup(signup.getP().getId());
+                    int num_total = parttimes.getNum();
+
+                    //3.获取报名的信息
+                    String stu_id = signup.getStu().getId();//手机号
+                    String signup_status = signup.getSignupStatus();//报名状态
+                    Date signup_time = signup.getCreateTime();//报名时间
+
+                    //4.找该报名的学生信息
+                    Student student = stuInfoRepository.findStudentByTelephone(stu_id);
+                    if (student != null) {
+                        //存在该学生
+                        String username = student.getStuName();
+                        String gender = (student.getGender() == 1) ? "男" : "女";
+                        String head = student.getHead();//头像
+                        int age = student.getAge();
+                        String grade = student.getGrade();
+
+                        //5.获取该学生的简历信息
+                        ResumeInfoDto resumeInfoDto = usersServiceImpl.getResume(student.getId());
+                        if (resumeInfoDto != null && resumeInfoDto.getMemo().equals("存在简历")) {
+                            //存在简历，获取
+                            String current_area = resumeInfoDto.getCurrent_area();
+                            String exp = resumeInfoDto.getExp();
+                            Date upload_time = resumeInfoDto.getUpload_time();
+                            List<ResumeDetailDto> campusList = resumeInfoDto.getCampusExpList();
+                            List<ResumeDetailDto> educationBgList = resumeInfoDto.getEducationBgList();
+                            List<ResumeDetailDto> projectExpList = resumeInfoDto.getProjectExpList();
+                            List<ResumeDetailDto> professionalSkillList = resumeInfoDto.getProfessionalSkillList();
+
+                            //5-2.找到该简历的id
+                            Resumes resumes = resumesInfoRepository.findResumesByStuId(student.getId());
+                            //这里可以不用判断是否存在简历，因为resumesInfoDto此时存在
+                            String url = resumesInfoRepository.getUrlOfResumePhoto(resumes.getId());//根据r_id找到简历照片url
+                            if (url != null && !url.equals("")) {
+                                //存在简历照片，什么事都不做
+                            } else {
+                                //不存在简历照片，也就表示上面得到的4个list是空的
+                                System.out.println("学生" + student.getId() + "的简历已创建但尚未上传");
+                            }
+
+                            //6.构造返回的res
+                            SignupInfoToEmpDto dto = new SignupInfoToEmpDto();
+                            //兼职信息部分
+                            dto.setP_id(parttimes.getId());
+                            dto.setP_name(p_name);
+                            dto.setNum_signup(num_signup);
+                            dto.setNum_employment(num_employment);
+                            dto.setNum_total(num_total);
+                            //用户信息部分
+                            dto.setStu_id(student.getId());
+                            dto.setUsername(username);
+                            dto.setGender(gender);
+                            dto.setHead(head);
+                            dto.setAge(age);
+                            dto.setGrade(grade);
+                            //简历部分
+                            dto.setExp(exp);
+                            dto.setCurrent_area(current_area);
+                            dto.setUrl(url);
+                            dto.setCampusExpList(campusList);
+                            dto.setEducationBgList(educationBgList);
+                            dto.setProjectExpList(projectExpList);
+                            dto.setProfessionalSkillList(professionalSkillList);
+                            //报名部分
+                            dto.setS_id(s_id);
+                            dto.setSignup_status(signup_status);
+                            dto.setSignup_time(signup_time);
+                            //备忘录
+                            res.setMemo("获取报名信息成功");
+                        } else {
+                            //不存在简历
+                            logger.warn("不存在简历");
+                            res.setP_id(0);
+                            res.setMemo("不存在简历");
+                        }
+                    } else {
+                        //不存在该学生
+                        logger.warn("存在非法报名");
+                        res.setP_id(parttimes.getId());
+                        res.setMemo("存在非法报名");
+                    }
+                } else {
+                    logger.warn("不存在该兼职");
+                    res.setP_id(parttimes.getId());
+                    res.setMemo("不存在该兼职");
+                }
+            } else {
+                //无报名数据
+                logger.warn("暂时无人报名该兼职");
+                res.setP_id(0);
+                res.setMemo("暂时无人报名该兼职");
+            }
+        } else {
+            logger.warn("请检查输入的信息是否完整");
+            res.setP_id(0);
+            res.setMemo("请检查输入的信息是否完整");
+        }
+
+        return res;
+    }
+
+    @Override
+    public List<SignupInfoToEmpDto> confirmSignup(ConfirmInputDto confirmInputDto) throws ParttimeServiceException, ParseException {
+        List<SignupInfoToEmpDto> res = new ArrayList<>();
+
+        if (confirmInputDto != null) {
+            //有输入
+            String emp_id = confirmInputDto.getEmp_id();
+            int s_id = confirmInputDto.getS_id();
+
+            //根据据s_id找到对应的p_id
+            Signup signup = signupRepository.findSignup(s_id);
+            if (signup != null) {
+                //存在signup
+                int p_id = signup.getP().getId();
+
+                //由p_id找parttimes
+                Parttimes parttimes = positionRepository.checkIsTheManager(emp_id, p_id);
+                if (parttimes != null) {
+                    //是该兼职的操作员，就录用该学生的报名，更新报名状态为“已录取”
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    Date now = sdf.parse(sdf.format(new Date()));
+                    signupRepository.confirmSignup(now, s_id);
+
+                    //获取所有报名信息，实现页面刷新
+                    List<SignupInfoToEmpDto> list = this.getSignupInfoByEmp(emp_id);
+                    if (list.size() > 0 && list.get(0).getMemo().equals("获取报名信息成功")) {
+                        res = list;
+                        System.out.println(res.toString());
+                    }
+//                    //获取该报名的所有信息
+//                    SignupInfoToEmpDto signupInfoToEmpDto=this.getASpecialSignupInfoByEmp(emp_id,s_id);
+//                    if(signupInfoToEmpDto!=null && signupInfoToEmpDto.getMemo().equals("获取报名信息成功")){
+//                        //
+//                    }
+                } else {
+                    logger.warn("不能操作非负责的兼职");
+                    SignupInfoToEmpDto dto = new SignupInfoToEmpDto();
+                    dto.setP_id(0);
+                    dto.setMemo("不能操作非负责的兼职");
+                    res.add(dto);
+                }
+            } else {
+                //不存在signup
+                logger.warn("不存在该报名");
+                SignupInfoToEmpDto dto = new SignupInfoToEmpDto();
+                dto.setP_id(0);
+                dto.setMemo("不存在该报名");
+                res.add(dto);
+            }
+
+        } else {
+            logger.warn("请检查输入的信息是否完整");
+            SignupInfoToEmpDto dto = new SignupInfoToEmpDto();
+            dto.setP_id(0);
+            dto.setMemo("请检查输入的信息是否完整");
+            res.add(dto);
+        }
+
+        return res;
+    }
+
+    @Override
+    public List<SignupInfoToEmpDto> rejectSignup(RejectInputDto rejectInputDto) throws ParttimeServiceException, ParseException {
+        List<SignupInfoToEmpDto> res = new ArrayList<>();
+
+        if (rejectInputDto != null) {
+            //有输入
+            String emp_id = rejectInputDto.getEmp_id();
+            int s_id = rejectInputDto.getS_id();
+
+            //根据据s_id找到对应的p_id
+            Signup signup = signupRepository.findSignup(s_id);
+            if (signup != null) {
+                //存在signup
+                int p_id = signup.getP().getId();
+
+                //由p_id找parttimes
+                Parttimes parttimes = positionRepository.checkIsTheManager(emp_id, p_id);
+                if (parttimes != null) {
+                    //是该兼职的操作员，就录用该学生的报名，更新报名状态为“已录取”
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    Date now = sdf.parse(sdf.format(new Date()));
+                    signupRepository.rejectSignup(now, s_id);
+
+                    //获取所有报名信息，实现页面刷新
+                    List<SignupInfoToEmpDto> list = this.getSignupInfoByEmp(emp_id);
+                    if (list.size() > 0 && list.get(0).getMemo().equals("获取报名信息成功")) {
+                        res = list;
+                        System.out.println(res.toString());
+                    }
+//                    //获取该报名的所有信息
+//                    SignupInfoToEmpDto signupInfoToEmpDto=this.getASpecialSignupInfoByEmp(emp_id,s_id);
+//                    if(signupInfoToEmpDto!=null && signupInfoToEmpDto.getMemo().equals("获取报名信息成功")){
+//                        //
+//                    }
+                } else {
+                    logger.warn("不能操作非负责的兼职");
+                    SignupInfoToEmpDto dto = new SignupInfoToEmpDto();
+                    dto.setP_id(0);
+                    dto.setMemo("不能操作非负责的兼职");
+                    res.add(dto);
+                }
+            } else {
+                //不存在signup
+                logger.warn("不存在该报名");
+                SignupInfoToEmpDto dto = new SignupInfoToEmpDto();
+                dto.setP_id(0);
+                dto.setMemo("不存在该报名");
+                res.add(dto);
+            }
+        } else {
+            logger.warn("请检查输入的信息是否完整");
+            SignupInfoToEmpDto dto = new SignupInfoToEmpDto();
+            dto.setP_id(0);
+            dto.setMemo("请检查输入的信息是否完整");
+            res.add(dto);
+        }
+
+        return res;
+    }
 }

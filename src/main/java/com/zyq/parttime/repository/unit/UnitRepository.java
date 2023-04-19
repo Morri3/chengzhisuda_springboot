@@ -25,4 +25,13 @@ public interface UnitRepository extends JpaRepository<Unit, Integer>, JpaSpecifi
     @Query(value = "select u_id from unit where unit_name = ?1", nativeQuery = true)
     int findUnitByUnitNameWithUId(String unit_name);
 
+    @Transactional
+    @Modifying
+    @Query(value = "update unit set job_nums=job_nums+1 where u_id=?1", nativeQuery = true)
+    void addJobNums(int u_id);
+
+    @Transactional
+    @Modifying
+    @Query(value = "update unit set job_nums=job_nums-1 where u_id=?1", nativeQuery = true)
+    void minusJobNums(int u_id);
 }
