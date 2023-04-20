@@ -3,6 +3,7 @@ package com.zyq.parttime.service;
 import com.zyq.parttime.exception.ParttimeServiceException;
 import com.zyq.parttime.form.mark.MarkDto;
 import com.zyq.parttime.form.mark.MarkPostDto;
+import com.zyq.parttime.form.mark.MarkToEmpDto;
 import com.zyq.parttime.form.mark.OneMarkDto;
 import com.zyq.parttime.form.position.PositionInfoDto;
 import org.springframework.stereotype.Service;
@@ -21,5 +22,5 @@ public interface MarkService {
     MarkDto post(MarkPostDto markPostDto) throws ParttimeServiceException;
 
     //获取自己负责的所有兼职的所有评分记录
-    List<MarkDto> getAllSpecialMark(String emp_id) throws ParttimeServiceException;
+    List<MarkToEmpDto> getAllSpecialMark(String emp_id) throws ParttimeServiceException;
 }

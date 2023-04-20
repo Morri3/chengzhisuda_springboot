@@ -2,6 +2,7 @@ package com.zyq.parttime.controller;
 
 import com.zyq.parttime.form.mark.MarkDto;
 import com.zyq.parttime.form.mark.MarkPostDto;
+import com.zyq.parttime.form.mark.MarkToEmpDto;
 import com.zyq.parttime.form.mark.OneMarkDto;
 import com.zyq.parttime.form.position.PositionInfoDto;
 import com.zyq.parttime.result.ExceptionMsg;
@@ -48,7 +49,7 @@ public class MarkController {
     @RequestMapping(value = "/emp/getSome", method = RequestMethod.GET)
     @ResponseBody
     public ResponseData getAllSpecialMark(@RequestParam String emp_id) {
-        List<MarkDto> res = markService.getAllSpecialMark(emp_id);
+        List<MarkToEmpDto> res = markService.getAllSpecialMark(emp_id);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 }

@@ -3,6 +3,7 @@ package com.zyq.parttime.controller;
 import com.zyq.parttime.entity.Comment;
 import com.zyq.parttime.form.comment.CommentDto;
 import com.zyq.parttime.form.comment.CommentPostDto;
+import com.zyq.parttime.form.comment.CommentToEmpDto;
 import com.zyq.parttime.form.comment.OneCommentDto;
 import com.zyq.parttime.form.mark.MarkDto;
 import com.zyq.parttime.form.mark.MarkPostDto;
@@ -50,7 +51,7 @@ public class CommentController {
     @RequestMapping(value = "/emp/getSome", method = RequestMethod.GET)
     @ResponseBody
     public ResponseData getAllSpecialComment(@RequestParam String emp_id) {
-        List<CommentDto> res = commentService.getAllSpecialComment(emp_id);
+        List<CommentToEmpDto> res = commentService.getAllSpecialComment(emp_id);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 }

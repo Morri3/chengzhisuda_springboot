@@ -5,10 +5,7 @@ import com.zyq.parttime.entity.Mark;
 import com.zyq.parttime.entity.Parttimes;
 import com.zyq.parttime.entity.Signup;
 import com.zyq.parttime.exception.ParttimeServiceException;
-import com.zyq.parttime.form.mark.MarkDto;
-import com.zyq.parttime.form.mark.MarkPostDto;
-import com.zyq.parttime.form.mark.OneMark;
-import com.zyq.parttime.form.mark.OneMarkDto;
+import com.zyq.parttime.form.mark.*;
 import com.zyq.parttime.form.position.SignupInfoToEmpDto;
 import com.zyq.parttime.repository.mark.MarkRepository;
 import com.zyq.parttime.repository.position.PositionRepository;
@@ -154,8 +151,8 @@ public class MarkServiceImpl implements MarkService {
     }
 
     @Override
-    public List<MarkDto> getAllSpecialMark(String emp_id) throws ParttimeServiceException {
-        List<MarkDto> res = new ArrayList<>();
+    public List<MarkToEmpDto> getAllSpecialMark(String emp_id) throws ParttimeServiceException {
+        List<MarkToEmpDto> res = new ArrayList<>();
 
         if (emp_id != null && !emp_id.equals("")) {
             //有输入,根据emp_id找到管理的所有兼职
@@ -175,7 +172,7 @@ public class MarkServiceImpl implements MarkService {
                             Mark mark = markRepository.getMark(item2.getId());
                             if (mark != null) {
                                 //存在该评分记录，构造dto，加入res
-                                MarkDto markDto = new MarkDto();
+                                MarkToEmpDto markDto = new MarkToEmpDto();
                                 markDto.setM_id(mark.getId());
                                 markDto.setS_id(item2.getId());
                                 markDto.setDsps(mark.getDsps());
@@ -187,11 +184,14 @@ public class MarkServiceImpl implements MarkService {
                                 markDto.setPt(mark.getPt());
                                 markDto.setTotal_score(mark.getTotalScore());
                                 markDto.setWe(mark.getWe());
+                                markDto.setUser_id(item2.getStu().getId());
+                                markDto.setUsername(item2.getStu().getStuName());
+                                markDto.setP_name(item.getPositionName());
                                 markDto.setMemo("获取成功");
                                 res.add(markDto);
                             } else {
                                 logger.warn("该报名尚未评分");
-                                MarkDto dto = new MarkDto();
+                                MarkToEmpDto dto = new MarkToEmpDto();
                                 dto.setM_id(0);
                                 dto.setS_id(item2.getId());
                                 dto.setMemo("该报名尚未评分");
@@ -200,7 +200,7 @@ public class MarkServiceImpl implements MarkService {
                         }
                     } else {
                         logger.warn("该兼职尚未报名");
-                        MarkDto dto = new MarkDto();
+                        MarkToEmpDto dto = new MarkToEmpDto();
                         dto.setM_id(0);
                         dto.setS_id(0);
                         dto.setMemo("该兼职尚未报名");
@@ -209,7 +209,7 @@ public class MarkServiceImpl implements MarkService {
                 }
             } else {
                 logger.warn("暂无负责的兼职");
-                MarkDto dto = new MarkDto();
+                MarkToEmpDto dto = new MarkToEmpDto();
                 dto.setM_id(0);
                 dto.setS_id(0);
                 dto.setMemo("暂无负责的兼职");
@@ -217,7 +217,7 @@ public class MarkServiceImpl implements MarkService {
             }
         } else {
             logger.warn("请检出输入");
-            MarkDto dto = new MarkDto();
+            MarkToEmpDto dto = new MarkToEmpDto();
             dto.setM_id(0);
             dto.setS_id(0);
             dto.setMemo("请检出输入");

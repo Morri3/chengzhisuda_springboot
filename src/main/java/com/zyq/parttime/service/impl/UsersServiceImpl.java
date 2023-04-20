@@ -93,6 +93,7 @@ public class UsersServiceImpl implements UsersService {
                 res.setGraduation_date(graduation_date);
                 res.setGrade(grade);
                 res.setHead(head);
+                res.setMemo("获取成功");
             } else {//不存在
                 logger.warn("该账号不存在");
                 res.setTelephone(telephone);
@@ -120,6 +121,7 @@ public class UsersServiceImpl implements UsersService {
                 String unit_descriptions = emp.getU().getDescriptions();
                 String unit_loc = emp.getU().getLoc();
                 int job_nums = emp.getU().getJobNums();
+                String head = emp.getHead();
 
                 res.setEmp_name(emp_name);
                 res.setGender(gender);
@@ -131,6 +133,8 @@ public class UsersServiceImpl implements UsersService {
                 res.setUnit_descriptions(unit_descriptions);
                 res.setUnit_loc(unit_loc);
                 res.setJob_nums(job_nums);
+                res.setHead(head);
+                res.setMemo("获取成功");
             } else {//不存在
                 logger.warn("该账号不存在");
                 res.setTelephone(telephone);

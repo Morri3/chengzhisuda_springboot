@@ -278,9 +278,19 @@ public class PositionServiceImpl implements PositionService {
                             res.setMemo("报名失败");
                         }
                     } else {
-                        logger.warn("不存在该兼职");
-                        res.setStu_id(telephone);
-                        res.setMemo("不存在该兼职");
+                        if (dto == null || !(dto.getMemo()).equals("存在兼职")) {
+                            logger.warn("不存在该兼职");
+                            res.setStu_id(telephone);
+                            res.setMemo("不存在该兼职");
+                        } else if (dto.getPosition_status().equals("已招满")) {
+                            logger.warn("该兼职已招满");
+                            res.setStu_id(telephone);
+                            res.setMemo("该兼职已招满");
+                        } else if (dto.getPosition_status().equals("已结束")) {
+                            logger.warn("该兼职已结束");
+                            res.setStu_id(telephone);
+                            res.setMemo("该兼职已结束");
+                        }
                     }
                 } else if (find != null && find.size() > 0) {
                     //有报名过
@@ -294,7 +304,6 @@ public class PositionServiceImpl implements PositionService {
                     }
 
                     if (flag == true) {//不能报名
-
                         logger.warn("请先完成正在进行的兼职");
                         res.setStu_id(telephone);
                         res.setMemo("请先完成正在进行的兼职");

@@ -8,6 +8,7 @@ import com.zyq.parttime.entity.Signup;
 import com.zyq.parttime.exception.ParttimeServiceException;
 import com.zyq.parttime.form.comment.CommentDto;
 import com.zyq.parttime.form.comment.CommentPostDto;
+import com.zyq.parttime.form.comment.CommentToEmpDto;
 import com.zyq.parttime.form.comment.OneCommentDto;
 import com.zyq.parttime.form.mark.MarkDto;
 import com.zyq.parttime.form.mark.MarkPostDto;
@@ -202,8 +203,8 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public List<CommentDto> getAllSpecialComment(String emp_id) throws ParttimeServiceException {
-        List<CommentDto> res = new ArrayList<>();
+    public List<CommentToEmpDto> getAllSpecialComment(String emp_id) throws ParttimeServiceException {
+        List<CommentToEmpDto> res = new ArrayList<>();
 
         if (emp_id != null && !emp_id.equals("")) {
             //有输入,根据emp_id找到管理的所有兼职
@@ -223,25 +224,28 @@ public class CommentServiceImpl implements CommentService {
                             Comment comment = commentRepository.getComment(item2.getId());
                             if (comment != null) {
                                 //存在该评论记录，构造dto，加入res
-                                CommentDto commentDto = new CommentDto();
+                                CommentToEmpDto commentDto = new CommentToEmpDto();
                                 commentDto.setC_id(comment.getId());
                                 commentDto.setS_id(item2.getId());
                                 commentDto.setContent(comment.getContent());
                                 commentDto.setCreate_time(comment.getCreateTime());
                                 commentDto.setMemo("获取成功");
+                                commentDto.setP_name(item.getPositionName());
+                                commentDto.setUser_id(item2.getStu().getId());
+                                commentDto.setUsername(item2.getStu().getStuName());
                                 res.add(commentDto);
                             } else {
-                                logger.warn("该报名尚未评分");
-                                CommentDto dto = new CommentDto();
+                                logger.warn("该报名尚未评论");
+                                CommentToEmpDto dto = new CommentToEmpDto();
                                 dto.setC_id(0);
                                 dto.setS_id(item2.getId());
-                                dto.setMemo("该报名尚未评分");
+                                dto.setMemo("该报名尚未评论");
                                 res.add(dto);
                             }
                         }
                     } else {
                         logger.warn("该兼职尚未报名");
-                        CommentDto dto = new CommentDto();
+                        CommentToEmpDto dto = new CommentToEmpDto();
                         dto.setC_id(0);
                         dto.setS_id(0);
                         dto.setMemo("该兼职尚未报名");
@@ -250,7 +254,7 @@ public class CommentServiceImpl implements CommentService {
                 }
             } else {
                 logger.warn("暂无负责的兼职");
-                CommentDto dto = new CommentDto();
+                CommentToEmpDto dto = new CommentToEmpDto();
                 dto.setC_id(0);
                 dto.setS_id(0);
                 dto.setMemo("暂无负责的兼职");
@@ -258,7 +262,7 @@ public class CommentServiceImpl implements CommentService {
             }
         } else {
             logger.warn("请检出输入");
-            CommentDto dto = new CommentDto();
+            CommentToEmpDto dto = new CommentToEmpDto();
             dto.setC_id(0);
             dto.setS_id(0);
             dto.setMemo("请检出输入");

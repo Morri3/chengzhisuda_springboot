@@ -3,6 +3,7 @@ package com.zyq.parttime.service;
 import com.zyq.parttime.exception.ParttimeServiceException;
 import com.zyq.parttime.form.comment.CommentDto;
 import com.zyq.parttime.form.comment.CommentPostDto;
+import com.zyq.parttime.form.comment.CommentToEmpDto;
 import com.zyq.parttime.form.comment.OneCommentDto;
 import com.zyq.parttime.form.mark.MarkDto;
 import org.springframework.stereotype.Service;
@@ -21,5 +22,5 @@ public interface CommentService {
     OneCommentDto getCommentThree(int p_id) throws ParttimeServiceException;
 
     //获取自己负责的所有兼职的所有评论记录
-    List<CommentDto> getAllSpecialComment(String emp_id) throws ParttimeServiceException;
+    List<CommentToEmpDto> getAllSpecialComment(String emp_id) throws ParttimeServiceException;
 }
