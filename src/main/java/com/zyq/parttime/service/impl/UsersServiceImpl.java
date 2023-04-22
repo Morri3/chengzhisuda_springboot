@@ -12,6 +12,7 @@ import com.zyq.parttime.minio.MinIO;
 import com.zyq.parttime.repository.intention.IntentionRepository;
 import com.zyq.parttime.repository.resumemanage.ResumesDetailRepository;
 import com.zyq.parttime.repository.resumemanage.ResumesInfoRepository;
+import com.zyq.parttime.repository.unit.UnitRepository;
 import com.zyq.parttime.repository.userinfomanage.EmpInfoRepository;
 import com.zyq.parttime.repository.userinfomanage.StuInfoRepository;
 import com.zyq.parttime.service.UsersService;
@@ -54,6 +55,8 @@ public class UsersServiceImpl implements UsersService {
     private ResumesDetailRepository resumesDetailRepository;
     @Autowired
     private IntentionRepository intentionRepository;
+    @Autowired
+    private UnitRepository unitRepository;
     @Autowired
     private MinIO minIO;
 
@@ -122,6 +125,7 @@ public class UsersServiceImpl implements UsersService {
                 String unit_loc = emp.getU().getLoc();
                 int job_nums = emp.getU().getJobNums();
                 String head = emp.getHead();
+                int emp_grade=emp.getEmpGrade();
 
                 res.setEmp_name(emp_name);
                 res.setGender(gender);
@@ -134,6 +138,7 @@ public class UsersServiceImpl implements UsersService {
                 res.setUnit_loc(unit_loc);
                 res.setJob_nums(job_nums);
                 res.setHead(head);
+                res.setEmp_grade(emp_grade);
                 res.setMemo("获取成功");
             } else {//不存在
                 logger.warn("该账号不存在");
@@ -210,7 +215,11 @@ public class UsersServiceImpl implements UsersService {
                 res.setTelephone(telephone);
                 res.setMemo("该账号不存在");
             }
+        } else {
+            logger.warn("请检查输入的信息是否完整");
+            res.setMemo("请检查输入的信息是否完整");
         }
+
         return res;
     }
 
@@ -256,6 +265,10 @@ public class UsersServiceImpl implements UsersService {
                 res.setTelephone(telephone);
                 res.setMemo("该账号不存在");
             }
+        } else {//不存在
+            logger.warn("请检查输入的信息是否完整");
+            res.setTelephone("0");
+            res.setMemo("请检查输入的信息是否完整");
         }
         return res;
     }
@@ -703,15 +716,10 @@ public class UsersServiceImpl implements UsersService {
                 res.setPic_url(pic_url);
 
                 //填充上传时间
-//                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-//                Date uploadTime = sdf.parse(upload_time);
-//                res.setUpload_time(uploadTime);
                 res.setUpload_time(upload_time);
 
                 //图片url存入DB，即创建resume记录
-//                Date now = new Date(System.currentTimeMillis());//当前时间
                 resumesInfoRepository.modifyResumeRecord(pic_url, upload_time, "已上传", telephone);
-//                resumesInfoRepository.createAResumeRecord(telephone, pic_url, upload_time, now, "已上传");
 
                 //获取刚刚创建的resume的id
                 int r_id = resumesInfoRepository.findLatestResumes();
@@ -733,12 +741,6 @@ public class UsersServiceImpl implements UsersService {
                     res.setMemo("获取文件字节数据异常" + e.getMessage());
                 }
                 JSONObject result = client.basicGeneral(buf, options);
-//                String jsonData = "";
-//                try {
-//                    jsonData = result.toString(2);//最终的json字符串结果
-//                } catch (JSONException e) {
-//                    res.setMemo("获取json数据异常" + e.getMessage());
-//                }
 
                 //解析文字的处理
                 ArrayList<JSONObject> words = new ArrayList<>();//存放识别出的文字的列表
@@ -1702,6 +1704,104 @@ public class UsersServiceImpl implements UsersService {
             IntentionDto dto = new IntentionDto();
             dto.setMemo("参数传入错误");
             res.add(dto);
+        }
+        return res;
+    }
+
+    @Override
+    public EmpInfoDto editEmpInfo(EditEmpInfoDto editEmpInfoDto) throws ParttimeServiceException, ParseException {
+        EmpInfoDto res = new EmpInfoDto();
+
+        if (editEmpInfoDto != null) {
+            //有输入
+            String telephone = editEmpInfoDto.getTelephone();
+            int gender = editEmpInfoDto.getGender();
+            int age = editEmpInfoDto.getAge();
+            String emails = editEmpInfoDto.getEmails();
+            String unit_descriptions = editEmpInfoDto.getUnit_descriptions();
+            String unit_loc = editEmpInfoDto.getUnit_loc();
+
+            //查找该用户是否存在
+            Employer emp = empInfoRepository.findEmployerByTelephone(telephone);
+            if (emp != null) {//存在
+                //修改用户信息
+                empInfoRepository.editEmpInfo(gender, age, emails, telephone);
+                unitRepository.editEmpUnitInfo(unit_descriptions, unit_loc, emp.getU().getId());
+
+                //获取更新后的用户信息
+                Employer emp_new = empInfoRepository.findEmployerByTelephone(telephone);
+
+                //填充返回的dto
+                res.setEmp_name(emp_new.getEmpName());
+                res.setTelephone(emp_new.getId());
+                res.setAge(emp_new.getAge());
+                res.setGender(emp_new.getGender());
+                res.setEmails(emp_new.getEmails());
+                res.setJno(emp_new.getJno());
+                res.setUnit_name(emp_new.getU().getUnitName());
+                res.setUnit_descriptions(emp_new.getU().getDescriptions());
+                res.setUnit_loc(emp_new.getU().getLoc());
+                res.setJob_nums(emp_new.getU().getJobNums());
+                res.setHead(emp_new.getHead());
+                res.setMemo("修改个人信息成功");
+            } else {//不存在
+                logger.warn("该账号不存在");
+                res.setTelephone(telephone);
+                res.setMemo("该账号不存在");
+            }
+        } else {
+            logger.warn("请检查输入的信息是否完整");
+            res.setMemo("请检查输入的信息是否完整");
+        }
+        return res;
+    }
+
+    @Override
+    public EmpInfoDto modifyEmpPwd(ModifyPwdDto modifyPwdDto) throws ParttimeServiceException {
+        EmpInfoDto res = new EmpInfoDto();
+
+        if (modifyPwdDto != null) {
+            //获取传入的dto的信息
+            String telephone = modifyPwdDto.getTelephone();
+            String old_pwd = modifyPwdDto.getOld_pwd();
+            String new_pwd = modifyPwdDto.getNew_pwd();
+            String new_pwd2 = modifyPwdDto.getNew_pwd2();
+
+            //判断两次新密码是否输入正确
+            if (!new_pwd.equals(new_pwd2)) {
+                logger.warn("两次新密码请输入正确");
+                res.setTelephone(telephone);
+                res.setMemo("两次新密码请输入正确");
+                return res;
+            }
+
+            //查找该用户是否存在
+            Employer emp = empInfoRepository.findEmployerByTelephone(telephone);
+            if (emp != null) {//存在
+                //判断输入的旧密码和真正的旧密码是否相同
+                old_pwd = SaSecureUtil.md5BySalt(old_pwd, "emp");//md5加盐加密后的密码
+                if (emp.getPwd().equals(old_pwd)) {//相同
+                    //更新DB
+                    String md5pwd = SaSecureUtil.md5BySalt(new_pwd, "emp");//md5加盐加密后的密码
+                    empInfoRepository.modifyEmpPwd(md5pwd, telephone);
+
+                    //填充返回的dto
+                    res.setTelephone(telephone);
+                    res.setMemo("修改密码成功");
+                } else {//旧密码输入错误
+                    logger.warn("请输入正确的旧密码");
+                    res.setTelephone(telephone);
+                    res.setMemo("请输入正确的旧密码");
+                }
+            } else {//不存在
+                logger.warn("该账号不存在");
+                res.setTelephone(telephone);
+                res.setMemo("该账号不存在");
+            }
+        } else {
+            logger.warn("请检查输入的信息是否完整");
+            res.setTelephone("0");
+            res.setMemo("请检查输入的信息是否完整");
         }
         return res;
     }

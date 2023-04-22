@@ -31,19 +31,21 @@ public interface UsersService {
     StuInfoDto modifyStuPwd(ModifyPwdDto modifyPwdDto) throws ParttimeServiceException;
 
     //个人信息编辑-兼职发布者/管理员
-
+    EmpInfoDto editEmpInfo(EditEmpInfoDto editEmpInfoDto) throws ParttimeServiceException, ParseException;
 
     //修改密码-兼职发布者/管理员
-
+    EmpInfoDto modifyEmpPwd(ModifyPwdDto modifyPwdDto) throws ParttimeServiceException;
 
     //简历查看-学生
     ResumeInfoDto getResume(String telephone) throws ParttimeServiceException;
 
     //创建简历
     ResumeInfoDto createResume(String telephone, String upload_time) throws ParttimeServiceException, Exception;
+
     //简历上传-学生
     String uploadResumeWithStuInfo(String telephone, String upload_time)
             throws ParttimeServiceException, Exception;
+
     ResumeUploadCallbackDto uploadResume(MultipartFile file)
             throws ParttimeServiceException, Exception;
 

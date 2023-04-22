@@ -47,8 +47,11 @@ public interface PositionService {
     //根据unit_name获取单位信息
     UnitInfoDto getUnitInfoByUnitName(String op_id) throws ParttimeServiceException;
 
-    //根据unit_name获取单位信息
+    //发布兼职
     PositionInfoToEmpDto publishParttime(PublishInputDto input) throws ParttimeServiceException, ParseException;
+
+    //编辑兼职
+    PositionInfoToEmpDto editParttime(EditInputDto input) throws ParttimeServiceException, ParseException;
 
     //下架兼职
     PositionInfoToEmpDto undercarriageParttime(UndercarriageInputDto undercarriageInputDto) throws ParttimeServiceException, ParseException;

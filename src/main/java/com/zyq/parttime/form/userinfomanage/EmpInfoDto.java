@@ -17,6 +17,7 @@ public class EmpInfoDto implements Serializable {
     private String unit_descriptions;
     private String unit_loc;
     private int job_nums;
+    private int emp_grade;//是否是管理员
     private String head;//头像
     private String memo;//备注
 }

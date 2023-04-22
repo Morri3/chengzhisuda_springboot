@@ -51,7 +51,7 @@ public class MinIO {
 //    @Value("${minio.urlprefix}")
 //    public String urlprefix;
 
-    private static final int DEFAULT_EXPIRY_TIME = 4 * 24 * 3600;//有效期为4天
+    private static final int DEFAULT_EXPIRY_TIME = 7 * 24 * 3600;//有效期为7天
 
     //判断bucket是否存在
     public Boolean existBucket(String name) throws Exception {
@@ -192,7 +192,6 @@ public class MinIO {
 
     /**
      * 批量删除文件对象
-     *
      * @param bucketName 存储bucket名称
      * @param objects    对象名称集合
      */
@@ -208,5 +207,4 @@ public class MinIO {
         }
         return resultMap;
     }
-
 }

@@ -62,9 +62,20 @@ public class UsersController {
     }
 
     //TODO 个人信息编辑-兼职发布者/管理员
-
+    @RequestMapping(value = "/info/edit_emp", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseData editEmpInfo(@RequestBody EditEmpInfoDto editEmpInfoDto) throws ParseException {
+        EmpInfoDto res = usersService.editEmpInfo(editEmpInfoDto);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
 
     //TODO 修改密码-兼职发布者/管理员
+    @RequestMapping(value = "/info/modify_emp_pwd", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseData modifyEmpPwd(@RequestBody ModifyPwdDto modifyPwdDto) throws ParseException {
+        EmpInfoDto res = usersService.modifyEmpPwd(modifyPwdDto);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
 
 
 //    //TODO 简历查看-学生

@@ -46,6 +46,15 @@ public interface PositionRepository extends JpaRepository<Parttimes, Integer>, J
                           String slogan, String work_time, String settlement, String position_status,
                           Date create_time, Date update_time);
 
+    @Transactional
+    @Modifying
+    @Query(value = "update parttimes set num=?1,category=?2,salary=?3,area=?4,exp=?5,content=?6, " +
+            "requirement=?7,signup_ddl=?8,slogan=?9,work_time=?10,settlement=?11,position_status=?12,update_time=?13 " +
+            "where p_id=?14", nativeQuery = true)
+    void editAParttime(int num, String category, String salary, String area, String exp, String content,
+                       String requirement, Date signup_ddl, String slogan, String work_time, String settlement,
+                       String position_status, Date update_time, int p_id);
+
     @Query(value = "select * from parttimes order by create_time limit 0,1", nativeQuery = true)
     Parttimes getLatestPosition();
 
@@ -53,6 +62,6 @@ public interface PositionRepository extends JpaRepository<Parttimes, Integer>, J
     Parttimes checkIsTheManager(String op_id, int p_id);
 
     @Query(value = "select * from parttimes where op_id=?1", nativeQuery = true)
-    List<Parttimes> getAllPositionManagedByEmp( String op_id);
+    List<Parttimes> getAllPositionManagedByEmp(String op_id);
 
 }

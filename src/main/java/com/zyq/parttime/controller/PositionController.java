@@ -122,6 +122,14 @@ public class PositionController {
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
+    //TODO 编辑兼职-管理员
+    @RequestMapping(value = "/edit", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseData editParttime(@RequestBody EditInputDto input) throws ParseException {
+        PositionInfoToEmpDto res = positionService.editParttime(input);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
     //TODO 下架兼职-管理员
     @RequestMapping(value = "/undercarriage", method = RequestMethod.POST)
     @ResponseBody
