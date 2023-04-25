@@ -54,4 +54,12 @@ public class CommentController {
         List<CommentToEmpDto> res = commentService.getAllSpecialComment(emp_id);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
+
+    //TODO 获取某一兼职的所有评论-兼职发布者/管理员
+    @RequestMapping(value = "/emp/getAll", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseData getCommentThreeByEmp(@RequestParam int p_id,@RequestParam String emp_id) {
+        List<CommentToEmpDto> res = commentService.getCommentThreeByEmp(p_id,emp_id);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
 }

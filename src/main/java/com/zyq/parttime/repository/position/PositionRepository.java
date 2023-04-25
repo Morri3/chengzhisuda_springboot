@@ -2,6 +2,8 @@ package com.zyq.parttime.repository.position;
 
 import com.zyq.parttime.entity.Parttimes;
 import com.zyq.parttime.entity.Signup;
+import com.zyq.parttime.form.analyze.AnalyzePublishDto;
+import com.zyq.parttime.form.analyze.GetAnalyzePublishDto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -9,7 +11,9 @@ import org.springframework.data.jpa.repository.Query;
 
 import javax.transaction.Transactional;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public interface PositionRepository extends JpaRepository<Parttimes, Integer>, JpaSpecificationExecutor<Parttimes> {
     @Query(value = "select * from parttimes", nativeQuery = true)
@@ -64,4 +68,6 @@ public interface PositionRepository extends JpaRepository<Parttimes, Integer>, J
     @Query(value = "select * from parttimes where op_id=?1", nativeQuery = true)
     List<Parttimes> getAllPositionManagedByEmp(String op_id);
 
+    @Query(value = "select create_time,count(*) as num from parttimes group by create_time", nativeQuery = true)
+    List<Map<String, Object>> getNumOfDailyPublish();
 }

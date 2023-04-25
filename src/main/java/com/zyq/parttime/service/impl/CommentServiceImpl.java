@@ -108,6 +108,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public OneCommentDto getCommentThree(int p_id) throws ParttimeServiceException {
+        //结果是前3个评论组成字符串
         OneCommentDto res = new OneCommentDto();
         List<CommentDto> list = new ArrayList<>();//存放该兼职的所有评论
 
@@ -149,10 +150,6 @@ public class CommentServiceImpl implements CommentService {
                     }
                     str += "No3: " + list.get(2).getContent();
                     res.setContent(str);//set到res中
-//                    //取前3个
-//                    for (int i = 3; i < res.size(); i++) {
-//                        res.remove(i);//移除第i个
-//                    }
                 } else if (list.size() > 0 && list.size() <= 3) {
                     //不做操作，保留这3个
                     String str = "";
@@ -170,33 +167,10 @@ public class CommentServiceImpl implements CommentService {
             }
         } else {
             //没人报名过该兼职，返回空的
-//            CommentDto dto = new CommentDto();
-//            dto.setS_id(0);
-//            dto.setC_id(0);
-//            dto.setMemo("暂无评论");
-//            res.add(dto);
             logger.warn("暂无评论");
             res.setP_id(p_id);
             res.setMemo("暂无评论");
         }
-//        List<Comment> list = commentRepository.getCommentByPId(p_id);
-//        if (list != null && list.size() > 0) {
-//            for (Comment comment : list) {
-//                CommentDto dto = new CommentDto();
-//                dto.setC_id(comment.getId());
-//                dto.setContent(comment.getContent());
-//                dto.setCreate_time(comment.getCreateTime());
-//                dto.setS_id(comment.getS().getId());
-//                dto.setMemo("获取成功");
-//                res.add(dto);
-//            }
-//        } else {
-//            CommentDto dto = new CommentDto();
-//            dto.setC_id(0);
-//            dto.setS_id(0);
-//            dto.setMemo("获取失败");
-//            res.add(dto);
-//        }
         System.out.println("兼职" + p_id + "的评论数据为：" + res.getContent());
 
         return res;
@@ -266,6 +240,83 @@ public class CommentServiceImpl implements CommentService {
             dto.setC_id(0);
             dto.setS_id(0);
             dto.setMemo("请检出输入");
+            res.add(dto);
+        }
+
+        return res;
+    }
+
+    @Override
+    public List<CommentToEmpDto> getCommentThreeByEmp(int p_id, String emp_id) throws ParttimeServiceException {
+        List<CommentToEmpDto> res = new ArrayList<>();
+
+        if (emp_id != null && !emp_id.equals("")) {
+            if (p_id > 0) {
+                //有输入
+                Parttimes parttimes = positionRepository.checkIsTheManager(emp_id, p_id);
+
+                //有负责的兼职
+                if (parttimes != null) {
+
+                    //找到报名该兼职的所有signup
+                    List<Signup> signups = signupRepository.getAllSignupByPId(parttimes.getId());
+                    if (signups.size() > 0) {
+                        //存在报名
+
+                        for (Signup item : signups) {
+                            //找到该signup的comment记录
+                            Comment comment = commentRepository.getComment(item.getId());
+                            if (comment != null) {
+                                //存在该评论记录，构造dto，加入res
+                                CommentToEmpDto commentDto = new CommentToEmpDto();
+                                commentDto.setC_id(comment.getId());
+                                commentDto.setS_id(item.getId());
+                                commentDto.setContent(comment.getContent());
+                                commentDto.setCreate_time(comment.getCreateTime());
+                                commentDto.setMemo("获取成功");
+                                commentDto.setP_name(parttimes.getPositionName());
+                                commentDto.setUser_id(item.getStu().getId());
+                                commentDto.setUsername(item.getStu().getStuName());
+                                res.add(commentDto);
+                            } else {
+                                logger.warn("该报名尚未评论");
+                                CommentToEmpDto dto = new CommentToEmpDto();
+                                dto.setC_id(0);
+                                dto.setS_id(item.getId());
+                                dto.setMemo("该报名尚未评论");
+                                res.add(dto);
+                            }
+                        }
+                    } else {
+                        logger.warn("该兼职尚未报名");
+                        CommentToEmpDto dto = new CommentToEmpDto();
+                        dto.setC_id(0);
+                        dto.setS_id(0);
+                        dto.setMemo("该兼职尚未报名");
+                        res.add(dto);
+                    }
+                } else {
+                    logger.warn("暂无负责的兼职");
+                    CommentToEmpDto dto = new CommentToEmpDto();
+                    dto.setC_id(0);
+                    dto.setS_id(0);
+                    dto.setMemo("暂无负责的兼职");
+                    res.add(dto);
+                }
+            } else {
+                logger.warn("请确保输入完整");
+                CommentToEmpDto dto = new CommentToEmpDto();
+                dto.setC_id(0);
+                dto.setS_id(0);
+                dto.setMemo("请确保输入完整");
+                res.add(dto);
+            }
+        } else {
+            logger.warn("请确保输入完整");
+            CommentToEmpDto dto = new CommentToEmpDto();
+            dto.setC_id(0);
+            dto.setS_id(0);
+            dto.setMemo("请确保输入完整");
             res.add(dto);
         }
 

@@ -77,15 +77,6 @@ public class UsersController {
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
-
-//    //TODO 简历查看-学生
-//    @RequestMapping(value = "/resumes/get1", method = RequestMethod.GET)
-//    @ResponseBody
-//    public ResponseData getResumeByAdmin(@RequestBody GetResumeDto getResumeDto) throws ParseException {
-//        ResumeInfoDto res = usersService.getResume(getResumeDto);
-//        return new ResponseData(ExceptionMsg.SUCCESS, res);
-//    }
-
     //TODO 简历上传stu_id-学生
     @RequestMapping(value = "/resumes/create", method = RequestMethod.POST)
     @ResponseBody
@@ -123,15 +114,6 @@ public class UsersController {
         ResumeUploadCallbackDto res = usersService.uploadResume(file);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
-//    public ResponseData uploadResume(MultipartFile file, String telephone,
-//                                     String upload_time) throws ParseException, Exception {
-//        ResumeUploadCallbackDto res = usersService.uploadResume(file, telephone, upload_time);
-////    public ResponseData uploadResume(@RequestBody File file, @RequestParam String telephone,
-////                                     @RequestParam String upload_time) throws ParseException, Exception {
-//
-////        ResumeUploadCallbackDto res = usersService.uploadResume(uploadInputDto);
-//        return new ResponseData(ExceptionMsg.SUCCESS, res);
-//    }
 
     //TODO 简历编辑（个人信息）-学生
     @RequestMapping(value = "/resumes/edit_personal", method = RequestMethod.POST)
@@ -246,4 +228,22 @@ public class UsersController {
         String res = usersService.deleteFile(fileName);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
+
+    //    //TODO 简历查看-学生
+//    @RequestMapping(value = "/resumes/get1", method = RequestMethod.GET)
+//    @ResponseBody
+//    public ResponseData getResumeByAdmin(@RequestBody GetResumeDto getResumeDto) throws ParseException {
+//        ResumeInfoDto res = usersService.getResume(getResumeDto);
+//        return new ResponseData(ExceptionMsg.SUCCESS, res);
+//    }
+
+    //    public ResponseData uploadResume(MultipartFile file, String telephone,
+//                                     String upload_time) throws ParseException, Exception {
+//        ResumeUploadCallbackDto res = usersService.uploadResume(file, telephone, upload_time);
+////    public ResponseData uploadResume(@RequestBody File file, @RequestParam String telephone,
+////                                     @RequestParam String upload_time) throws ParseException, Exception {
+//
+////        ResumeUploadCallbackDto res = usersService.uploadResume(uploadInputDto);
+//        return new ResponseData(ExceptionMsg.SUCCESS, res);
+//    }
 }

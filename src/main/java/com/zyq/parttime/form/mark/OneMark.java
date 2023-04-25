@@ -7,6 +7,7 @@ import java.util.Date;
 
 @Data
 public class OneMark implements Serializable {
+    //这里都是平均值
     private float total_score;
     private int pf;
     private int pl;
