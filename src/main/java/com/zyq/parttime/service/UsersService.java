@@ -67,6 +67,9 @@ public interface UsersService {
     //删除简历详情——学生
     DeleteDetailCallbackDto deleteDetail(DeleteDetailDto deleteDetailDto) throws ParseException, Exception;
 
+    //增加简历详情——学生
+    AddDetailCallbackDto addDetail(AddDetailDto addDetailDto) throws ParseException, Exception;
+
     //删除简历——学生
     DeleteResumeCallbackDto deleteResume(DeleteResumeDto deleteResumeDto) throws ParseException, Exception;
 

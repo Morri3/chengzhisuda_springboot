@@ -1,5 +1,6 @@
 package com.zyq.parttime.service;
 
+//import com.kennycason.kumo.WordFrequency;
 import com.zyq.parttime.exception.ParttimeServiceException;
 import com.zyq.parttime.form.analyze.AnalyzeAvgScoreOfMarkDto;
 import com.zyq.parttime.form.analyze.AnalyzePublishDto;
@@ -23,4 +24,7 @@ public interface AnalyzeService {
 
     //获取所有兼职的兼职名+平均综合评分
     List<AnalyzeAvgScoreOfMarkDto> getAvgScoreOfMark() throws ParttimeServiceException, ParseException;
+
+    //获取评论词云
+//    List<WordFrequency> getWordCloudOfComment() throws ParttimeServiceException, ParseException;
 }

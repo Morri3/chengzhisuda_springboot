@@ -19,4 +19,5 @@ public class ResumeInfoDto implements Serializable {
     private List<ResumeDetailDto> professionalSkillList;
     private String status;
     private String memo;//若不存在简历，该字段为”请填写简历“
+    private int r_id;//简历id
 }

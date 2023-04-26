@@ -163,6 +163,14 @@ public class UsersController {
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
+    //TODO 简历详情增加-学生
+    @RequestMapping(value = "/resumes/add_detail", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseData addDetail(@RequestBody AddDetailDto addDetailDto) throws ParseException, Exception {
+        AddDetailCallbackDto res = usersService.addDetail(addDetailDto);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
     //TODO 简历删除-学生
     @RequestMapping(value = "/resumes/delete", method = RequestMethod.POST)
     @ResponseBody

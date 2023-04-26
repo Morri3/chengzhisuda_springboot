@@ -1,6 +1,9 @@
 package com.zyq.parttime.service.impl;
 
 import com.alibaba.fastjson.JSON;
+//import com.kennycason.kumo.WordFrequency;
+//import com.kennycason.kumo.nlp.FrequencyAnalyzer;
+//import com.kennycason.kumo.nlp.tokenizers.ChineseWordTokenizer;
 import com.zyq.parttime.entity.Comment;
 import com.zyq.parttime.entity.Parttimes;
 import com.zyq.parttime.entity.Signup;
@@ -214,4 +217,36 @@ public class AnalyzeServiceImpl implements AnalyzeService {
 
         return res;
     }
+
+//    @Override
+//    public List<WordFrequency> getWordCloudOfComment() throws ParttimeServiceException, ParseException {
+//        //1.数据库获取所有评论
+//        List<Comment> list = commentRepository.getAllComment();
+//        //2.根据list构造词云所需List<String>
+//        List<String> source = new ArrayList<>();
+//        for (Comment comment : list) {
+//            source.add(comment.getContent());
+//        }
+//        System.out.println("词云源数据： " + source.toString());
+////        if (list.size() > 0) {
+//        //2.有数据
+//        FrequencyAnalyzer frequencyAnalyzer = new FrequencyAnalyzer();
+//        //3.设置分词返回数量(频率最高的600个词)
+//        frequencyAnalyzer.setWordFrequenciesToReturn(600);
+//        //4.最小分词长度
+//        frequencyAnalyzer.setMinWordLength(2);
+//        //5.引入中文解析器
+//        frequencyAnalyzer.setWordTokenizer(new ChineseWordTokenizer());
+//        //6.直接从文件中读取，返回前端
+//        final List<WordFrequency> wordFrequencies = frequencyAnalyzer.load(source);
+//        System.out.println("词云结果："+wordFrequencies.toString());
+//        return wordFrequencies;
+////        } else {
+////            //2.没数据
+////            logger.warn("暂无兼职");
+////            List<WordFrequency> nocontent = new ArrayList<>();
+////            return nocontent;
+////        }
+//
+//    }
 }

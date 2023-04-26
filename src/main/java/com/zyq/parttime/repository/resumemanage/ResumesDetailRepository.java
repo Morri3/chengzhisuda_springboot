@@ -30,6 +30,11 @@ public interface ResumesDetailRepository extends JpaRepository<Resumedetail, Int
 
     @Transactional
     @Modifying
+    @Query(value = "insert into resumedetail(r_id, content, category, create_time, rd_status) values(?1,?2,?3,?4,?5)", nativeQuery = true)
+    void addAResumesDetailRecord2(int r_id, String content, String category, Date create_time, String rd_status);
+
+    @Transactional
+    @Modifying
     @Query(value = "insert into resumedetail(r_id, content, category, create_time, rd_status) values(?1,?2,?3,?4,?5)",
             nativeQuery = true)
     void addAProfessionalResumesDetailRecord(int r_id, String content, String category, Date create_time, String rd_status);
@@ -73,4 +78,6 @@ public interface ResumesDetailRepository extends JpaRepository<Resumedetail, Int
     @Query(value = "update resumedetail set rd_status='已删除' where rd_id=?1", nativeQuery = true)
     void deleteResumedetailByRdId(int rd_id);
 
+    @Query(value = "select * from resumedetail order by create_time desc limit 0,1", nativeQuery = true)
+    Resumedetail findLatestResumesDetailWithAdd();
 }

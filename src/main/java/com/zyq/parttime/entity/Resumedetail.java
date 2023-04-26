@@ -33,6 +33,17 @@ public class Resumedetail {
     @Column(name = "rd_status")
     private String rdStatus;
 
+    @Column(name = "create_time")
+    private Date createTime;
+
+    public Date getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
+    }
+
     public String getCategory() {
         return category;
     }

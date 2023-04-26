@@ -60,6 +60,7 @@ public class UsersServiceImpl implements UsersService {
     @Autowired
     private MinIO minIO;
 
+    // minio配置
     @Value("${minio.endpoint}")
     private String endpoint;
     @Value("${minio.bucket}")
@@ -125,7 +126,7 @@ public class UsersServiceImpl implements UsersService {
                 String unit_loc = emp.getU().getLoc();
                 int job_nums = emp.getU().getJobNums();
                 String head = emp.getHead();
-                int emp_grade=emp.getEmpGrade();
+                int emp_grade = emp.getEmpGrade();
 
                 res.setEmp_name(emp_name);
                 res.setGender(gender);
@@ -289,6 +290,7 @@ public class UsersServiceImpl implements UsersService {
                 res.setCurrent_area(resumes.getCurrentArea());
                 res.setExp(resumes.getExp());
                 res.setUpload_time(resumes.getUploadTime());
+                res.setR_id(resumes.getId());
 
                 //根据r_id查找四个子类的内容
                 List<Resumedetail> campusExpList =
@@ -472,6 +474,7 @@ public class UsersServiceImpl implements UsersService {
                 res.setCurrent_area(resumes.getCurrentArea());
                 res.setExp(resumes.getExp());
                 res.setUpload_time(resumes.getUploadTime());
+                res.setR_id(resumes.getId());
 
                 //根据r_id查找四个子类的内容
                 List<Resumedetail> campusExpList =
@@ -515,6 +518,7 @@ public class UsersServiceImpl implements UsersService {
                     dto.setHasContent(0);//无内容
                     list1.add(dto);
                 }
+
                 //2.遍历教育背景
                 List<ResumeDetailDto> list2 = new ArrayList<>();
                 if (educationBgList.size() > 0) {//有内容
@@ -546,6 +550,7 @@ public class UsersServiceImpl implements UsersService {
                     dto.setHasContent(0);//无内容
                     list2.add(dto);
                 }
+
                 //3.遍历项目经历
                 List<ResumeDetailDto> list3 = new ArrayList<>();
                 if (campusExpList.size() > 0) {//有内容
@@ -577,6 +582,7 @@ public class UsersServiceImpl implements UsersService {
                     dto.setHasContent(0);//无内容
                     list3.add(dto);
                 }
+
                 //4.遍历专业技能
                 List<ResumeDetailDto> list4 = new ArrayList<>();
                 if (campusExpList.size() > 0) {//有内容
@@ -608,7 +614,7 @@ public class UsersServiceImpl implements UsersService {
                 res.setProjectExpList(list3);
                 res.setProfessionalSkillList(list4);
 
-                //状态
+                //设置状态
                 res.setStatus(resumes.getrStatus());
                 res.setMemo("存在简历");
             } else {
@@ -670,8 +676,7 @@ public class UsersServiceImpl implements UsersService {
     }
 
     @Override
-    public ResumeUploadCallbackDto uploadResume(MultipartFile file)
-            throws ParttimeServiceException, Exception {
+    public ResumeUploadCallbackDto uploadResume(MultipartFile file) throws ParttimeServiceException, Exception {
         ResumeUploadCallbackDto res = new ResumeUploadCallbackDto();
 
 //        if (uploadInputDto != null) {
@@ -1080,9 +1085,17 @@ public class UsersServiceImpl implements UsersService {
                     //根据手机号找到该学生的简历、校园经历
                     Resumes resumes = resumesInfoRepository.findResumesByStuId(telephone);
                     //根据r_id+类型找到校园经历
-                    Resumedetail resumedetail = resumesDetailRepository.findResumeDetailByRIdAndCategory(resumes.getId(), "校园经历");
+                    List<Resumedetail> list = resumesDetailRepository.findResumeDetailByRIdAndCategory2(resumes.getId(), "校园经历");
 
-                    if (resumes != null && resumedetail != null && resumedetail.getId() == rd_id) {//存在简历和校园经历
+                    //遍历列表，找到那个detail
+                    Resumedetail resumedetail = new Resumedetail();
+                    for (Resumedetail detail : list) {
+                        if (detail.getId() == rd_id) {//rd_id相同
+                            resumedetail = detail;
+                        }
+                    }
+
+                    if (resumes != null && resumedetail != null) {//存在简历和校园经历
                         int f1 = 0, f2 = 0;//判断是否为空
                         //处理时间
                         Date start = new Date(), end = new Date();
@@ -1228,7 +1241,8 @@ public class UsersServiceImpl implements UsersService {
                         res.setStart_time(resumedetail2.getStartTime());
                         res.setEnd_time(resumedetail2.getEndTime());
                         res.setRd_status(resumedetail2.getRdStatus());
-                    } else {//不存在简历/教育背景
+                    } else {
+                        //不存在简历/教育背景
                         if (resumes != null && resumedetail == null) {
                             logger.warn("该账号不存在教育背景信息");
 
@@ -1412,6 +1426,7 @@ public class UsersServiceImpl implements UsersService {
                     //根据手机号找到该学生的简历、专业技能
                     Resumes resumes = resumesInfoRepository.findResumesByStuId(telephone);
 //                    Resumedetail resumedetail = resumesDetailRepository.findResumeDetailByRdId(rd_id, resumes.getId());
+
                     //根据r_id+类型找到专业技能
                     List<Resumedetail> list = resumesDetailRepository.findResumeDetailByRIdAndCategory2(resumes.getId(), "专业技能");
 
@@ -1473,49 +1488,184 @@ public class UsersServiceImpl implements UsersService {
         DeleteDetailCallbackDto res = new DeleteDetailCallbackDto();
 
         if (deleteDetailDto != null) {
+            //1.有数据，获取传入的数据
             String telephone = deleteDetailDto.getTelephone();//手机号
             int rd_id = deleteDetailDto.getRd_id();
             System.out.println("要删除的简历详情id是：" + rd_id);
 
-            if (telephone != null && !telephone.equals("")) {//手机号不为空
-                //根据手机号查找学生用户
+            if (telephone != null && !telephone.equals("")) {
+                //2.手机号不为空，根据手机号查找学生用户
                 Student student = stuInfoRepository.findStudentByTelephone(telephone);
 
-                if (student != null) {//存在学生
-                    //根据手机号找到该学生的简历、项目经历
+                if (student != null) {
+                    //3.存在学生，根据手机号找到该学生的简历、项目经历
                     Resumes resumes = resumesInfoRepository.findResumesByStuId(telephone);
                     Resumedetail resumedetail = null;
-                    if (resumes != null)
-                        resumedetail = resumesDetailRepository.findResumeDetailByRdId(rd_id, resumes.getId());
 
-                    if (resumes != null && resumedetail != null) {//存在简历和项目经历
-                        if (resumedetail.getId() == rd_id && !resumedetail.getRdStatus().equals("已删除")) {//当前的rd是该学生的简历详情id，且不是已删除的简历详情
-                            //更新DB
+                    if (resumes != null) {
+                        //4.存在简历，找是否存在简历细节
+                        resumedetail = resumesDetailRepository.findResumeDetailByRdId(rd_id, resumes.getId());
+                    }
+
+                    if (resumes != null && resumedetail != null) {
+                        //5.存在简历和简历细节
+                        if (resumedetail.getId() == rd_id && !resumedetail.getRdStatus().equals("已删除")) {
+                            //6.当前的rd是该学生的简历详情id，且不是已删除的简历详情，就更新DB
                             resumesDetailRepository.deleteResumedetailByRdId(rd_id);
 
                             //填充到res
                             res.setTelephone(telephone);
+                            res.setRd_id(rd_id);
                             res.setMemo("删除成功！");
                         } else {//该简历详情不是该学生的
                             logger.warn("该简历详情不是该学生的");
                             res.setTelephone(telephone);
+                            res.setRd_id(0);
                             res.setMemo("该简历详情不是该学生的");
                         }
                     } else {//不存在简历/简历详情
-                        logger.warn("该账号不存在简历信息或简历详情");
-                        res.setTelephone(telephone);
-                        res.setMemo("该账号不存在简历信息或简历详情");
+                        if (resumes == null) {
+                            logger.warn("该账号不存在简历信息");
+                            res.setTelephone(telephone);
+                            res.setRd_id(0);
+                            res.setMemo("该账号不存在简历信息");
+                        } else if (resumedetail == null) {
+                            logger.warn("该账号不存在简历详情");
+                            res.setTelephone(telephone);
+                            res.setRd_id(0);
+                            res.setMemo("该账号不存在简历详情");
+                        }
                     }
                 } else {//不存在账号
                     logger.warn("该账号不存在");
                     res.setTelephone(telephone);
+                    res.setRd_id(0);
                     res.setMemo("该账号不存在");
                 }
             } else {//手机号为空
                 logger.warn("请输入手机号");
                 res.setTelephone(telephone);
+                res.setRd_id(0);
                 res.setMemo("请输入手机号");
             }
+        }
+        return res;
+    }
+
+    @Override
+    public AddDetailCallbackDto addDetail(AddDetailDto addDetailDto) throws ParseException, Exception {
+        AddDetailCallbackDto res = new AddDetailCallbackDto();
+
+        if (addDetailDto != null) {
+            //1.有数据，获取传入的数据
+            String stu_id = addDetailDto.getTelephone();
+            int r_id = addDetailDto.getR_id();
+            String category = addDetailDto.getCategory();
+
+            //2.根据种类判断
+            if (category.equals("专业技能")) {
+                String content = addDetailDto.getContent();
+
+                //3.判断是否存在该resume简历，以及该简历是否是该学生的
+                Resumes resumes = resumesInfoRepository.checkIsTheResumeOfStu(r_id, stu_id);
+
+                if (resumes != null) {
+                    //4.存在且是该学生的兼职，获取当前时间
+                    SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//年月日格式
+                    Date now = sdf2.parse(sdf2.format(new Date()));
+
+                    //5.创建resumedetail记录
+                    resumesDetailRepository.addAResumesDetailRecord2(r_id, content, category, now, "已上传");//新增一条记录的状态是”已上传“
+
+                    //6.获取刚刚创建的记录
+                    Resumedetail resumedetail = resumesDetailRepository.findLatestResumesDetailWithAdd();
+                    if (resumedetail != null) {
+                        //7.构造res
+                        res.setTelephone(resumedetail.getR().getStu().getId());
+                        res.setRd_id(resumedetail.getId());
+                        res.setR_id(resumedetail.getR().getId());
+                        res.setContent(resumedetail.getContent());
+                        res.setCreate_time(resumedetail.getCreateTime());
+                        res.setRd_status(resumedetail.getRdStatus());
+                        res.setMemo("添加成功");
+                    } else {
+                        //创建失败
+                        logger.warn("添加失败");
+                        AddDetailCallbackDto dto = new AddDetailCallbackDto();
+                        dto.setTelephone("0");//学生账号
+                        dto.setR_id(r_id);
+                        dto.setMemo("添加失败");
+                    }
+                } else {
+                    logger.warn("不存在简历");
+                    AddDetailCallbackDto dto = new AddDetailCallbackDto();
+                    dto.setTelephone("0");//学生账号
+                    dto.setR_id(r_id);
+                    dto.setMemo("不存在简历");
+                }
+            } else {
+                //其他三种detail
+
+                String date = addDetailDto.getDate();
+                String title = addDetailDto.getTitle();
+                String content = addDetailDto.getContent();
+
+                //3.判断是否存在该resume简历，以及该简历是否是该学生的
+                Resumes resumes = resumesInfoRepository.checkIsTheResumeOfStu(r_id, stu_id);
+
+                if (resumes != null) {
+                    //4.存在且是该学生的兼职,处理日期
+                    String[] arr = date.split("-");
+                    String start = arr[0].substring(0, 4) + "-" + arr[0].substring(5, 7) + "-01";
+                    String end = arr[1].substring(0, 4) + "-" + arr[0].substring(5, 7) + "-01";
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");//年月日格式
+                    Date start_time = sdf.parse(start);
+                    Date end_time = sdf.parse(end);
+
+                    //5.获取当前时间
+                    SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//年月日格式
+                    Date now = sdf2.parse(sdf2.format(new Date()));
+
+                    //6.创建resumedetail记录
+                    resumesDetailRepository.addAResumesDetailRecord(r_id, start_time, end_time, title,
+                            content, category, now, "已上传");//新增一条记录的状态是”已上传“
+
+                    //7.获取刚刚创建的记录
+                    Resumedetail resumedetail = resumesDetailRepository.findLatestResumesDetailWithAdd();
+                    if (resumedetail != null) {
+                        //8.构造res
+                        res.setTelephone(resumedetail.getR().getStu().getId());
+                        res.setRd_id(resumedetail.getId());
+                        res.setR_id(resumedetail.getR().getId());
+                        res.setStart_time(resumedetail.getStartTime());
+                        res.setEnd_time(resumedetail.getEndTime());
+                        res.setTitle(resumedetail.getTitle());
+                        res.setContent(resumedetail.getContent());
+                        res.setCreate_time(resumedetail.getCreateTime());
+                        res.setRd_status(resumedetail.getRdStatus());
+                        res.setMemo("添加成功");
+                    } else {
+                        //创建失败
+                        logger.warn("添加失败");
+                        AddDetailCallbackDto dto = new AddDetailCallbackDto();
+                        dto.setTelephone("0");//学生账号
+                        dto.setR_id(r_id);
+                        dto.setMemo("添加失败");
+                    }
+                } else {
+                    logger.warn("不存在简历");
+                    AddDetailCallbackDto dto = new AddDetailCallbackDto();
+                    dto.setTelephone("0");//学生账号
+                    dto.setR_id(r_id);
+                    dto.setMemo("不存在简历");
+                }
+            }
+        } else {
+            logger.warn("请检查输入");
+            AddDetailCallbackDto dto = new AddDetailCallbackDto();
+            dto.setTelephone("0");//学生账号
+            dto.setR_id(0);
+            dto.setMemo("请检查输入");
         }
         return res;
     }

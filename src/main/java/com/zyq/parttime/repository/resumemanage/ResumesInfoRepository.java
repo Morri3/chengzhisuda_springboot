@@ -50,4 +50,8 @@ public interface ResumesInfoRepository extends JpaRepository<Resumes, Integer>, 
     @Query(value = "select pic_url from resumes where r_id=?1", nativeQuery = true)
     String getUrlOfResumePhoto(int r_id);
 
+    @Query(value = "select * from resumes where r_id=?1 and stu_id=?2", nativeQuery = true)
+    Resumes checkIsTheResumeOfStu(int r_id, String stu_id);
+
+
 }

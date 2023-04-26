@@ -8,5 +8,6 @@ import java.io.Serializable;
 @Data
 public class DeleteDetailCallbackDto implements Serializable {
     private String telephone;
+    private int rd_id;
     private String memo;
 }
