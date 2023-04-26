@@ -6,24 +6,16 @@ import com.alibaba.fastjson.JSON;
 //import com.kennycason.kumo.nlp.tokenizers.ChineseWordTokenizer;
 import com.zyq.parttime.entity.Comment;
 import com.zyq.parttime.entity.Parttimes;
-import com.zyq.parttime.entity.Signup;
+import com.zyq.parttime.entity.Student;
 import com.zyq.parttime.exception.ParttimeServiceException;
-import com.zyq.parttime.form.analyze.AnalyzeAvgScoreOfMarkDto;
-import com.zyq.parttime.form.analyze.AnalyzePublishDto;
-import com.zyq.parttime.form.analyze.AnalyzeThreeIndicatorsDto;
-import com.zyq.parttime.form.analyze.GetAnalyzePublishDto;
-import com.zyq.parttime.form.comment.CommentDto;
-import com.zyq.parttime.form.comment.CommentPostDto;
-import com.zyq.parttime.form.comment.CommentToEmpDto;
-import com.zyq.parttime.form.comment.OneCommentDto;
+import com.zyq.parttime.form.analyze.*;
 import com.zyq.parttime.form.mark.OneMark;
 import com.zyq.parttime.repository.comment.CommentRepository;
 import com.zyq.parttime.repository.mark.MarkRepository;
 import com.zyq.parttime.repository.position.PositionRepository;
 import com.zyq.parttime.repository.position.SignupRepository;
+import com.zyq.parttime.repository.userinfomanage.StuInfoRepository;
 import com.zyq.parttime.service.AnalyzeService;
-import com.zyq.parttime.service.CommentService;
-import org.checkerframework.checker.units.qual.A;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +37,8 @@ public class AnalyzeServiceImpl implements AnalyzeService {
     private PositionRepository positionRepository;
     @Autowired
     private MarkRepository markRepository;
+    @Autowired
+    private StuInfoRepository stuInfoRepository;
 
     @Override
     public List<AnalyzePublishDto> getNumOfDailyPublish() throws ParttimeServiceException, ParseException {
@@ -59,8 +53,9 @@ public class AnalyzeServiceImpl implements AnalyzeService {
         if (list.size() > 0) {
             //2.有数据，遍历每个Map
             for (Map<String, Object> item : list) {
-                System.out.println("1: " + item.get("create_time"));
-                System.out.println("2: " + item.get("num"));
+//                System.out.println("1: " + item.get("create_time"));
+//                System.out.println("2: " + item.get("num"));
+
                 //3.对于每个map，获取value，构造dto
                 AnalyzePublishDto dto = new AnalyzePublishDto();
                 dto.setDate(sdf.format(sdf.parse(item.get("create_time").toString())));//Date转String
@@ -68,8 +63,10 @@ public class AnalyzeServiceImpl implements AnalyzeService {
                 dto.setMemo("获取成功");
                 tmp.add(dto);//加入列表
             }
+
             //4.创建map，存放日期、数量
             HashMap<String, Integer> map = new HashMap<>();
+
             //5.遍历dto列表
             for (AnalyzePublishDto item : tmp) {
                 if (map.containsKey(item.getDate())) {// 若map中的key包含该日期，put前加上原来的数量
@@ -85,8 +82,13 @@ public class AnalyzeServiceImpl implements AnalyzeService {
 //                numList.add(num);
 //            }
 //            System.out.println(numList.toString());
-            //6.构造dto
-            for (String date : map.keySet()) {
+            //6.按照日期排序
+            Map<String, Object> sortMap = new TreeMap<>(new MapKeyComparator());
+            sortMap.putAll(map);
+            System.out.println("排序后的map：" + sortMap);
+
+            //7.构造dto
+            for (String date : sortMap.keySet()) {
                 AnalyzePublishDto dto = new AnalyzePublishDto();
                 dto.setDate(date);//日期是string类型
                 dto.setNum(Integer.parseInt(map.get(date).toString()));
@@ -218,35 +220,67 @@ public class AnalyzeServiceImpl implements AnalyzeService {
         return res;
     }
 
-//    @Override
-//    public List<WordFrequency> getWordCloudOfComment() throws ParttimeServiceException, ParseException {
-//        //1.数据库获取所有评论
-//        List<Comment> list = commentRepository.getAllComment();
-//        //2.根据list构造词云所需List<String>
-//        List<String> source = new ArrayList<>();
-//        for (Comment comment : list) {
-//            source.add(comment.getContent());
-//        }
-//        System.out.println("词云源数据： " + source.toString());
-////        if (list.size() > 0) {
-//        //2.有数据
-//        FrequencyAnalyzer frequencyAnalyzer = new FrequencyAnalyzer();
-//        //3.设置分词返回数量(频率最高的600个词)
-//        frequencyAnalyzer.setWordFrequenciesToReturn(600);
-//        //4.最小分词长度
-//        frequencyAnalyzer.setMinWordLength(2);
-//        //5.引入中文解析器
-//        frequencyAnalyzer.setWordTokenizer(new ChineseWordTokenizer());
-//        //6.直接从文件中读取，返回前端
-//        final List<WordFrequency> wordFrequencies = frequencyAnalyzer.load(source);
-//        System.out.println("词云结果："+wordFrequencies.toString());
-//        return wordFrequencies;
-////        } else {
-////            //2.没数据
-////            logger.warn("暂无兼职");
-////            List<WordFrequency> nocontent = new ArrayList<>();
-////            return nocontent;
-////        }
-//
-//    }
+    @Override
+    public List<AnalyzeActivationDto> getActivationOfStudents() throws ParttimeServiceException, ParseException {
+        List<AnalyzeActivationDto> res = new ArrayList<>();
+
+        //1.从student找到所有学生
+        List<Student> allStudents = stuInfoRepository.getAllStudents();
+        if (allStudents.size() > 0) {
+            //2.存在学生，遍历每个学生
+            for (Student item : allStudents) {
+                //3.根据学生id在signup获取其报名数
+                AnalyzeActivationDto dto = new AnalyzeActivationDto();
+                //3-1.获取学生信息
+                dto.setStu_id(item.getId());
+                dto.setStu_name(item.getStuName());
+                //3-2.获取报名数
+                int num_signup = signupRepository.getNumOfSpecialCategoryByStuId(item.getId(), "已报名");
+                dto.setNum_name("报名数");
+                dto.setNum(num_signup);
+                dto.setMemo("获取成功");
+                res.add(dto);
+
+                //4.根据学生id在signup获取其录用数（录用数=录取状态报名数+结束状体报名数）
+                AnalyzeActivationDto dto2 = new AnalyzeActivationDto();
+                //4-1.获取学生信息
+                dto2.setStu_id(item.getId());
+                dto2.setStu_name(item.getStuName());
+                //4-2.获取录用数
+                int num_employment = signupRepository.getNumOfSpecialCategoryByStuId(item.getId(), "已录取");
+                int num_finished = signupRepository.getNumOfSpecialCategoryByStuId(item.getId(), "已结束");
+                dto2.setNum_name("录用数");
+                dto2.setNum(num_employment + num_finished);
+                dto2.setMemo("获取成功");
+                res.add(dto2);
+
+                //5.根据学生id在signup获取其取消数
+                AnalyzeActivationDto dto3 = new AnalyzeActivationDto();
+                //5-1.获取学生信息
+                dto3.setStu_id(item.getId());
+                dto3.setStu_name(item.getStuName());
+                //5-2.获取取消数
+                int num_cancel = signupRepository.getNumOfSpecialCategoryByStuId(item.getId(), "已取消");
+                dto3.setNum_name("取消数");
+                dto3.setNum(num_cancel);
+                dto3.setMemo("获取成功");
+                res.add(dto3);
+            }
+        } else {
+            logger.warn("暂无学生");
+            AnalyzeActivationDto dto = new AnalyzeActivationDto();
+            dto.setMemo("暂无学生");
+            res.add(dto);
+        }
+
+        return res;
+    }
+
+    //map键比较器类
+    public class MapKeyComparator implements Comparator<String> {
+        @Override
+        public int compare(String str1, String str2) {
+            return str1.compareTo(str2);
+        }
+    }
 }

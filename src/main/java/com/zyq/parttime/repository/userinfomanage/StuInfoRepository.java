@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import javax.transaction.Transactional;
 import java.util.Date;
+import java.util.List;
 
 public interface StuInfoRepository extends JpaRepository<Student, Integer>, JpaSpecificationExecutor<Student> {
     @Query(value = "select * from student where telephone = ?1", nativeQuery = true)
@@ -24,4 +25,6 @@ public interface StuInfoRepository extends JpaRepository<Student, Integer>, JpaS
     @Query(value = "update student set pwd=?1 where telephone=?2", nativeQuery = true)
     void modifyStuPwd(String pwd, String telephone);
 
+    @Query(value = "select * from student", nativeQuery = true)
+    List<Student> getAllStudents();
 }

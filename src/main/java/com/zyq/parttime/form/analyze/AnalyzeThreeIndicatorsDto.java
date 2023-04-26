@@ -15,7 +15,7 @@ public class AnalyzeThreeIndicatorsDto implements Serializable {
 //    private int num_employment;//报名数
 //    private int num_signup;//录取数
 //    private int num_total;//名额
-    private String num_name;//三个数其中之一
-    private int num;//三个数其中之一
+    private String num_name;//三个指标其中之一的名称
+    private int num;//三个指标其中之一
     private String memo;
 }

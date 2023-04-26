@@ -68,6 +68,6 @@ public interface PositionRepository extends JpaRepository<Parttimes, Integer>, J
     @Query(value = "select * from parttimes where op_id=?1", nativeQuery = true)
     List<Parttimes> getAllPositionManagedByEmp(String op_id);
 
-    @Query(value = "select create_time,count(*) as num from parttimes group by create_time", nativeQuery = true)
+    @Query(value = "select create_time,count(*) as num from parttimes group by create_time order by create_time", nativeQuery = true)
     List<Map<String, Object>> getNumOfDailyPublish();
 }

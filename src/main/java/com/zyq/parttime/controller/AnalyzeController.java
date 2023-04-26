@@ -1,6 +1,7 @@
 package com.zyq.parttime.controller;
 
 //import com.kennycason.kumo.WordFrequency;
+import com.zyq.parttime.form.analyze.AnalyzeActivationDto;
 import com.zyq.parttime.form.analyze.AnalyzeAvgScoreOfMarkDto;
 import com.zyq.parttime.form.analyze.AnalyzePublishDto;
 import com.zyq.parttime.form.analyze.AnalyzeThreeIndicatorsDto;
@@ -51,6 +52,13 @@ public class AnalyzeController {
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
+    //TODO 获取学生活跃度
+    @RequestMapping(value = "/student/get", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseData getActivationOfStudents() throws ParseException {
+        List<AnalyzeActivationDto> res = analyzeService.getActivationOfStudents();
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
 //    //TODO 获取评论词云
 //    @RequestMapping(value = "/comment/get", method = RequestMethod.GET)
 //    @ResponseBody

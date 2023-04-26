@@ -54,4 +54,15 @@ public interface SignupRepository extends JpaRepository<Signup, Integer>, JpaSpe
     @Modifying
     @Query(value = "update signup set signup_status='已取消',update_time=?1 where s_id=?2", nativeQuery = true)
     void rejectSignup(Date update_time, int s_id);
+
+    @Query(value = "select count(*) from signup where stu_id=?1 and signup_status=?2", nativeQuery = true)
+    int getNumOfSpecialCategoryByStuId(String stu_id,String category);
+
+//    @Query(value = "select count(*) from signup where stu_id=?1 and signup_status='已录用'", nativeQuery = true)
+//    int getNumOfEmploymentByStuId(String stu_id);
+//
+//    @Query(value = "select count(*) from signup where stu_id=?1 and signup_status='已结束'", nativeQuery = true)
+//    int getNumOfFinishedByStuId(String stu_id);
+
+
 }
