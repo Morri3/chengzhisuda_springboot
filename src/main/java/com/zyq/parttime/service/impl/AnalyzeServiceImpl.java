@@ -132,11 +132,17 @@ public class AnalyzeServiceImpl implements AnalyzeService {
                 res.add(dto);
 
 
+                int n1 = signupRepository.getNumOfSpecialStatus(item.getId(), "已报名");
+                int n2 = signupRepository.getNumOfSpecialStatus(item.getId(), "已录取");
+                int n3 = signupRepository.getNumOfSpecialStatus(item.getId(), "已结束");
+                int n4 = signupRepository.getNumOfSpecialStatus(item.getId(), "已取消");
+                int num_signup = n1 + n2 + n3 + n4;
+                int num_employment = n2 + n3;
                 //3-2.找到录取数
                 AnalyzeThreeIndicatorsDto dto2 = new AnalyzeThreeIndicatorsDto();
                 //4.找到录取数
                 dto2.setNum_name("录取数");
-                dto2.setNum(signupRepository.getNumOfEmployment(item.getId()));
+                dto2.setNum(num_employment);
                 //5.其他参数
                 dto2.setCreate_time(sdf.format(item.getCreateTime()));//字符串型，年月日
                 dto2.setP_name(item.getPositionName());
@@ -151,7 +157,7 @@ public class AnalyzeServiceImpl implements AnalyzeService {
                 AnalyzeThreeIndicatorsDto dto3 = new AnalyzeThreeIndicatorsDto();
                 //4.找到报名数
                 dto3.setNum_name("报名数");
-                dto3.setNum(signupRepository.getNumOfSignup(item.getId()));
+                dto3.setNum(num_signup);
                 //5.其他参数
                 dto3.setCreate_time(sdf.format(item.getCreateTime()));//字符串型，年月日
                 dto3.setP_name(item.getPositionName());

@@ -9,6 +9,7 @@ import java.util.Date;
 public class PositionInfoToEmpDto implements Serializable {
     private int p_id;
     private String op_id;//操作员
+    private String op_name;//操作员
     private String position_name;
     private String category;
     private String salary;

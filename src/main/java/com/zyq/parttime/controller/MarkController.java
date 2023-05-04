@@ -45,11 +45,19 @@ public class MarkController {
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
-    //TODO 获取自己负责的所有兼职的所有评分记录-兼职发布者/管理员
-    @RequestMapping(value = "/emp/getSome", method = RequestMethod.GET)
+    //TODO 获取自己负责的所有兼职的所有评分记录-兼职发布者
+    @RequestMapping(value = "/emp/get_all_emp", method = RequestMethod.GET)
     @ResponseBody
     public ResponseData getAllSpecialMark(@RequestParam String emp_id) {
         List<MarkToEmpDto> res = markService.getAllSpecialMark(emp_id);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
+    //TODO 获取所有兼职的所有评分记录-管理员
+    @RequestMapping(value = "/emp/get_all_admin", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseData getAllSpecialMarkBtAdmin(@RequestParam String emp_id) {
+        List<MarkToEmpDto> res = markService.getAllSpecialMarkBtAdmin(emp_id);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 }

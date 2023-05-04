@@ -12,6 +12,8 @@ public class StuInfoDto implements Serializable {
     private int gender;
     private String emails;
     private int age;
+    private String birth_year;//出生年份
+    private String birth_month;//出生月份
     private String telephone;
     private String school_name;
     private String sno;

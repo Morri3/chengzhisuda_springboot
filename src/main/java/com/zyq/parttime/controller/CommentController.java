@@ -47,16 +47,24 @@ public class CommentController {
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
-    //TODO 获取自己负责的所有兼职的所有评论记录-兼职发布者/管理员
-    @RequestMapping(value = "/emp/getSome", method = RequestMethod.GET)
+    //TODO 获取自己负责的所有兼职的所有评论记录-兼职发布者
+    @RequestMapping(value = "/emp/get_all_emp", method = RequestMethod.GET)
     @ResponseBody
-    public ResponseData getAllSpecialComment(@RequestParam String emp_id) {
+    public ResponseData getAllSpecialCommentByEmp(@RequestParam String emp_id) {
         List<CommentToEmpDto> res = commentService.getAllSpecialComment(emp_id);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
+    //TODO 获取所有兼职的所有评论记录-管理员
+    @RequestMapping(value = "/emp/get_all_admin", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseData getAllSpecialCommentByAdmin(@RequestParam String emp_id) {
+        List<CommentToEmpDto> res = commentService.getAllSpecialCommentByAdmin(emp_id);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
     //TODO 获取某一兼职的所有评论-兼职发布者/管理员
-    @RequestMapping(value = "/emp/getAll", method = RequestMethod.GET)
+    @RequestMapping(value = "/emp/get_one_all", method = RequestMethod.GET)
     @ResponseBody
     public ResponseData getCommentThreeByEmp(@RequestParam int p_id,@RequestParam String emp_id) {
         List<CommentToEmpDto> res = commentService.getCommentThreeByEmp(p_id,emp_id);

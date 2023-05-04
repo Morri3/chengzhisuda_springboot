@@ -1,14 +1,17 @@
 package com.zyq.parttime.service.impl;
 
 import cn.dev33.satoken.secure.SaSecureUtil;
-import com.baidu.aip.ocr.AipOcr;
+//导入可选配置类
+import com.alibaba.fastjson.JSON;
 import com.zyq.parttime.entity.*;
 import com.zyq.parttime.exception.ParttimeServiceException;
 import com.zyq.parttime.form.intention.EditIntentionDto;
 import com.zyq.parttime.form.intention.IntentionDto;
+import com.zyq.parttime.form.logandreg.UserBirthDto;
 import com.zyq.parttime.form.resumemanage.*;
 import com.zyq.parttime.form.userinfomanage.*;
 import com.zyq.parttime.minio.MinIO;
+import com.zyq.parttime.ocr.OcrBDUtils;
 import com.zyq.parttime.repository.intention.IntentionRepository;
 import com.zyq.parttime.repository.resumemanage.ResumesDetailRepository;
 import com.zyq.parttime.repository.resumemanage.ResumesInfoRepository;
@@ -16,17 +19,21 @@ import com.zyq.parttime.repository.unit.UnitRepository;
 import com.zyq.parttime.repository.userinfomanage.EmpInfoRepository;
 import com.zyq.parttime.repository.userinfomanage.StuInfoRepository;
 import com.zyq.parttime.service.UsersService;
-import com.zyq.parttime.utils.Constant;
-import org.apache.commons.lang3.ObjectUtils;
+import com.zyq.parttime.utils.MockUtils;
+import net.coobird.thumbnailator.Thumbnails;
+//import org.apache.commons.lang.time.DateUtils;
+import net.coobird.thumbnailator.geometry.Positions;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.ClassUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
@@ -35,8 +42,6 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-
-import static java.util.stream.Collectors.toList;
 
 @Service
 public class UsersServiceImpl implements UsersService {
@@ -66,6 +71,7 @@ public class UsersServiceImpl implements UsersService {
     @Value("${minio.bucket}")
     private String bucket;
 
+    //TODO 获取个人信息——学生
     @Override
     public StuInfoDto getStuInfo(String telephone) throws ParttimeServiceException {
         StuInfoDto res = new StuInfoDto();
@@ -73,8 +79,9 @@ public class UsersServiceImpl implements UsersService {
         if (telephone != null) {
             //查找该用户是否存在
             Student stu = stuInfoRepository.findStudentByTelephone(telephone);
-            if (stu != null) {//存在
-                //获取该用户的个人信息，填充到res
+
+            if (stu != null) {
+                //存在学生，获取该用户的个人信息，填充到res
                 String stu_name = stu.getStuName();
                 int gender = stu.getGender();
                 String emails = stu.getEmails();
@@ -86,11 +93,23 @@ public class UsersServiceImpl implements UsersService {
                 Date graduation_date = stu.getGraduationDate();
                 String head = stu.getHead();
 
+                //缓存中获取出生年月
+                String dtoStr = (String) redisTemplate.opsForValue().get(UserBirthDto.cacheKey(telephone));
+                UserBirthDto tmp = com.alibaba.fastjson.JSONObject.parseObject(dtoStr, UserBirthDto.class);//json转dto
+                String birth_year = "", birth_month = "";//出生年月
+                if (tmp != null) {
+                    //缓存中存在该用户的出生年月数据
+                    birth_year = tmp.getBirth_year();
+                    birth_month = tmp.getBirth_month();
+                }
+
                 res.setStu_name(stu_name);
                 res.setGender(gender);
                 res.setTelephone(telephone);
                 res.setEmails(emails);
                 res.setAge(age);
+                res.setBirth_year(birth_year);//出生年份
+                res.setBirth_month(birth_month);//出生月份
                 res.setSchool_name(school_name);
                 res.setSno(sno);
                 res.setEntrance_date(entrance_date);
@@ -103,19 +122,26 @@ public class UsersServiceImpl implements UsersService {
                 res.setTelephone(telephone);
                 res.setMemo("该账号不存在");
             }
+        } else {
+            logger.warn("请检查输入");
+            res.setTelephone(telephone);
+            res.setMemo("请检查输入");
         }
+
         return res;
     }
 
+    //TODO 个人信息查看-兼职发布者/管理员
     @Override
     public EmpInfoDto getEmpInfo(String telephone) throws ParttimeServiceException {
         EmpInfoDto res = new EmpInfoDto();
 
         if (telephone != null) {
-            //查找该用户是否存在
+            //1.查找该用户是否存在
             Employer emp = empInfoRepository.findEmployerByTelephone(telephone);
-            if (emp != null) {//存在
-                //获取该用户的个人信息，填充到res
+
+            if (emp != null) {
+                //2.存在，获取该用户的个人信息，填充到res
                 String emp_name = emp.getEmpName();
                 int gender = emp.getGender();
                 String emails = emp.getEmails();
@@ -128,10 +154,23 @@ public class UsersServiceImpl implements UsersService {
                 String head = emp.getHead();
                 int emp_grade = emp.getEmpGrade();
 
+                //3.缓存中获取出生年月
+                String dtoStr = (String) redisTemplate.opsForValue().get(UserBirthDto.cacheKey(telephone));
+                UserBirthDto tmp = com.alibaba.fastjson.JSONObject.parseObject(dtoStr, UserBirthDto.class);//json转dto
+                String birth_year = "", birth_month = "";//出生年月
+                if (tmp != null) {
+                    //缓存中存在该用户的出生年月数据
+                    birth_year = tmp.getBirth_year();
+                    birth_month = tmp.getBirth_month();
+                }
+
+                //4.构造res
                 res.setEmp_name(emp_name);
                 res.setGender(gender);
                 res.setEmails(emails);
                 res.setAge(age);
+                res.setBirth_year(birth_year);//出生年份
+                res.setBirth_month(birth_month);//出生月份
                 res.setTelephone(telephone);
                 res.setJno(jno);
                 res.setUnit_name(unit_name);
@@ -146,10 +185,15 @@ public class UsersServiceImpl implements UsersService {
                 res.setTelephone(telephone);
                 res.setMemo("该账号不存在");
             }
+        } else {
+            logger.warn("请检查输入");
+            res.setTelephone(telephone);
+            res.setMemo("请检查输入");
         }
         return res;
     }
 
+    //TODO 编辑信息——学生
     @Override
     public StuInfoDto editStuInfo(EditInfoDto editInfoDto) throws ParttimeServiceException, ParseException {
         StuInfoDto res = new StuInfoDto();
@@ -159,41 +203,65 @@ public class UsersServiceImpl implements UsersService {
             String telephone = editInfoDto.getTelephone();
             int gender = editInfoDto.getGender();
             int age = editInfoDto.getAge();
+            String birth_year = editInfoDto.getBirth_year();
+            String birth_month = editInfoDto.getBirth_month();
             String emails = editInfoDto.getEmails();
             String entrance_date = editInfoDto.getEntrance_date();
             String graduation_date = editInfoDto.getGraduation_date();
+
 
             //入学年月、毕业年月
             SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy-MM");
             Date entrance = sdf2.parse(entrance_date);
             Date graduation = sdf2.parse(graduation_date);
+            Date now = sdf2.parse(sdf2.format(new Date()));
 
+            //计算年级
             Calendar c1 = Calendar.getInstance();
             Calendar c2 = Calendar.getInstance();
-            c1.setTime(entrance);
-            c2.setTime(graduation);
-            int plus = c2.get(Calendar.DATE) - c1.get(Calendar.DATE);
-            int res2 = c2.get(Calendar.MONTH) - c1.get(Calendar.MONTH);
-            int year = c2.get(Calendar.YEAR) - c1.get(Calendar.YEAR);
-            if (res2 > 0) {
-                res2 = 1;
-            } else if (res2 == 0) {
-                if (plus <= 0) res2 = 0;
-                else res2 = 1;
-            } else {
-                res2 = 0;
-            }
-            int diff = year + res2;
+            Calendar c3 = Calendar.getInstance();
+            c1.setTime(entrance);//入学时间
+            c2.setTime(graduation);//毕业时间
+            c3.setTime(now);//现在
 
-            //把int转为字符串类型
+            int diff = 0;
+            if ((c1.getTime()).before(c2.getTime()) && (c2.getTime()).before(c3.getTime())) {
+                //入学时间在毕业时间前，且毕业时间在现在时间前，已经毕业
+                diff = 6;
+            } else if ((c1.getTime()).before(c2.getTime()) && (c2.getTime()).after(c3.getTime())) {
+                //入学时间在毕业时间前，且毕业时间在现在时间后，未毕业
+                int tmp1 = c3.get(Calendar.DATE) - c1.get(Calendar.DATE);
+                int tmp2 = c3.get(Calendar.MONTH) - c1.get(Calendar.MONTH);
+                int tmp3 = c3.get(Calendar.YEAR) - c1.get(Calendar.YEAR);
+                if (tmp2 > 0) {//月份更大
+                    tmp2 = 1;//最后要+1
+                } else if (tmp2 == 0) {//月份相同
+                    tmp2 = tmp1 <= 0 ? 0 : 1;//判断日期，前面日期更小，最后月份要+1
+                } else {//月份更小，不用+
+                    tmp2 = 0;
+                }
+                diff = tmp3 + tmp2;
+            }
+
+            //把int型年级转为字符串类型
             String grade = "";
             if (diff == 1) grade = "大一";
             else if (diff == 2) grade = "大二";
             else if (diff == 3) grade = "大三";
             else if (diff == 4) grade = "大四";
             else if (diff == 5) grade = "大五（五年制）";
-            else if (diff > 5) grade = null;
+            else if (diff == 6) grade = "已毕业";
+//            else if (diff > 5) grade = null;
             System.out.println("年级:" + grade);
+
+
+            //将出生年月存入缓存
+            UserBirthDto userBirthDto = new UserBirthDto();
+            userBirthDto.setBirth_year(birth_year);
+            userBirthDto.setBirth_month(birth_month);
+            redisTemplate.opsForValue().set(UserBirthDto.cacheKey(telephone), JSON.toJSONString(userBirthDto));
+            logger.warn("存储该学生的出生年月[{}]", UserBirthDto.cacheKey(telephone));
+
 
             //查找该用户是否存在
             Student stu = stuInfoRepository.findStudentByTelephone(telephone);
@@ -274,14 +342,12 @@ public class UsersServiceImpl implements UsersService {
         return res;
     }
 
+    //TODO 简历查看-学生
     @Override
     public ResumeInfoDto getResume(String telephone) throws ParttimeServiceException {
         ResumeInfoDto res = new ResumeInfoDto();
 
         if (telephone != null) {
-//            //获取学生账号
-//            String telephone = getResumeDto.getTelephone();
-
             //根据学生账号查找该学生的resumes
             Resumes resumes = resumesInfoRepository.findResumesByStuId(telephone);
             if (resumes != null) {//存在简历
@@ -326,7 +392,8 @@ public class UsersServiceImpl implements UsersService {
                         dto.setStatus(item.getRdStatus());
                         list1.add(dto);
                     }
-                } else {//无内容
+                } else {
+                    //无内容
                     ResumeDetailDto dto = new ResumeDetailDto();
                     dto.setTelephone(telephone);
                     dto.setR_id(resumes.getId());
@@ -334,6 +401,7 @@ public class UsersServiceImpl implements UsersService {
                     dto.setHasContent(0);//无内容
                     list1.add(dto);
                 }
+
                 //2.遍历教育背景
                 List<ResumeDetailDto> list2 = new ArrayList<>();
                 if (educationBgList.size() > 0) {//有内容
@@ -365,6 +433,7 @@ public class UsersServiceImpl implements UsersService {
                     dto.setHasContent(0);//无内容
                     list2.add(dto);
                 }
+
                 //3.遍历项目经历
                 List<ResumeDetailDto> list3 = new ArrayList<>();
                 if (campusExpList.size() > 0) {//有内容
@@ -396,6 +465,7 @@ public class UsersServiceImpl implements UsersService {
                     dto.setHasContent(0);//无内容
                     list3.add(dto);
                 }
+
                 //4.遍历专业技能
                 List<ResumeDetailDto> list4 = new ArrayList<>();
                 if (campusExpList.size() > 0) {//有内容
@@ -430,36 +500,51 @@ public class UsersServiceImpl implements UsersService {
                 //状态
                 res.setStatus(resumes.getrStatus());
                 res.setMemo("存在简历");
-            } else {//不存在简历
-                logger.warn("获取简历失败");
+            } else {
+                logger.warn("不存在简历");
                 res.setTelephone(telephone);
-                res.setMemo("请填写简历");
+                res.setMemo("不存在简历");
             }
+        } else {
+            logger.warn("请检查输入");
+            res.setTelephone(telephone);
+            res.setMemo("请检查输入");
         }
+
         return res;
     }
 
+    //TODO 创建简历，简历上传stu_id-学生
     @Override
-    public ResumeInfoDto createResume(String telephone, String upload_time) throws ParttimeServiceException, Exception {
+//    public ResumeInfoDto createResume(String telephone, String upload_time) throws ParttimeServiceException, Exception {
+    public ResumeInfoDto createResume(CreateResumeDto createResumeDto) throws ParttimeServiceException, Exception {
         ResumeInfoDto res = new ResumeInfoDto();
 
         //有输入
-        if (telephone != null) {
+        if (createResumeDto != null) {
+            String telephone = createResumeDto.getTelephone();
+            String create_time = createResumeDto.getUpload_time();
+            //这里upload_time实际上是创建时间create_time
+
             //根据手机号查找学生用户
             Student student = stuInfoRepository.findStudentByTelephone(telephone);
 
             //存在学生
             if (student != null) {
+                System.out.println("学生学号：" + student.getId());
+
                 //判断是否存在简历，不存在就创建
                 Resumes resumes = resumesInfoRepository.findResumesByStuId(student.getId());
-                if (resumes == null) {//不存在，创建
+
+                if (resumes == null) {
+                    //不存在，创建
+
                     //String转Date
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                     Date time = new Date();
                     try {
-                        time = sdf.parse(upload_time);
-                        resumesInfoRepository.createAResumeRecord(student.getId(), null,
-                                null, time, "已创建");
+                        time = sdf.parse(create_time);
+                        resumesInfoRepository.createAResumeRecord(student.getId(), null, null, time, "已创建");
                         //找到该用户的简历
                         resumes = resumesInfoRepository.findResumesByStuId(student.getId());
                     } catch (ParseException e) {
@@ -467,10 +552,10 @@ public class UsersServiceImpl implements UsersService {
                     }
                 }
 
-                System.out.println(resumes.toString());//test
+                System.out.println("创建的简历信息：" + resumes.toString());//test
 
                 //填充简历的基本信息
-                res.setTelephone(telephone);
+                res.setTelephone(resumes.getStu().getId());
                 res.setCurrent_area(resumes.getCurrentArea());
                 res.setExp(resumes.getExp());
                 res.setUpload_time(resumes.getUploadTime());
@@ -616,18 +701,24 @@ public class UsersServiceImpl implements UsersService {
 
                 //设置状态
                 res.setStatus(resumes.getrStatus());
-                res.setMemo("存在简历");
+                res.setMemo("存在学生，简历创建成功");
             } else {
                 logger.warn("不存在该学生");
                 res.setMemo("不存在该学生");
             }
+        } else {
+            logger.warn("请检查输入");
+            res.setMemo("请检查输入");
         }
+
         return res;
     }
 
+    //TODO 简历上传step1上传账号+上传时间-学生
     @Override
     public String uploadResumeWithStuInfo(String telephone, String upload_time) throws ParttimeServiceException, Exception {
         String res = "";
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
         if (telephone != null) {
             //根据手机号查找学生用户
@@ -638,7 +729,6 @@ public class UsersServiceImpl implements UsersService {
                 Resumes resumes = resumesInfoRepository.findResumesByStuId(student.getId());
                 if (resumes == null) {//不存在，创建
                     //String转Date
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                     Date time = new Date();
                     try {
                         time = sdf.parse(upload_time);
@@ -648,11 +738,6 @@ public class UsersServiceImpl implements UsersService {
                         e.printStackTrace();
                     }
                 }
-//                else {//存在
-//                    //时间Date转String
-//                    Date date = new Date();
-//                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-//                    String dateStr = sdf.format(date);
 
                 //将学号存入redis缓存，这个缓存永远只有一条记录
                 redisTemplate.opsForValue().set(ResumeStuIdDto.cacheKey(1), telephone);
@@ -661,7 +746,8 @@ public class UsersServiceImpl implements UsersService {
                 //将学号+上传日期存入redis缓存，会有多条记录
                 redisTemplate.opsForValue().set(ResumeCacheDto.cacheKey(telephone), upload_time);
                 logger.warn("存储该学生简历的信息[{}]", ResumeCacheDto.cacheKey(telephone));
-//                }
+
+                //结果
                 res = "学号时间上传成功";
             } else {
                 logger.warn("学号时间上传失败");
@@ -675,114 +761,213 @@ public class UsersServiceImpl implements UsersService {
         return res;
     }
 
+    //TODO 简历上传step2上传图片-学生
     @Override
     public ResumeUploadCallbackDto uploadResume(MultipartFile file) throws ParttimeServiceException, Exception {
         ResumeUploadCallbackDto res = new ResumeUploadCallbackDto();
 
-//        if (uploadInputDto != null) {
-//            File file = uploadInputDto.getFile();
-//            String telephone = uploadInputDto.getTelephone();
-//            String upload_time = uploadInputDto.getUpload_time();
+//        System.out.println(file.getOriginalFilename());//test
+        //原来的文件名：2023-05-03_5835703641455551212.jpg
 
-        //File转MultipartFile
-//        InputStream inputStream = new FileInputStream(file);
-//        MultipartFile multipartFile = new MockMultipartFile(file.getName(), inputStream);
-//            MultipartFile multipartFile = FileUtils.fileToMultipartFile(file);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        System.out.println("时间3" + sdf.parse(sdf.format(new Date())));
 
-        //先获取当前的用户的学号
+        //0.图片压缩
+        MultipartFile uploadFile = null;
+        if (!file.isEmpty()) {
+            //0-1.获取后缀名
+            String suffix = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf(".") + 1);//获取.后面的子串
+
+            //0-2.判断是否是图片，是否大小大于100K
+            if (isPicture(suffix) && (1024 * 1024 * 0.1) <= file.getSize()) {
+                String path = ClassUtils.getDefaultClassLoader().getResource("").getPath();//本地文件夹中的路径
+                File upload = new File(path, "static/images/parttimes/");
+                //不存在文件夹就创建
+                if (!upload.exists()) {
+                    upload.mkdirs();
+                }
+                System.out.println("本地临时文件的上传路径:" + upload.getAbsolutePath());
+
+                //在项目根目录下的parttimes目录生成临时文件
+                File newFile = new File(upload.getAbsolutePath() + "/" + file.getOriginalFilename());
+
+                //outputQuality输出质量，接近1质量越高
+                //scale用于等比例缩放
+                if ((1024 * 1024 * 0.1) <= file.getSize() && file.getSize() <= (1024 * 1024)) {
+                    //0.1M≤大小≤1M（file是传进来的图片）
+
+//                    Thumbnails.of(file.getInputStream()).scale(1f).outputQuality(0.3f).toFile(newFile);
+                    Thumbnails.of(file.getInputStream()).scale(0.85f).outputQuality(0.35f).toFile(newFile);
+                } else if ((1024 * 1024) < file.getSize() && file.getSize() <= (1024 * 1024 * 2)) {
+                    //1M<大小≤2M（file是传进来的图片）
+
+//                    Thumbnails.of(file.getInputStream()).scale(1f).outputQuality(0.2f).toFile(newFile);
+                    Thumbnails.of(file.getInputStream()).scale(0.8f).outputQuality(0.3f).toFile(newFile);
+                } else if (file.getSize() > (1024 * 1024 * 2)) {
+                    //大小>2M（file是传进来的图片）
+
+//                    Thumbnails.of(file.getInputStream()).scale(1f).outputQuality(0.1f).toFile(newFile);
+                    Thumbnails.of(file.getInputStream()).scale(0.7f).outputQuality(0.25f).toFile(newFile);
+                }
+
+                //输入流
+                FileInputStream input = new FileInputStream(newFile);
+
+                //用自定义MockMultipartFile类的方法将文件转为MultipartFile
+                MultipartFile multipartFile = new MockUtils("file", newFile.getName(), "text/plain", input);
+
+                //赋值给文件uploadFile，用于在识别结果处理后进行图片上传到minio
+                uploadFile = multipartFile;
+
+                //删除生成的临时文件
+                newFile.delete();
+                System.out.println("时间4" + sdf.parse(sdf.format(new Date())));
+            }
+        }
+
+        //1.获取当前的用户的学号，键永远是1，每次都覆盖这个
         String telephone = (String) redisTemplate.opsForValue().get(ResumeStuIdDto.cacheKey(1));
-        //再通过学号来找他的upload_time
+
+        //2.再通过学号来找他的upload_time
         String dateStr = (String) redisTemplate.opsForValue().get(ResumeCacheDto.cacheKey(telephone));
-        SimpleDateFormat sdf3 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Date upload_time = new Date();
         try {
-            upload_time = sdf3.parse(dateStr);
+            upload_time = sdf.parse(dateStr);
         } catch (ParseException e) {
             e.printStackTrace();
         }
 
-        System.out.println("telephone:" + telephone);//test
-        System.out.println("upload_time:" + upload_time);//test
-
-        if (ObjectUtils.isEmpty(file) || file.getSize() <= 0) {
+        //3.文件为空，直接返回
+//        if (ObjectUtils.isEmpty(file) || file.getSize() <= 0) {
+        if (ObjectUtils.isEmpty(uploadFile) || uploadFile.getSize() <= 0) {
             res.setTelephone(telephone);
             res.setMemo("上传文件大小为空");
             return res;
         }
 
-        if (telephone != null && !telephone.equals("")) {//手机号不为空
-            //根据手机号查找学生用户
+        //4.判断手机号是否为空
+        if (telephone != null && !telephone.equals("")) {
+            //4-1.手机号不为空，根据手机号查找学生用户
             Student student = stuInfoRepository.findStudentByTelephone(telephone);
 
-            if (student != null) {//存在学生
-                //把图片存入minio，并返回图片的url
-                String pic_url = this.upload(file);
-                //填充照片url
-                res.setPic_url(pic_url);
+            if (student != null) {
+                System.out.println("时间5" + sdf.parse(sdf.format(new Date())));
 
-                //填充上传时间
-                res.setUpload_time(upload_time);
+                //5.获取刚刚创建的resume的id（根据stu_id找到resumes实体，再找到r_id）
+                Resumes resumes = resumesInfoRepository.findResumesByStuId(telephone);
+                int r_id;
+                if (resumes != null) {
+                    r_id = resumes.getId();
+                } else {
+                    res.setTelephone(telephone);
+                    res.setMemo("无法获取用户简历信息");
+                    return res;
+                }
 
-                //图片url存入DB，即创建resume记录
-                resumesInfoRepository.modifyResumeRecord(pic_url, upload_time, "已上传", telephone);
-
-                //获取刚刚创建的resume的id
-                int r_id = resumesInfoRepository.findLatestResumes();
-
-                //调用api解析图片中的文字
-                AipOcr client = new AipOcr(Constant.APP_ID, Constant.API_KEY, Constant.SECRET_KEY);//获取百度云OCR的客户端
-                HashMap<String, String> options = new HashMap<>(4);//设置选项
-                options.put("language_type", "CHN_ENG");//语言类型：中文+英语
-                options.put("detect_direction", "true");
-                options.put("detect_language", "true");
-                options.put("probability", "true");
-
-                // 参数为二进制数组
-                byte[] buf = new byte[0];
+                //⭐6.调用api解析图片中的文字
+                System.out.println("时间6-1" + sdf.parse(sdf.format(new Date())));
+                byte[] buf = new byte[0];//二进制数组
                 try {
-                    buf = file.getBytes();
+                    //获取文件的二进制数组
+//                    buf = file.getBytes();//20230503-2323
+                    buf = uploadFile.getBytes();//识别压缩图
                 } catch (IOException e) {
                     e.printStackTrace();
                     res.setMemo("获取文件字节数据异常" + e.getMessage());
                 }
-                JSONObject result = client.basicGeneral(buf, options);
+                System.out.println("时间6-2" + sdf.parse(sdf.format(new Date())));
 
-                //解析文字的处理
+                //7.调用百度云ocr客户端，result就是获取的结果
+                System.out.println("时间7-1" + sdf.parse(sdf.format(new Date())));
+                JSONObject result = OcrBDUtils.recognizeBasic(buf);
+                System.out.println("时间7-2" + sdf.parse(sdf.format(new Date())));
+
+                //8.解析文字的处理
+                System.out.println("处理前的识别结果：" + result.toString());
                 ArrayList<JSONObject> words = new ArrayList<>();//存放识别出的文字的列表
                 JSONArray arr = (JSONArray) result.get("words_result");//获取识别结果JSON数组
-                System.out.println(arr.toString());//输出识别结果
 
-                //遍历JSON数组
+                //9.遍历JSON数组，把元素添加到words中，words用于后面遍历获取相应的数据
                 for (int i = 0; i < arr.length(); i++) {
-                    words.add((JSONObject) arr.get(i));//添加到words中
+                    words.add((JSONObject) arr.get(i));
+                }
+                System.out.println("识别结果：" + words.toString());//输出识别结果
+
+                //10.个人信息部分
+                String birth, phone, current_area, exp;
+                int age;
+                try {
+                    if (((words.get(0).get("words")).toString()).length() > 3) {
+                        //第一个字段识别的是“姓名：XXX”，正常识别
+                        birth = ((words.get(1).get("words")).toString().split("："))[1];//出生年月
+                        phone = ((words.get(3).get("words")).toString().split("："))[1];//联系方式
+                        current_area = ((words.get(4).get("words")).toString().split("："))[1];//现居地
+                        exp = ((words.get(5).get("words")).toString().split("："))[1];//工作经验
+                    } else {
+                        //第一个字段识别的是“姓名：”，非正常识别
+                        birth = ((words.get(2).get("words")).toString().split("："))[1];//出生年月
+                        phone = ((words.get(4).get("words")).toString().split("："))[1];//联系方式
+                        current_area = ((words.get(5).get("words")).toString().split("："))[1];//现居地
+                        exp = ((words.get(6).get("words")).toString().split("："))[1];//工作经验
+                    }
+                    System.out.println("识别到的手机号：" + phone + "；现居地：" + current_area + "；工作经验：" + exp);
+
+                    //计算年龄
+
+
+                    //11.把现居地、工作经验填充到res
+                    res.setTelephone(phone);
+                    res.setAge(0);
+                    res.setCurrent_area(current_area);
+                    res.setExp(exp);
+                    System.out.println("时间8" + sdf.parse(sdf.format(new Date())));
+
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    res.setTelephone(telephone);
+                    res.setMemo("文字识别异常");
+                    return res;
                 }
 
-                //个人信息部分
-//                String stu_name = ((words.get(0).get("words")).toString().split("："))[1];//姓名
-//                String birth = ((words.get(1).get("words")).toString().split("："))[1];//出生年月
-//                String emails = ((words.get(2).get("words")).toString().split("："))[1];//邮箱
-                String phone = ((words.get(3).get("words")).toString().split("："))[1];//联系方式
-                String current_area = ((words.get(4).get("words")).toString().split("："))[1];//现居地
-                String exp = ((words.get(5).get("words")).toString().split("："))[1];//工作经验
-
-                //把现居地、工作经验填充到res
-                res.setTelephone(phone);
-                res.setCurrent_area(current_area);
-                res.setExp(exp);
-
-                //求职意向
+                //12.求职意向
                 String intended = "";//求职意向岗位
                 if (words.get(6).get("words").equals("求职意向")) {
+                    //第一个字段识别的是“姓名：XXX”，正常识别
                     intended = ((words.get(7).get("words")).toString().split("："))[1];
+                } else if (words.get(7).get("words").equals("求职意向")) {
+                    //第一个字段识别的是“姓名：”，非正常识别
+                    intended = ((words.get(8).get("words")).toString().split("："))[1];
                 }
-                //把求职意向填充到res
-                res.setIntended(intended);
+                //12-1.拆分意向兼职
+                String[] intentions = intended.split("；");
+                //12-2.求职意向更新到DB中
+                EditIntentionDto editIntentionDto = new EditIntentionDto();//构造传入的dto
+                editIntentionDto.setTelephone(phone);
+                editIntentionDto.setIntentions(intentions);
+                List<IntentionDto> updateIntentions = this.editIntention(editIntentionDto);//调用函数更新意向兼职
+                if (((updateIntentions.get(0)).getMemo()).equals("参数传入错误")) {
+                    logger.warn("参数传入错误");
+                } else if (((updateIntentions.get(0)).getMemo()).equals("不存在该用户")) {
+                    logger.warn("不存在该用户");
+                } else {
+                    //12-3.把求职意向填充到res
+                    res.setIntended(intended);
+                }
+                System.out.println("时间9" + sdf.parse(sdf.format(new Date())));
 
                 //其余部分
-                for (int i = 8; i < words.size(); i++) {//遍历列表
-                    //教育背景【以本科生为例，设定为只有本科一段教育经历】
+                int startIdx;//开始遍历的位置下标，根据前面识别到哪了来确定
+                if (((words.get(0).get("words")).toString()).length() > 3) {
+                    //第一个字段识别的是“姓名：XXX”，正常识别
+                    startIdx = 8;
+                } else {
+                    //第一个字段识别的是“姓名：”，非正常识别
+                    startIdx = 9;
+                }
+                for (int i = startIdx; i < words.size(); i++) {//遍历列表
+                    //13.教育背景【以本科生为例，设定为只有本科一段教育经历】
                     ResumeDetailDto dto1 = new ResumeDetailDto();
-                    if (words.get(i).get("words").equals("教育背景")) {
+                    if (words.get(i).get("words").equals("教育背景") || words.get(i).get("words").equals("敦育背景")) {
+                        //可能会识别为“敦育背景”
                         String time = (words.get(i + 1).get("words")).toString();
                         String start = (time.split("-"))[0];
                         String end = (time.split("-"))[1];
@@ -813,7 +998,6 @@ public class UsersServiceImpl implements UsersService {
                         dto1.setTelephone(phone);
                         dto1.setR_id(r_id);
                         dto1.setRd_id(rd_id);
-                        dto1.setR_id(r_id);
                         dto1.setTitle(title);
                         dto1.setContent(content);
                         dto1.setTime(time);
@@ -825,8 +1009,9 @@ public class UsersServiceImpl implements UsersService {
                         list.add(dto1);
                         res.setEducationBgList(list);//set到res中
                     }
+                    System.out.println("时间10" + sdf.parse(sdf.format(new Date())));
 
-                    //项目经历【1~N个】
+                    //14.项目经历【1~N个】
                     if (words.get(i).get("words").equals("项目经历")) {
                         List<ResumeDetailDto> list = new ArrayList();
 
@@ -847,7 +1032,6 @@ public class UsersServiceImpl implements UsersService {
                             //项目内容【1~N行】
                             int j = k + 2;
                             String content = "";
-                            System.out.println(((words.get(j).get("words").toString())));//test
                             //只要不是日期or专业技能字样就循环把内容加到content
                             while (!(words.get(j)).get("words").equals("专业技能")) {
                                 if ((isDate(((words.get(j).get("words").toString()).split("-"))[0]) == true &&
@@ -870,7 +1054,6 @@ public class UsersServiceImpl implements UsersService {
                             dto.setTelephone(phone);
                             dto.setR_id(r_id);
                             dto.setRd_id(rd_id);
-                            dto.setR_id(r_id);
                             dto.setTitle(title);
                             dto.setContent(content);
                             dto.setTime(time);
@@ -891,8 +1074,9 @@ public class UsersServiceImpl implements UsersService {
                         }
                         res.setProjectExpList(list);//set到res中
                     }
+                    System.out.println("时间11" + sdf.parse(sdf.format(new Date())));
 
-                    //专业技能【1~N个】
+                    //15.专业技能【1~N个】
                     if (words.get(i).get("words").equals("专业技能")) {
                         List<ResumeDetailDto> list = new ArrayList();
 
@@ -916,7 +1100,6 @@ public class UsersServiceImpl implements UsersService {
                             dto.setTelephone(phone);
                             dto.setR_id(r_id);
                             dto.setRd_id(rd_id);
-                            dto.setR_id(r_id);
                             dto.setContent(content);
                             dto.setCategory("专业技能");
                             dto.setHasContent(1);
@@ -925,8 +1108,9 @@ public class UsersServiceImpl implements UsersService {
                         }
                         res.setProfessionalSkillList(list);//set到res中
                     }
+                    System.out.println("时间12" + sdf.parse(sdf.format(new Date())));
 
-                    //校园经历【1~N个，多为1个】
+                    //16.校园经历【1~N个，多为1个】
                     if (words.get(i).get("words").equals("校园经历")) {
                         List<ResumeDetailDto> list = new ArrayList();
 
@@ -947,7 +1131,6 @@ public class UsersServiceImpl implements UsersService {
                             //校园经历【1~N行】
                             int j = k + 2;
                             String content = "";
-                            System.out.println(((words.get(j).get("words").toString())));//test
                             //只要不为空就循环把内容加到content
                             String word = (String) words.get(j).get("words");
                             while (word != null && !word.equals("")) {
@@ -976,7 +1159,6 @@ public class UsersServiceImpl implements UsersService {
                             dto.setTelephone(phone);
                             dto.setR_id(r_id);
                             dto.setRd_id(rd_id);
-                            dto.setR_id(r_id);
                             dto.setTitle(title);
                             dto.setContent(content);
                             dto.setTime(time);
@@ -1001,18 +1183,33 @@ public class UsersServiceImpl implements UsersService {
                         }
                         res.setCampusExpList(list);//set到res中
                         res.setR_status("已上传");
+                        res.setMemo("上传成功");
                     }
                 }
+                System.out.println("时间13" + sdf.parse(sdf.format(new Date())));
+
+                //⭐17.存在学生，把图片存入minio，并返回图片的url
+                String pic_url = this.upload(uploadFile);//上传压缩图
+                System.out.println("时间14" + sdf.parse(sdf.format(new Date())));
+
+                //18.填充照片url+上传时间
+                res.setPic_url(pic_url);
+                res.setUpload_time(upload_time);
+
+                //19.图片url、现居地等信息存入DB，即更新resume记录
+                resumesInfoRepository.modifyResumeRecord(pic_url, upload_time, current_area, exp, "已上传", telephone);
+                System.out.println("时间15" + sdf.parse(sdf.format(new Date())));
             } else {//不存在学生
                 logger.warn("该账号不存在");
                 res.setTelephone(telephone);
                 res.setMemo("该账号不存在");
             }
         }
-//        }
+
         return res;
     }
 
+    //TODO 简历编辑（个人信息）-学生
     @Override
     public ResumeEditCallbackDto editPersonal(EditPersonalDto editPersonalDto) throws ParseException, Exception {
         ResumeEditCallbackDto res = new ResumeEditCallbackDto();
@@ -1065,6 +1262,7 @@ public class UsersServiceImpl implements UsersService {
         return res;
     }
 
+    //TODO 简历编辑（校园经历）-学生
     @Override
     public GetCampusDto editCampus(EditCampusDto editCampusDto) throws ParseException, Exception {
         GetCampusDto res = new GetCampusDto();
@@ -1181,6 +1379,7 @@ public class UsersServiceImpl implements UsersService {
         return res;
     }
 
+    //TODO 简历编辑（教育背景）-学生
     @Override
     public GetEducationDto editEducation(EditEducationDto editEducationDto) throws ParseException, Exception {
         GetEducationDto res = new GetEducationDto();
@@ -1290,6 +1489,7 @@ public class UsersServiceImpl implements UsersService {
         return res;
     }
 
+    //TODO 简历编辑（项目经历）-学生
     @Override
     public GetProgramDto editProgram(EditProgramDto editProgramDto) throws ParseException, Exception {
         GetProgramDto res = new GetProgramDto();
@@ -1408,6 +1608,7 @@ public class UsersServiceImpl implements UsersService {
         return res;
     }
 
+    //TODO 简历编辑（专业技能）-学生
     @Override
     public GetSkillsDto editSkills(EditSkillsDto editSkillsDto) throws ParseException, Exception {
         GetSkillsDto res = new GetSkillsDto();
@@ -1483,6 +1684,7 @@ public class UsersServiceImpl implements UsersService {
         return res;
     }
 
+    //TODO 简历详情删除-学生
     @Override
     public DeleteDetailCallbackDto deleteDetail(DeleteDetailDto deleteDetailDto) throws ParseException, Exception {
         DeleteDetailCallbackDto res = new DeleteDetailCallbackDto();
@@ -1512,6 +1714,9 @@ public class UsersServiceImpl implements UsersService {
                         if (resumedetail.getId() == rd_id && !resumedetail.getRdStatus().equals("已删除")) {
                             //6.当前的rd是该学生的简历详情id，且不是已删除的简历详情，就更新DB
                             resumesDetailRepository.deleteResumedetailByRdId(rd_id);
+
+                            //7.更新简历状态
+                            resumesInfoRepository.updateResumesStatus("已修改", telephone);
 
                             //填充到res
                             res.setTelephone(telephone);
@@ -1552,6 +1757,7 @@ public class UsersServiceImpl implements UsersService {
         return res;
     }
 
+    //TODO 简历详情增加-学生
     @Override
     public AddDetailCallbackDto addDetail(AddDetailDto addDetailDto) throws ParseException, Exception {
         AddDetailCallbackDto res = new AddDetailCallbackDto();
@@ -1580,7 +1786,10 @@ public class UsersServiceImpl implements UsersService {
                     //6.获取刚刚创建的记录
                     Resumedetail resumedetail = resumesDetailRepository.findLatestResumesDetailWithAdd();
                     if (resumedetail != null) {
-                        //7.构造res
+                        //7.更新简历状态
+                        resumesInfoRepository.updateResumesStatus("已修改", stu_id);
+
+                        //8.构造res
                         res.setTelephone(resumedetail.getR().getStu().getId());
                         res.setRd_id(resumedetail.getId());
                         res.setR_id(resumedetail.getR().getId());
@@ -1858,6 +2067,7 @@ public class UsersServiceImpl implements UsersService {
         return res;
     }
 
+    //TODO 个人信息编辑-兼职发布者/管理员
     @Override
     public EmpInfoDto editEmpInfo(EditEmpInfoDto editEmpInfoDto) throws ParttimeServiceException, ParseException {
         EmpInfoDto res = new EmpInfoDto();
@@ -1867,6 +2077,8 @@ public class UsersServiceImpl implements UsersService {
             String telephone = editEmpInfoDto.getTelephone();
             int gender = editEmpInfoDto.getGender();
             int age = editEmpInfoDto.getAge();
+            String birth_year = editEmpInfoDto.getBirth_year();
+            String birth_month = editEmpInfoDto.getBirth_month();
             String emails = editEmpInfoDto.getEmails();
             String unit_descriptions = editEmpInfoDto.getUnit_descriptions();
             String unit_loc = editEmpInfoDto.getUnit_loc();
@@ -1877,6 +2089,14 @@ public class UsersServiceImpl implements UsersService {
                 //修改用户信息
                 empInfoRepository.editEmpInfo(gender, age, emails, telephone);
                 unitRepository.editEmpUnitInfo(unit_descriptions, unit_loc, emp.getU().getId());
+
+                //将出生年份、月份更新到缓存
+                UserBirthDto userBirthDto = new UserBirthDto();
+                userBirthDto.setTelephone(telephone);
+                userBirthDto.setBirth_year(birth_year);
+                userBirthDto.setBirth_month(birth_month);
+                redisTemplate.opsForValue().set(UserBirthDto.cacheKey(telephone), JSON.toJSONString(userBirthDto));
+                logger.warn("存储该兼职发布者的出生年月[{}]", UserBirthDto.cacheKey(telephone));
 
                 //获取更新后的用户信息
                 Employer emp_new = empInfoRepository.findEmployerByTelephone(telephone);
@@ -1969,7 +2189,7 @@ public class UsersServiceImpl implements UsersService {
 
     @Override
     public String upload(MultipartFile file) throws ParttimeServiceException, Exception {
-        return minIO.uploadFile(file, "parttime");
+        return minIO.uploadFile(file, "parttime");//上传图片文件
     }
 
     @Override
@@ -1997,4 +2217,21 @@ public class UsersServiceImpl implements UsersService {
         }
         return convertSuccess;
     }
+
+    //根据文件后缀是否是照片类型的文件
+    public boolean isPicture(String imgName) {
+        boolean flag = false;
+        if (StringUtils.isBlank(imgName)) {
+            return false;
+        }
+        String[] arr = {"jpeg", "jpg", "png"};//可识别的图片后缀
+        for (String item : arr) {
+            if (item.equals(imgName)) {
+                flag = true;
+                break;
+            }
+        }
+        return flag;
+    }
+
 }

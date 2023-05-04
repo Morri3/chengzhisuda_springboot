@@ -16,6 +16,8 @@ public class EmpRegisterDto implements Serializable {
     private String emails;
     private String emp_name;
     private int age;
+    private String birth_year;//出生年份
+    private String birth_month;//出生月份
     private String reg_date;
     private boolean emp_grade;//是兼职发布者还是管理员
 }

@@ -6,7 +6,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 public class ResumeCacheDto implements Serializable {
-    public static final String KEY_PREFIX = "Screenshot";//缓存前缀
+    public static final String KEY_PREFIX = "resumes";//缓存前缀
 
     private String telephone;
     private Date upload_time;

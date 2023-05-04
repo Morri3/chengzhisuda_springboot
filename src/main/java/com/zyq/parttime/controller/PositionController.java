@@ -5,6 +5,7 @@ import com.zyq.parttime.form.unit.UnitInfoDto;
 import com.zyq.parttime.result.ExceptionMsg;
 import com.zyq.parttime.result.ResponseData;
 import com.zyq.parttime.service.PositionService;
+//import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -93,8 +94,8 @@ public class PositionController {
     //TODO 获取所有兼职-管理员
     @RequestMapping(value = "/emp/get", method = RequestMethod.GET)
     @ResponseBody
-    public ResponseData getAllPositionByEmp() {
-        List<PositionInfoToEmpDto> res = positionService.getAllPositionByEmp();
+    public ResponseData getAllPositionByAdmin(@RequestParam String emp_id) {
+        List<PositionInfoToEmpDto> res = positionService.getAllPositionByAdmin(emp_id);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
@@ -106,7 +107,7 @@ public class PositionController {
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
-    //TODO 根据op_id获取单位信息-管理员
+    //TODO 根据op_id获取单位信息-兼职发布者/管理员
     @RequestMapping(value = "/unit/get", method = RequestMethod.GET)
     @ResponseBody
     public ResponseData getUnitInfoByUnitName(@RequestParam String op_id) {
@@ -114,7 +115,7 @@ public class PositionController {
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
-    //TODO 发布兼职-管理员
+    //TODO 发布兼职-兼职发布者/管理员
     @RequestMapping(value = "/publish", method = RequestMethod.POST)
     @ResponseBody
     public ResponseData publishParttime(@RequestBody PublishInputDto input) throws ParseException {
@@ -122,7 +123,7 @@ public class PositionController {
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
-    //TODO 编辑兼职-管理员
+    //TODO 编辑兼职-兼职发布者/管理员
     @RequestMapping(value = "/edit", method = RequestMethod.POST)
     @ResponseBody
     public ResponseData editParttime(@RequestBody EditInputDto input) throws ParseException {
@@ -130,7 +131,7 @@ public class PositionController {
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
-    //TODO 下架兼职-管理员
+    //TODO 下架兼职-兼职发布者/管理员
     @RequestMapping(value = "/undercarriage", method = RequestMethod.POST)
     @ResponseBody
     public ResponseData undercarriageParttime(@RequestBody UndercarriageInputDto undercarriageInputDto) throws ParseException {
@@ -138,11 +139,19 @@ public class PositionController {
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
-    //TODO 获取自己管理的所有兼职的所有报名信息-兼职发布者/管理员
+    //TODO 获取自己管理的所有兼职的所有报名信息-兼职发布者
     @RequestMapping(value = "/signup/get_info", method = RequestMethod.GET)
     @ResponseBody
     public ResponseData getSignupInfoByEmp(@RequestParam String emp_id) throws ParseException {
         List<SignupInfoToEmpDto> res = positionService.getSignupInfoByEmp(emp_id);
+        return new ResponseData(ExceptionMsg.SUCCESS, res);
+    }
+
+    //TODO 获取所有兼职的所有报名信息-管理员
+    @RequestMapping(value = "/signup/get_info_admin", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseData getSignupInfoByAdmin(@RequestParam String emp_id) throws ParseException {
+        List<SignupInfoToEmpDto> res = positionService.getSignupInfoByAdmin(emp_id);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
@@ -158,7 +167,7 @@ public class PositionController {
     @RequestMapping(value = "/signup/confirm", method = RequestMethod.POST)
     @ResponseBody
     public ResponseData confrimSignup(@RequestBody ConfirmInputDto confirmInputDto) throws ParseException {
-        List<SignupInfoToEmpDto> res = positionService.confirmSignup(confirmInputDto);//录取后返回报名的信息
+        SignupInfoToEmpDto res = positionService.confirmSignup(confirmInputDto);//录取后返回报名的信息
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
@@ -166,7 +175,15 @@ public class PositionController {
     @RequestMapping(value = "/signup/reject", method = RequestMethod.POST)
     @ResponseBody
     public ResponseData rejectSignup(@RequestBody RejectInputDto rejectInputDto) throws ParseException {
-        List<SignupInfoToEmpDto> res = positionService.rejectSignup(rejectInputDto);//录取后返回报名的信息
+        SignupInfoToEmpDto res = positionService.rejectSignup(rejectInputDto);//录取后返回报名的信息
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
+
+//    //兼职推荐（基于兼职评分+意向兼职的简单协同过滤算法）-学生
+//    @RequestMapping(value = "/recommend", method = RequestMethod.GET)
+//    @ResponseBody
+//    public ResponseData recommendParttimes(@RequestParam String stu_id) throws ParseException {
+//        List<PositionInfoDto> res = positionService.recommendParttimes(stu_id);
+//        return new ResponseData(ExceptionMsg.SUCCESS, res);
+//    }
 }

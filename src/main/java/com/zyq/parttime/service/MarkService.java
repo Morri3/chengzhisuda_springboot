@@ -23,4 +23,8 @@ public interface MarkService {
 
     //获取自己负责的所有兼职的所有评分记录
     List<MarkToEmpDto> getAllSpecialMark(String emp_id) throws ParttimeServiceException;
+
+    //获取所有兼职的所有评分记录
+    List<MarkToEmpDto> getAllSpecialMarkBtAdmin(String emp_id) throws ParttimeServiceException;
+
 }

@@ -15,6 +15,9 @@ public class SignupInfoToEmpDto implements Serializable {
     private int num_signup;//报名人数
     private int num_employment;//录用人数
     private int num_total;//名额数
+    private String op_id;//负责人id
+    private String op_name;//负责人姓名
+    private String category;//兼职种类
     //用户信息部分
     private String stu_id;
     private String username;

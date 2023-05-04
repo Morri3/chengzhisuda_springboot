@@ -23,11 +23,11 @@ public interface ResumesInfoRepository extends JpaRepository<Resumes, Integer>, 
 
     @Transactional
     @Modifying
-    @Query(value = "update resumes set pic_url=?1,upload_time=?2,r_status=?3 where stu_id=?4", nativeQuery = true)
-    void modifyResumeRecord(String pic_url, Date upload_time, String r_status, String stu_id);
+    @Query(value = "update resumes set pic_url=?1,upload_time=?2,current_area=?3,exp=?4,r_status=?5 where stu_id=?6", nativeQuery = true)
+    void modifyResumeRecord(String pic_url, Date upload_time, String current_area, String exp, String r_status, String stu_id);
 
-    @Query(value = "select r_id from resumes order by create_time desc limit 0,1", nativeQuery = true)
-    int findLatestResumes();
+//    @Query(value = "select r_id from resumes order by create_time desc limit 0,1", nativeQuery = true)
+//    int findLatestResumes();
 
     @Query(value = "select * from resumes order by create_time desc limit 0,1", nativeQuery = true)
     Resumes findLatestResumesEntity();

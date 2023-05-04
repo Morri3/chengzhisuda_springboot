@@ -1,10 +1,7 @@
 package com.zyq.parttime.service.impl;
 
 import cn.hutool.crypto.asymmetric.Sign;
-import com.zyq.parttime.entity.Comment;
-import com.zyq.parttime.entity.Mark;
-import com.zyq.parttime.entity.Parttimes;
-import com.zyq.parttime.entity.Signup;
+import com.zyq.parttime.entity.*;
 import com.zyq.parttime.exception.ParttimeServiceException;
 import com.zyq.parttime.form.comment.CommentDto;
 import com.zyq.parttime.form.comment.CommentPostDto;
@@ -16,6 +13,7 @@ import com.zyq.parttime.repository.comment.CommentRepository;
 import com.zyq.parttime.repository.mark.MarkRepository;
 import com.zyq.parttime.repository.position.PositionRepository;
 import com.zyq.parttime.repository.position.SignupRepository;
+import com.zyq.parttime.repository.userinfomanage.EmpInfoRepository;
 import com.zyq.parttime.service.CommentService;
 import com.zyq.parttime.service.MarkService;
 import org.checkerframework.checker.units.qual.C;
@@ -38,6 +36,8 @@ public class CommentServiceImpl implements CommentService {
     private SignupRepository signupRepository;
     @Autowired
     private PositionRepository positionRepository;
+    @Autowired
+    private EmpInfoRepository empInfoRepository;
 
     @Override
     public CommentDto getComment(int s_id) throws ParttimeServiceException {
@@ -181,23 +181,23 @@ public class CommentServiceImpl implements CommentService {
         List<CommentToEmpDto> res = new ArrayList<>();
 
         if (emp_id != null && !emp_id.equals("")) {
-            //有输入,根据emp_id找到管理的所有兼职
+            //1.有输入，根据emp_id找到管理的所有兼职
             List<Parttimes> parttimes = positionRepository.getAllPositionManagedByEmp(emp_id);
             if (parttimes.size() > 0) {
 
-                //有负责的兼职,遍历每个兼职
+                //2.有负责的兼职,遍历每个兼职
                 for (Parttimes item : parttimes) {
 
-                    //遍历每个兼职，找到报名该兼职的signup
+                    //3.遍历每个兼职，找到报名该兼职的signup
                     List<Signup> signups = signupRepository.getAllSignupByPId(item.getId());
                     if (signups.size() > 0) {
-                        //存在报名
+                        //4.存在报名，遍历报名
 
                         for (Signup item2 : signups) {
-                            //找到该signup的comment记录
+                            //5.找到该signup的comment记录
                             Comment comment = commentRepository.getComment(item2.getId());
                             if (comment != null) {
-                                //存在该评论记录，构造dto，加入res
+                                //6.存在该评论记录，构造dto，加入res
                                 CommentToEmpDto commentDto = new CommentToEmpDto();
                                 commentDto.setC_id(comment.getId());
                                 commentDto.setS_id(item2.getId());
@@ -205,6 +205,7 @@ public class CommentServiceImpl implements CommentService {
                                 commentDto.setCreate_time(comment.getCreateTime());
                                 commentDto.setMemo("获取成功");
                                 commentDto.setP_name(item.getPositionName());
+                                commentDto.setCategory(item.getCategory());
                                 commentDto.setUser_id(item2.getStu().getId());
                                 commentDto.setUsername(item2.getStu().getStuName());
                                 res.add(commentDto);
@@ -246,54 +247,63 @@ public class CommentServiceImpl implements CommentService {
         return res;
     }
 
+    //TODO 获取所有兼职的所有评论记录-管理员
     @Override
-    public List<CommentToEmpDto> getCommentThreeByEmp(int p_id, String emp_id) throws ParttimeServiceException {
+    public List<CommentToEmpDto> getAllSpecialCommentByAdmin(String emp_id) throws ParttimeServiceException {
         List<CommentToEmpDto> res = new ArrayList<>();
 
         if (emp_id != null && !emp_id.equals("")) {
-            if (p_id > 0) {
-                //有输入
-                Parttimes parttimes = positionRepository.checkIsTheManager(emp_id, p_id);
+            //有输入
 
-                //有负责的兼职
-                if (parttimes != null) {
+            //1.找到该emp，判断是否是管理员
+            Employer emp = empInfoRepository.findEmployerByTelephone(emp_id);
 
-                    //找到报名该兼职的所有signup
-                    List<Signup> signups = signupRepository.getAllSignupByPId(parttimes.getId());
-                    if (signups.size() > 0) {
-                        //存在报名
+            if (emp != null && emp.getEmpGrade() == 1) {
+                //2.存在该用户且是管理员，根据emp_id找到管理的所有兼职
+                List<Parttimes> parttimes = positionRepository.getAllPositions();
+                if (parttimes.size() > 0) {
 
-                        for (Signup item : signups) {
-                            //找到该signup的comment记录
-                            Comment comment = commentRepository.getComment(item.getId());
-                            if (comment != null) {
-                                //存在该评论记录，构造dto，加入res
-                                CommentToEmpDto commentDto = new CommentToEmpDto();
-                                commentDto.setC_id(comment.getId());
-                                commentDto.setS_id(item.getId());
-                                commentDto.setContent(comment.getContent());
-                                commentDto.setCreate_time(comment.getCreateTime());
-                                commentDto.setMemo("获取成功");
-                                commentDto.setP_name(parttimes.getPositionName());
-                                commentDto.setUser_id(item.getStu().getId());
-                                commentDto.setUsername(item.getStu().getStuName());
-                                res.add(commentDto);
-                            } else {
-                                logger.warn("该报名尚未评论");
-                                CommentToEmpDto dto = new CommentToEmpDto();
-                                dto.setC_id(0);
-                                dto.setS_id(item.getId());
-                                dto.setMemo("该报名尚未评论");
-                                res.add(dto);
+                    //3.有负责的兼职,遍历每个兼职
+                    for (Parttimes item : parttimes) {
+
+                        //4.遍历每个兼职，找到报名该兼职的signup
+                        List<Signup> signups = signupRepository.getAllSignupByPId(item.getId());
+                        if (signups.size() > 0) {
+                            //5.存在报名，遍历报名
+
+                            for (Signup item2 : signups) {
+                                //6.找到该signup的comment记录
+                                Comment comment = commentRepository.getComment(item2.getId());
+                                if (comment != null) {
+                                    //7.存在该评论记录，构造dto，加入res
+                                    CommentToEmpDto commentDto = new CommentToEmpDto();
+                                    commentDto.setC_id(comment.getId());
+                                    commentDto.setS_id(item2.getId());
+                                    commentDto.setContent(comment.getContent());
+                                    commentDto.setCreate_time(comment.getCreateTime());
+                                    commentDto.setMemo("获取成功");
+                                    commentDto.setP_name(item.getPositionName());
+                                    commentDto.setCategory(item.getCategory());
+                                    commentDto.setUser_id(item2.getStu().getId());
+                                    commentDto.setUsername(item2.getStu().getStuName());
+                                    res.add(commentDto);
+                                } else {
+                                    logger.warn("该报名尚未评论");
+                                    CommentToEmpDto dto = new CommentToEmpDto();
+                                    dto.setC_id(0);
+                                    dto.setS_id(item2.getId());
+                                    dto.setMemo("该报名尚未评论");
+                                    res.add(dto);
+                                }
                             }
+                        } else {
+                            logger.warn("该兼职尚未报名");
+                            CommentToEmpDto dto = new CommentToEmpDto();
+                            dto.setC_id(0);
+                            dto.setS_id(0);
+                            dto.setMemo("该兼职尚未报名");
+                            res.add(dto);
                         }
-                    } else {
-                        logger.warn("该兼职尚未报名");
-                        CommentToEmpDto dto = new CommentToEmpDto();
-                        dto.setC_id(0);
-                        dto.setS_id(0);
-                        dto.setMemo("该兼职尚未报名");
-                        res.add(dto);
                     }
                 } else {
                     logger.warn("暂无负责的兼职");
@@ -302,6 +312,143 @@ public class CommentServiceImpl implements CommentService {
                     dto.setS_id(0);
                     dto.setMemo("暂无负责的兼职");
                     res.add(dto);
+                }
+            } else {
+                logger.warn("不存在该管理员");
+                CommentToEmpDto dto = new CommentToEmpDto();
+                dto.setC_id(0);
+                dto.setS_id(0);
+                dto.setMemo("不存在该管理员");
+                res.add(dto);
+            }
+        } else {
+            logger.warn("请检出输入");
+            CommentToEmpDto dto = new CommentToEmpDto();
+            dto.setC_id(0);
+            dto.setS_id(0);
+            dto.setMemo("请检出输入");
+            res.add(dto);
+        }
+
+        return res;
+    }
+
+    //TODO 获取某一兼职的所有评论-兼职发布者/管理员
+    @Override
+    public List<CommentToEmpDto> getCommentThreeByEmp(int p_id, String emp_id) throws ParttimeServiceException {
+        List<CommentToEmpDto> res = new ArrayList<>();
+
+        //1.判断是否有输入
+        if (emp_id != null && !emp_id.equals("")) {
+            if (p_id > 0) {
+                //有输入
+
+                //2.管理员、兼职发布者分类讨论
+                Employer emp = empInfoRepository.findEmployerByTelephone(emp_id);
+                if (emp != null && emp.getEmpGrade() == 1) {
+                    //2-1.是管理员，可以查看某一兼职的全部评论数据
+                    Parttimes parttimes = positionRepository.getPosition(p_id);
+
+                    //3.有负责的兼职
+                    if (parttimes != null) {
+
+                        //4.找到报名该兼职的所有signup
+                        List<Signup> signups = signupRepository.getAllSignupByPId(parttimes.getId());
+                        if (signups.size() > 0) {
+                            //5.存在报名
+
+                            for (Signup item : signups) {
+                                //6.找到该signup的comment记录
+                                Comment comment = commentRepository.getComment(item.getId());
+                                if (comment != null) {
+                                    //7.存在该评论记录，构造dto，加入res
+                                    CommentToEmpDto commentDto = new CommentToEmpDto();
+                                    commentDto.setC_id(comment.getId());
+                                    commentDto.setS_id(item.getId());
+                                    commentDto.setContent(comment.getContent());
+                                    commentDto.setCreate_time(comment.getCreateTime());
+                                    commentDto.setP_name(parttimes.getPositionName());
+                                    commentDto.setUser_id(item.getStu().getId());
+                                    commentDto.setUsername(item.getStu().getStuName());
+                                    commentDto.setMemo("获取成功");
+                                    res.add(commentDto);
+                                } else {
+                                    logger.warn("该报名尚未评论");
+                                    CommentToEmpDto dto = new CommentToEmpDto();
+                                    dto.setC_id(0);
+                                    dto.setS_id(item.getId());
+                                    dto.setMemo("该报名尚未评论");
+                                    res.add(dto);
+                                }
+                            }
+                        } else {
+                            logger.warn("该兼职尚未报名");
+                            CommentToEmpDto dto = new CommentToEmpDto();
+                            dto.setC_id(0);
+                            dto.setS_id(0);
+                            dto.setMemo("该兼职尚未报名");
+                            res.add(dto);
+                        }
+                    } else {
+                        logger.warn("暂无负责的兼职");
+                        CommentToEmpDto dto = new CommentToEmpDto();
+                        dto.setC_id(0);
+                        dto.setS_id(0);
+                        dto.setMemo("暂无负责的兼职");
+                        res.add(dto);
+                    }
+                } else if (emp != null && emp.getEmpGrade() == 0) {
+                    //2-2.是兼职发布者，只有是该兼职的负责人才能查看评论数据
+                    Parttimes parttimes = positionRepository.checkIsTheManager(emp_id, p_id);
+
+                    //3.该兼职发布者是该兼职的负责人
+                    if (parttimes != null) {
+
+                        //4.找到报名该兼职的所有signup
+                        List<Signup> signups = signupRepository.getAllSignupByPId(parttimes.getId());
+                        if (signups.size() > 0) {
+                            //5.存在报名
+
+                            for (Signup item : signups) {
+                                //6.找到该signup的comment记录
+                                Comment comment = commentRepository.getComment(item.getId());
+                                if (comment != null) {
+                                    //7.存在该评论记录，构造dto，加入res
+                                    CommentToEmpDto commentDto = new CommentToEmpDto();
+                                    commentDto.setC_id(comment.getId());
+                                    commentDto.setS_id(item.getId());
+                                    commentDto.setContent(comment.getContent());
+                                    commentDto.setCreate_time(comment.getCreateTime());
+                                    commentDto.setP_name(parttimes.getPositionName());
+                                    commentDto.setUser_id(item.getStu().getId());
+                                    commentDto.setUsername(item.getStu().getStuName());
+                                    commentDto.setMemo("获取成功");
+                                    res.add(commentDto);
+                                } else {
+                                    logger.warn("该报名尚未评论");
+                                    CommentToEmpDto dto = new CommentToEmpDto();
+                                    dto.setC_id(0);
+                                    dto.setS_id(item.getId());
+                                    dto.setMemo("该报名尚未评论");
+                                    res.add(dto);
+                                }
+                            }
+                        } else {
+                            logger.warn("该兼职尚未报名");
+                            CommentToEmpDto dto = new CommentToEmpDto();
+                            dto.setC_id(0);
+                            dto.setS_id(0);
+                            dto.setMemo("该兼职尚未报名");
+                            res.add(dto);
+                        }
+                    } else {
+                        logger.warn("暂无负责的兼职");
+                        CommentToEmpDto dto = new CommentToEmpDto();
+                        dto.setC_id(0);
+                        dto.setS_id(0);
+                        dto.setMemo("暂无负责的兼职");
+                        res.add(dto);
+                    }
                 }
             } else {
                 logger.warn("请确保输入完整");

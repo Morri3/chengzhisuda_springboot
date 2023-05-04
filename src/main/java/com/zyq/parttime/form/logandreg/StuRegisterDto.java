@@ -14,6 +14,8 @@ public class StuRegisterDto implements Serializable {
     private String pwd;
     private String pwd2;
     private int age;
+    private String birth_year;//出生年份
+    private String birth_month;//出生月份
     private String school_name;
     private String sno;
     private String entrance_date;

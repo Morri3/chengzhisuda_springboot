@@ -9,6 +9,7 @@ import java.util.List;
 //简历上传返回给android的信息
 @Data
 public class ResumeUploadCallbackDto implements Serializable {
+    private int age;
     private String telephone;
     private String current_area;
     private String exp;

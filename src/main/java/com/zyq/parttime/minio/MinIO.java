@@ -37,21 +37,18 @@ import java.util.stream.Collectors;
 
 @Component
 public class MinIO {
-    @Autowired
-    private MinioClient minioClient;
-
+    private static final int DEFAULT_EXPIRY_TIME = 7 * 24 * 3600;//有效期为7天
+    @Value("${minio.bucket}")
+    public String bucketName;
     @Value("${minio.endpoint}")
     private String endpoint;
     @Value("${minio.accessKey}")
     private String accessKey;
     @Value("${minio.secretKey}")
     private String secretKey;
-    @Value("${minio.bucket}")
-    public String bucketName;
-//    @Value("${minio.urlprefix}")
-//    public String urlprefix;
 
-    private static final int DEFAULT_EXPIRY_TIME = 7 * 24 * 3600;//有效期为7天
+    @Autowired
+    private MinioClient minioClient;
 
     //判断bucket是否存在
     public Boolean existBucket(String name) throws Exception {
@@ -85,7 +82,7 @@ public class MinIO {
         return true;
     }
 
-    //上传文件
+    //上传图片文件
     public String uploadFile(MultipartFile file, String bucketName) throws Exception {
         existBucket(bucketName);
         try {
@@ -96,7 +93,9 @@ public class MinIO {
             String fileName = file.getOriginalFilename();
             minioClient.putObject(PutObjectArgs.builder().bucket(bucketName).object(fileName).
                     stream(inputStream, inputStream.available(), -1).
-                    contentType(file.getContentType()).build());
+//                    contentType(file.getContentType()).
+        contentType("image/jpg").//指定jpg的contentType，否则虽然能成功上传，但是后台看不到图片
+                            build());
 
             //生成url
             String url = minioClient.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
@@ -168,33 +167,7 @@ public class MinIO {
         return "删除失败";
     }
 
-//    //查看文件对象
-//    //@return 存储bucket内文件对象信息
-//    public List<ObjectItem> listObjects(String bucketName) {
-//        Iterable<Result<Item>> results = minioClient.listObjects(ListObjectsArgs.builder().bucket(bucketName).build());
-//        List<ObjectItem> objectItems = new ArrayList<>();
-//        try {
-//            for (Result<Item> result : results) {
-//                Item item = result.get();
-//
-//                ObjectItem objectItem = new ObjectItem();
-//                objectItem.setObjectName(item.objectName());
-//                objectItem.setSize(item.size());
-//
-//                objectItems.add(objectItem);
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return null;
-//        }
-//        return objectItems;
-//    }
-
-    /**
-     * 批量删除文件对象
-     * @param bucketName 存储bucket名称
-     * @param objects    对象名称集合
-     */
+    //批量删除文件对象
     public Map<String, String> removeObjects(String bucketName, List<String> objects) {
         Map<String, String> resultMap = new HashMap<>();
         List<DeleteObject> dos = objects.stream().map(e -> new DeleteObject(e)).collect(Collectors.toList());

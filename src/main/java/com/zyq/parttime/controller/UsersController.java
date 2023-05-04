@@ -77,13 +77,13 @@ public class UsersController {
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
-    //TODO 简历上传stu_id-学生
+    //TODO 创建简历，简历上传stu_id-学生
     @RequestMapping(value = "/resumes/create", method = RequestMethod.POST)
     @ResponseBody
-    public ResponseData createResume(@RequestParam String telephone,
-                                     @RequestParam String upload_time)
-            throws ParseException, Exception {
-        ResumeInfoDto res = usersService.createResume(telephone, upload_time);
+//    public ResponseData createResume(@RequestParam String telephone, @RequestParam String upload_time)
+    public ResponseData createResume(@RequestBody CreateResumeDto createResumeDto)throws ParseException, Exception {
+//        ResumeInfoDto res = usersService.createResume(telephone, upload_time);
+        ResumeInfoDto res = usersService.createResume(createResumeDto);
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
@@ -100,8 +100,7 @@ public class UsersController {
     //TODO 简历上传stu_id-学生
     @RequestMapping(value = "/resumes/upload/stu_info", method = RequestMethod.POST)
     @ResponseBody
-    public ResponseData uploadResumeWithStuInfo(@RequestParam String telephone,
-                                                @RequestParam String upload_time)
+    public ResponseData uploadResumeWithStuInfo(@RequestParam String telephone,@RequestParam String upload_time)
             throws ParseException, Exception {
         String res = usersService.uploadResumeWithStuInfo(telephone, upload_time);
         return new ResponseData(ExceptionMsg.SUCCESS, res);

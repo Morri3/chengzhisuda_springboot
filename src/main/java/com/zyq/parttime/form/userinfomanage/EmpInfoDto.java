@@ -11,6 +11,8 @@ public class EmpInfoDto implements Serializable {
     private int gender;
     private String emails;
     private int age;
+    private String birth_year;//出生年份
+    private String birth_month;//出生月份
     private String telephone;
     private String jno;
     private String unit_name;

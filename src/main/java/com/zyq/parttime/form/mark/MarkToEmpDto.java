@@ -20,6 +20,7 @@ public class MarkToEmpDto implements Serializable {
     private Date create_time;
     private String memo;
     private String p_name;
+    private String category;//兼职种类
     private String username;
     private String user_id;
 }

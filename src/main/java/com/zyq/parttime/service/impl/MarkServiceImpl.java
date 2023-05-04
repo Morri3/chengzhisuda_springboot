@@ -1,6 +1,7 @@
 package com.zyq.parttime.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.zyq.parttime.entity.Employer;
 import com.zyq.parttime.entity.Mark;
 import com.zyq.parttime.entity.Parttimes;
 import com.zyq.parttime.entity.Signup;
@@ -10,6 +11,7 @@ import com.zyq.parttime.form.position.SignupInfoToEmpDto;
 import com.zyq.parttime.repository.mark.MarkRepository;
 import com.zyq.parttime.repository.position.PositionRepository;
 import com.zyq.parttime.repository.position.SignupRepository;
+import com.zyq.parttime.repository.userinfomanage.EmpInfoRepository;
 import com.zyq.parttime.service.MarkService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +33,8 @@ public class MarkServiceImpl implements MarkService {
     private SignupRepository signupRepository;
     @Autowired
     private PositionRepository positionRepository;
+    @Autowired
+    private EmpInfoRepository empInfoRepository;
 
     @Override
     public MarkDto getMark(int s_id) throws ParttimeServiceException {
@@ -88,6 +92,7 @@ public class MarkServiceImpl implements MarkService {
         return res;
     }
 
+    //TODO 评分-学生
     @Override
     public MarkDto post(MarkPostDto markPostDto) throws ParttimeServiceException {
         MarkDto res = new MarkDto();
@@ -102,7 +107,7 @@ public class MarkServiceImpl implements MarkService {
             int ods = markPostDto.getOds();
             int dsps = markPostDto.getDsps();
             Date create_time = markPostDto.getCreate_time();
-            float total_score = (pf + pl + we + lt + pt + ods + dsps) / 7;
+            float total_score = (float) (((pf + pl + we + lt + pt + ods + dsps) * 1.0) / 7);
 
             //判断报名是否存在
             Signup signup = signupRepository.findSignup(s_id);
@@ -150,6 +155,7 @@ public class MarkServiceImpl implements MarkService {
         return res;
     }
 
+    //TODO 获取自己负责的所有兼职的所有评分记录-兼职发布者
     @Override
     public List<MarkToEmpDto> getAllSpecialMark(String emp_id) throws ParttimeServiceException {
         List<MarkToEmpDto> res = new ArrayList<>();
@@ -187,6 +193,7 @@ public class MarkServiceImpl implements MarkService {
                                 markDto.setUser_id(item2.getStu().getId());
                                 markDto.setUsername(item2.getStu().getStuName());
                                 markDto.setP_name(item.getPositionName());
+                                markDto.setCategory(item.getCategory());
                                 markDto.setMemo("获取成功");
                                 res.add(markDto);
                             } else {
@@ -227,4 +234,95 @@ public class MarkServiceImpl implements MarkService {
         return res;
     }
 
+    //TODO 获取自己负责的所有兼职的所有评分记录-兼职发布者
+    @Override
+    public List<MarkToEmpDto> getAllSpecialMarkBtAdmin(String emp_id) throws ParttimeServiceException {
+        List<MarkToEmpDto> res = new ArrayList<>();
+
+        if (emp_id != null && !emp_id.equals("")) {
+            //有输入
+
+            //1.找到该emp，判断是否是管理员
+            Employer emp = empInfoRepository.findEmployerByTelephone(emp_id);
+
+            if (emp != null && emp.getEmpGrade() == 1) {
+                //2.存在该用户且是管理员，根据emp_id找到管理的所有兼职
+                List<Parttimes> parttimes = positionRepository.getAllPositions();
+                if (parttimes.size() > 0) {
+
+                    //3.存在兼职，遍历每个兼职
+                    for (Parttimes item : parttimes) {
+
+                        //4.遍历每个兼职，找到报名该兼职的signup
+                        List<Signup> signups = signupRepository.getAllSignupByPId(item.getId());
+                        if (signups.size() > 0) {
+                            //5.存在报名，遍历每个报名
+                            for (Signup item2 : signups) {
+                                //6.找到该signup的mark记录
+                                Mark mark = markRepository.getMark(item2.getId());
+                                if (mark != null) {
+                                    //7.存在该评分记录，构造dto，加入res
+                                    MarkToEmpDto markDto = new MarkToEmpDto();
+                                    markDto.setM_id(mark.getId());
+                                    markDto.setS_id(item2.getId());
+                                    markDto.setDsps(mark.getDsps());
+                                    markDto.setCreate_time(mark.getCreateTime());
+                                    markDto.setLt(mark.getLt());
+                                    markDto.setOds(mark.getOds());
+                                    markDto.setPf(mark.getPf());
+                                    markDto.setPl(mark.getPl());
+                                    markDto.setPt(mark.getPt());
+                                    markDto.setTotal_score(mark.getTotalScore());
+                                    markDto.setWe(mark.getWe());
+                                    markDto.setUser_id(item2.getStu().getId());
+                                    markDto.setUsername(item2.getStu().getStuName());
+                                    markDto.setP_name(item.getPositionName());
+                                    markDto.setCategory(item.getCategory());
+                                    markDto.setMemo("获取成功");
+                                    res.add(markDto);
+                                } else {
+                                    logger.warn("该报名尚未评分");
+                                    MarkToEmpDto dto = new MarkToEmpDto();
+                                    dto.setM_id(0);
+                                    dto.setS_id(item2.getId());
+                                    dto.setMemo("该报名尚未评分");
+                                    res.add(dto);
+                                }
+                            }
+                        } else {
+                            logger.warn("该兼职尚未报名");
+                            MarkToEmpDto dto = new MarkToEmpDto();
+                            dto.setM_id(0);
+                            dto.setS_id(0);
+                            dto.setMemo("该兼职尚未报名");
+                            res.add(dto);
+                        }
+                    }
+                } else {
+                    logger.warn("暂无负责的兼职");
+                    MarkToEmpDto dto = new MarkToEmpDto();
+                    dto.setM_id(0);
+                    dto.setS_id(0);
+                    dto.setMemo("暂无负责的兼职");
+                    res.add(dto);
+                }
+            } else {
+                logger.warn("不存在该管理员");
+                MarkToEmpDto dto = new MarkToEmpDto();
+                dto.setM_id(0);
+                dto.setS_id(0);
+                dto.setMemo("不存在该管理员");
+                res.add(dto);
+            }
+        } else {
+            logger.warn("请检出输入");
+            MarkToEmpDto dto = new MarkToEmpDto();
+            dto.setM_id(0);
+            dto.setS_id(0);
+            dto.setMemo("请检出输入");
+            res.add(dto);
+        }
+
+        return res;
+    }
 }

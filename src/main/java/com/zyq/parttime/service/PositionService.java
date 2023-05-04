@@ -4,7 +4,9 @@ import com.zyq.parttime.entity.Signup;
 import com.zyq.parttime.exception.ParttimeServiceException;
 import com.zyq.parttime.form.position.*;
 import com.zyq.parttime.form.unit.UnitInfoDto;
+//import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.text.ParseException;
 import java.util.List;
@@ -39,7 +41,7 @@ public interface PositionService {
     List<PositionInfoDto> getPositionByCategory(String category) throws ParttimeServiceException;
 
     //获取所有兼职
-    List<PositionInfoToEmpDto> getAllPositionByEmp() throws ParttimeServiceException;
+    List<PositionInfoToEmpDto> getAllPositionByAdmin(String emp_id) throws ParttimeServiceException;
 
     //获取所有兼职String emp_id, int p_id
     List<PositionInfoToEmpDto> getAllPositionByEmpId(String emp_id) throws ParttimeServiceException;
@@ -59,12 +61,19 @@ public interface PositionService {
     //获取报名信息
     List<SignupInfoToEmpDto> getSignupInfoByEmp(String emp_id) throws ParttimeServiceException, ParseException;
 
+    //获取报名信息
+    List<SignupInfoToEmpDto> getSignupInfoByAdmin(String emp_id) throws ParttimeServiceException, ParseException;
+
     //获取指定的一个报名信息
     SignupInfoToEmpDto getASpecialSignupInfoByEmp(String emp_id, int p_id) throws ParttimeServiceException, ParseException;
 
     //录取
-    List<SignupInfoToEmpDto> confirmSignup(ConfirmInputDto confirmInputDto) throws ParttimeServiceException, ParseException;
+    SignupInfoToEmpDto confirmSignup(ConfirmInputDto confirmInputDto) throws ParttimeServiceException, ParseException;
 
     //婉拒
-    List<SignupInfoToEmpDto> rejectSignup(RejectInputDto rejectInputDto) throws ParttimeServiceException, ParseException;
+    SignupInfoToEmpDto rejectSignup(RejectInputDto rejectInputDto) throws ParttimeServiceException, ParseException;
+
+//    //推荐兼职
+//    List<PositionInfoDto> recommendParttimes(String stu_id) throws ParttimeServiceException, ParseException;
+
 }

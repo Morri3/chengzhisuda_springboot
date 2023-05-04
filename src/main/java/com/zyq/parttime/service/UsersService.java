@@ -40,7 +40,8 @@ public interface UsersService {
     ResumeInfoDto getResume(String telephone) throws ParttimeServiceException;
 
     //创建简历
-    ResumeInfoDto createResume(String telephone, String upload_time) throws ParttimeServiceException, Exception;
+//    ResumeInfoDto createResume(String telephone, String upload_time) throws ParttimeServiceException, Exception;
+    ResumeInfoDto createResume(CreateResumeDto createResumeDto) throws ParttimeServiceException, Exception;
 
     //简历上传-学生
     String uploadResumeWithStuInfo(String telephone, String upload_time)
