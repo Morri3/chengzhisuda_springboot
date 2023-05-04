@@ -516,7 +516,6 @@ public class UsersServiceImpl implements UsersService {
 
     //TODO 创建简历，简历上传stu_id-学生
     @Override
-//    public ResumeInfoDto createResume(String telephone, String upload_time) throws ParttimeServiceException, Exception {
     public ResumeInfoDto createResume(CreateResumeDto createResumeDto) throws ParttimeServiceException, Exception {
         ResumeInfoDto res = new ResumeInfoDto();
 
@@ -766,9 +765,6 @@ public class UsersServiceImpl implements UsersService {
     public ResumeUploadCallbackDto uploadResume(MultipartFile file) throws ParttimeServiceException, Exception {
         ResumeUploadCallbackDto res = new ResumeUploadCallbackDto();
 
-//        System.out.println(file.getOriginalFilename());//test
-        //原来的文件名：2023-05-03_5835703641455551212.jpg
-
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         System.out.println("时间3" + sdf.parse(sdf.format(new Date())));
 
@@ -816,7 +812,7 @@ public class UsersServiceImpl implements UsersService {
                 //用自定义MockMultipartFile类的方法将文件转为MultipartFile
                 MultipartFile multipartFile = new MockUtils("file", newFile.getName(), "text/plain", input);
 
-                //赋值给文件uploadFile，用于在识别结果处理后进行图片上传到minio
+                //赋值给文件uploadFile，用于识别、在识别结果处理后进行图片上传到minio
                 uploadFile = multipartFile;
 
                 //删除生成的临时文件
@@ -838,7 +834,6 @@ public class UsersServiceImpl implements UsersService {
         }
 
         //3.文件为空，直接返回
-//        if (ObjectUtils.isEmpty(file) || file.getSize() <= 0) {
         if (ObjectUtils.isEmpty(uploadFile) || uploadFile.getSize() <= 0) {
             res.setTelephone(telephone);
             res.setMemo("上传文件大小为空");
@@ -865,17 +860,15 @@ public class UsersServiceImpl implements UsersService {
                 }
 
                 //⭐6.调用api解析图片中的文字
-                System.out.println("时间6-1" + sdf.parse(sdf.format(new Date())));
+                System.out.println("时间6" + sdf.parse(sdf.format(new Date())));
                 byte[] buf = new byte[0];//二进制数组
                 try {
                     //获取文件的二进制数组
-//                    buf = file.getBytes();//20230503-2323
                     buf = uploadFile.getBytes();//识别压缩图
                 } catch (IOException e) {
                     e.printStackTrace();
                     res.setMemo("获取文件字节数据异常" + e.getMessage());
                 }
-                System.out.println("时间6-2" + sdf.parse(sdf.format(new Date())));
 
                 //7.调用百度云ocr客户端，result就是获取的结果
                 System.out.println("时间7-1" + sdf.parse(sdf.format(new Date())));
@@ -895,7 +888,6 @@ public class UsersServiceImpl implements UsersService {
 
                 //10.个人信息部分
                 String birth, phone, current_area, exp;
-                int age;
                 try {
                     if (((words.get(0).get("words")).toString()).length() > 3) {
                         //第一个字段识别的是“姓名：XXX”，正常识别
@@ -913,7 +905,9 @@ public class UsersServiceImpl implements UsersService {
                     System.out.println("识别到的手机号：" + phone + "；现居地：" + current_area + "；工作经验：" + exp);
 
                     //计算年龄
-
+                    int age;
+                    String birthYear = birth.substring(0, 4);
+                    String birthMonth = birth.substring(4, 6);
 
                     //11.把现居地、工作经验填充到res
                     res.setTelephone(phone);
@@ -932,12 +926,18 @@ public class UsersServiceImpl implements UsersService {
                 String intended = "";//求职意向岗位
                 if (words.get(6).get("words").equals("求职意向")) {
                     //第一个字段识别的是“姓名：XXX”，正常识别
-                    intended = ((words.get(7).get("words")).toString().split("："))[1];
+                    String tmp = ((words.get(7).get("words")).toString()).replace("：", "；");//先将所有冒号改为分号
+                    String tmp2 = tmp.replaceFirst("；", "：");//再将第一个分号改为冒号
+                    intended = (tmp2.split("："))[1];
+
                 } else if (words.get(7).get("words").equals("求职意向")) {
                     //第一个字段识别的是“姓名：”，非正常识别
-                    intended = ((words.get(8).get("words")).toString().split("："))[1];
+                    String tmp = ((words.get(8).get("words")).toString()).replace("：", "；");//先将所有冒号改为分号
+                    String tmp2 = tmp.replaceFirst("；", "：");//再将第一个分号改为冒号
+                    intended = (tmp2.split("："))[1];
                 }
-                //12-1.拆分意向兼职
+
+                //12-1.意向兼职拆分，存入String数组
                 String[] intentions = intended.split("；");
                 //12-2.求职意向更新到DB中
                 EditIntentionDto editIntentionDto = new EditIntentionDto();//构造传入的dto
