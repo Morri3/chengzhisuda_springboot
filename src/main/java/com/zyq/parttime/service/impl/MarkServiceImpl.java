@@ -97,7 +97,7 @@ public class MarkServiceImpl implements MarkService {
     public MarkDto post(MarkPostDto markPostDto) throws ParttimeServiceException {
         MarkDto res = new MarkDto();
         if (markPostDto != null) {
-            //获取传入参数
+            //1.获取传入参数
             int s_id = markPostDto.getS_id();
             int pf = markPostDto.getPf();
             int pl = markPostDto.getPl();
@@ -161,11 +161,11 @@ public class MarkServiceImpl implements MarkService {
         List<MarkToEmpDto> res = new ArrayList<>();
 
         if (emp_id != null && !emp_id.equals("")) {
-            //有输入,根据emp_id找到管理的所有兼职
+            //1.有输入,根据emp_id找到管理的所有兼职
             List<Parttimes> parttimes = positionRepository.getAllPositionManagedByEmp(emp_id);
             if (parttimes.size() > 0) {
 
-                //有负责的兼职,遍历每个兼职
+                //2.有负责的兼职,遍历每个兼职
                 for (Parttimes item : parttimes) {
 
                     //遍历每个兼职，找到报名该兼职的signup
@@ -234,7 +234,7 @@ public class MarkServiceImpl implements MarkService {
         return res;
     }
 
-    //TODO 获取自己负责的所有兼职的所有评分记录-兼职发布者
+    //TODO 获取所有兼职的所有评分记录-管理员
     @Override
     public List<MarkToEmpDto> getAllSpecialMarkBtAdmin(String emp_id) throws ParttimeServiceException {
         List<MarkToEmpDto> res = new ArrayList<>();
@@ -244,9 +244,9 @@ public class MarkServiceImpl implements MarkService {
 
             //1.找到该emp，判断是否是管理员
             Employer emp = empInfoRepository.findEmployerByTelephone(emp_id);
-
             if (emp != null && emp.getEmpGrade() == 1) {
-                //2.存在该用户且是管理员，根据emp_id找到管理的所有兼职
+
+                //2.存在该用户且是管理员，找到所有兼职
                 List<Parttimes> parttimes = positionRepository.getAllPositions();
                 if (parttimes.size() > 0) {
 
@@ -256,11 +256,13 @@ public class MarkServiceImpl implements MarkService {
                         //4.遍历每个兼职，找到报名该兼职的signup
                         List<Signup> signups = signupRepository.getAllSignupByPId(item.getId());
                         if (signups.size() > 0) {
+
                             //5.存在报名，遍历每个报名
                             for (Signup item2 : signups) {
                                 //6.找到该signup的mark记录
                                 Mark mark = markRepository.getMark(item2.getId());
                                 if (mark != null) {
+
                                     //7.存在该评分记录，构造dto，加入res
                                     MarkToEmpDto markDto = new MarkToEmpDto();
                                     markDto.setM_id(mark.getId());

@@ -1,8 +1,11 @@
 package com.zyq.parttime.utils;
 
+import com.zyq.parttime.entity.Employer;
 import com.zyq.parttime.entity.Parttimes;
+import com.zyq.parttime.entity.Unit;
 import com.zyq.parttime.repository.position.PositionRepository;
 import com.zyq.parttime.repository.position.SignupRepository;
+import com.zyq.parttime.repository.unit.UnitRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -18,6 +21,8 @@ public class TimerBean {
     private SignupRepository signupRepository;
     @Autowired
     private PositionRepository positionRepository;
+    @Autowired
+    private UnitRepository unitRepository;
 
     /*每5s执行一次定时任务*/
     @Scheduled(cron = "0/5 * * * * ?")
@@ -37,7 +42,15 @@ public class TimerBean {
                 if (now.compareTo(p.getSignupDdl()) >= 0 && p.getPositionStatus().equals("已发布")) {
                     //4-1.已经过了报名DDL，且状态是“已发布”，就把兼职状态改为“已结束”
                     positionRepository.updatePositionStatus("已结束", now, p.getId());
-
+                    //5.找到兼职所在单位
+                    Employer employer = p.getOp();
+                    if (employer != null) {
+                        Unit unit = employer.getU();
+                        if (unit != null) {
+                            //6.更新单位的在招兼职数
+                            unitRepository.minusJobNums(unit.getId());
+                        }
+                    }
                 } else if (now.compareTo(p.getSignupDdl()) < 0) {
                     //4-2.还没过DDL，可以继续报名，继续后面的判断
 
@@ -52,6 +65,15 @@ public class TimerBean {
                         //6-1.招满了
                         System.out.println("有兼职招满啦~开始下架");
                         positionRepository.updatePositionStatus("已招满", now, p.getId());
+                        //7.找到兼职所在单位
+                        Employer employer = p.getOp();
+                        if (employer != null) {
+                            Unit unit = employer.getU();
+                            if (unit != null) {
+                                //8.更新单位的在招兼职数
+                                unitRepository.minusJobNums(unit.getId());
+                            }
+                        }
                     } else {
                         //6-2.没招满
                         System.out.println("例行检查ing...");

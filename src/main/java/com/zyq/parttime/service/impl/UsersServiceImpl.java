@@ -347,18 +347,19 @@ public class UsersServiceImpl implements UsersService {
     public ResumeInfoDto getResume(String telephone) throws ParttimeServiceException {
         ResumeInfoDto res = new ResumeInfoDto();
 
+        //1.判断有无输入
         if (telephone != null) {
-            //根据学生账号查找该学生的resumes
+            //2.根据学生账号查找该学生的resumes
             Resumes resumes = resumesInfoRepository.findResumesByStuId(telephone);
-            if (resumes != null) {//存在简历
-                //填充简历的基本信息
+            if (resumes != null) {
+                //3.存在简历，填充简历的基本信息
                 res.setTelephone(telephone);
                 res.setCurrent_area(resumes.getCurrentArea());
                 res.setExp(resumes.getExp());
                 res.setUpload_time(resumes.getUploadTime());
                 res.setR_id(resumes.getId());
 
-                //根据r_id查找四个子类的内容
+                //4.根据r_id查找四个子类的内容
                 List<Resumedetail> campusExpList =
                         resumesDetailRepository.findResumeDetailListByRIdAndCategory(resumes.getId(), "校园经历");
                 List<Resumedetail> educationBgList =
@@ -368,8 +369,8 @@ public class UsersServiceImpl implements UsersService {
                 List<Resumedetail> professionalSkillList =
                         resumesDetailRepository.findResumeDetailListByRIdAndCategory(resumes.getId(), "专业技能");
 
-                // 遍历四个子类
-                //1.遍历校园经历
+                //5.遍历四个子类
+                //5-1.遍历校园经历
                 List<ResumeDetailDto> list1 = new ArrayList<>();
                 if (campusExpList.size() > 0) {//有内容
                     //遍历列表
@@ -382,7 +383,8 @@ public class UsersServiceImpl implements UsersService {
                         dto.setContent(item.getContent());
                         dto.setCategory("校园经历");
                         dto.setHasContent(1);//有内容
-                        //获取start_time、end_time拼成String
+
+                        //获取start_time、end_time拼成String，用于用户端显示拼接好的字符串
                         Date start_time = item.getStartTime();
                         Date end_time = item.getEndTime();
                         DateFormat sdf = new SimpleDateFormat("yyyy.MM");
@@ -402,7 +404,7 @@ public class UsersServiceImpl implements UsersService {
                     list1.add(dto);
                 }
 
-                //2.遍历教育背景
+                //5-2.遍历教育背景
                 List<ResumeDetailDto> list2 = new ArrayList<>();
                 if (educationBgList.size() > 0) {//有内容
                     //遍历列表
@@ -415,6 +417,7 @@ public class UsersServiceImpl implements UsersService {
                         dto.setContent(item.getContent());
                         dto.setCategory("教育背景");
                         dto.setHasContent(1);//有内容
+
                         //获取start_time、end_time拼成String
                         Date start_time = item.getStartTime();
                         Date end_time = item.getEndTime();
@@ -434,7 +437,7 @@ public class UsersServiceImpl implements UsersService {
                     list2.add(dto);
                 }
 
-                //3.遍历项目经历
+                //5-3.遍历项目经历
                 List<ResumeDetailDto> list3 = new ArrayList<>();
                 if (campusExpList.size() > 0) {//有内容
                     //遍历列表
@@ -447,6 +450,7 @@ public class UsersServiceImpl implements UsersService {
                         dto.setContent(item.getContent());
                         dto.setCategory("项目经历");
                         dto.setHasContent(1);//有内容
+
                         //获取start_time、end_time拼成String
                         Date start_time = item.getStartTime();
                         Date end_time = item.getEndTime();
@@ -466,7 +470,7 @@ public class UsersServiceImpl implements UsersService {
                     list3.add(dto);
                 }
 
-                //4.遍历专业技能
+                //5-4.遍历专业技能
                 List<ResumeDetailDto> list4 = new ArrayList<>();
                 if (campusExpList.size() > 0) {//有内容
                     //遍历列表
@@ -491,13 +495,13 @@ public class UsersServiceImpl implements UsersService {
                     list4.add(dto);
                 }
 
-                //把四个子类填充到res中
+                //6.把四个子类填充到res中
                 res.setCampusExpList(list1);
                 res.setEducationBgList(list2);
                 res.setProjectExpList(list3);
                 res.setProfessionalSkillList(list4);
 
-                //状态
+                //7.状态填充到res
                 res.setStatus(resumes.getrStatus());
                 res.setMemo("存在简历");
             } else {
@@ -514,29 +518,29 @@ public class UsersServiceImpl implements UsersService {
         return res;
     }
 
-    //TODO 创建简历，简历上传stu_id-学生
+    //TODO 创建简历-学生
     @Override
     public ResumeInfoDto createResume(CreateResumeDto createResumeDto) throws ParttimeServiceException, Exception {
         ResumeInfoDto res = new ResumeInfoDto();
 
-        //有输入
+        //1.判断是否有输入
         if (createResumeDto != null) {
             String telephone = createResumeDto.getTelephone();
             String create_time = createResumeDto.getUpload_time();
             //这里upload_time实际上是创建时间create_time
 
-            //根据手机号查找学生用户
+            //2.根据手机号查找学生用户
             Student student = stuInfoRepository.findStudentByTelephone(telephone);
 
-            //存在学生
+            //3.存在学生
             if (student != null) {
                 System.out.println("学生学号：" + student.getId());
 
-                //判断是否存在简历，不存在就创建
+                //4.判断是否存在简历，不存在就创建
                 Resumes resumes = resumesInfoRepository.findResumesByStuId(student.getId());
 
                 if (resumes == null) {
-                    //不存在，创建
+                    //4-1.不存在，创建
 
                     //String转Date
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -544,7 +548,8 @@ public class UsersServiceImpl implements UsersService {
                     try {
                         time = sdf.parse(create_time);
                         resumesInfoRepository.createAResumeRecord(student.getId(), null, null, time, "已创建");
-                        //找到该用户的简历
+
+                        //5.找到该用户的简历
                         resumes = resumesInfoRepository.findResumesByStuId(student.getId());
                     } catch (ParseException e) {
                         e.printStackTrace();
@@ -553,14 +558,14 @@ public class UsersServiceImpl implements UsersService {
 
                 System.out.println("创建的简历信息：" + resumes.toString());//test
 
-                //填充简历的基本信息
+                //6.填充简历的基本信息
                 res.setTelephone(resumes.getStu().getId());
                 res.setCurrent_area(resumes.getCurrentArea());
                 res.setExp(resumes.getExp());
                 res.setUpload_time(resumes.getUploadTime());
                 res.setR_id(resumes.getId());
 
-                //根据r_id查找四个子类的内容
+                //7.根据r_id查找四个子类的内容
                 List<Resumedetail> campusExpList =
                         resumesDetailRepository.findResumeDetailListByRIdAndCategory(resumes.getId(), "校园经历");
                 List<Resumedetail> educationBgList =
@@ -570,11 +575,10 @@ public class UsersServiceImpl implements UsersService {
                 List<Resumedetail> professionalSkillList =
                         resumesDetailRepository.findResumeDetailListByRIdAndCategory(resumes.getId(), "专业技能");
 
-                // 遍历四个子类
-                //1.遍历校园经历
+                //8.遍历四个子类
+                //8-1.遍历校园经历
                 List<ResumeDetailDto> list1 = new ArrayList<>();
                 if (campusExpList.size() > 0) {//有内容
-                    //遍历列表
                     for (Resumedetail item : campusExpList) {
                         ResumeDetailDto dto = new ResumeDetailDto();
                         dto.setTelephone(telephone);
@@ -603,7 +607,7 @@ public class UsersServiceImpl implements UsersService {
                     list1.add(dto);
                 }
 
-                //2.遍历教育背景
+                //8-2.遍历教育背景
                 List<ResumeDetailDto> list2 = new ArrayList<>();
                 if (educationBgList.size() > 0) {//有内容
                     //遍历列表
@@ -635,7 +639,7 @@ public class UsersServiceImpl implements UsersService {
                     list2.add(dto);
                 }
 
-                //3.遍历项目经历
+                //8-3.遍历项目经历
                 List<ResumeDetailDto> list3 = new ArrayList<>();
                 if (campusExpList.size() > 0) {//有内容
                     //遍历列表
@@ -667,7 +671,7 @@ public class UsersServiceImpl implements UsersService {
                     list3.add(dto);
                 }
 
-                //4.遍历专业技能
+                //8-4.遍历专业技能
                 List<ResumeDetailDto> list4 = new ArrayList<>();
                 if (campusExpList.size() > 0) {//有内容
                     //遍历列表
@@ -692,7 +696,7 @@ public class UsersServiceImpl implements UsersService {
                     list4.add(dto);
                 }
 
-                //把四个子类填充到res中
+                //9.把四个子类填充到res中
                 res.setCampusExpList(list1);
                 res.setEducationBgList(list2);
                 res.setProjectExpList(list3);
@@ -713,20 +717,22 @@ public class UsersServiceImpl implements UsersService {
         return res;
     }
 
-    //TODO 简历上传step1上传账号+上传时间-学生
+    //TODO 简历上传 step1上传账号+上传时间-学生
     @Override
     public String uploadResumeWithStuInfo(String telephone, String upload_time) throws ParttimeServiceException, Exception {
         String res = "";
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
         if (telephone != null) {
-            //根据手机号查找学生用户
+            //1.根据手机号查找学生用户
             Student student = stuInfoRepository.findStudentByTelephone(telephone);
 
-            if (student != null) {//存在学生
-                //判断是否存在简历，不存在就创建
+            if (student != null) {
+                //2.存在学生，判断是否存在简历，不存在就创建
                 Resumes resumes = resumesInfoRepository.findResumesByStuId(student.getId());
-                if (resumes == null) {//不存在，创建
+                if (resumes == null) {
+                    //2-1.不存在，创建简历
+
                     //String转Date
                     Date time = new Date();
                     try {
@@ -738,11 +744,11 @@ public class UsersServiceImpl implements UsersService {
                     }
                 }
 
-                //将学号存入redis缓存，这个缓存永远只有一条记录
+                //3.将学号存入redis缓存，这个缓存永远只有一条记录
                 redisTemplate.opsForValue().set(ResumeStuIdDto.cacheKey(1), telephone);
                 logger.warn("存储该学生的学号[{}]", ResumeStuIdDto.cacheKey(1));
 
-                //将学号+上传日期存入redis缓存，会有多条记录
+                //4.将学号+上传日期存入redis缓存，会有多条记录
                 redisTemplate.opsForValue().set(ResumeCacheDto.cacheKey(telephone), upload_time);
                 logger.warn("存储该学生简历的信息[{}]", ResumeCacheDto.cacheKey(telephone));
 
@@ -760,7 +766,7 @@ public class UsersServiceImpl implements UsersService {
         return res;
     }
 
-    //TODO 简历上传step2上传图片-学生
+    //TODO 简历上传 step2上传图片-学生
     @Override
     public ResumeUploadCallbackDto uploadResume(MultipartFile file) throws ParttimeServiceException, Exception {
         ResumeUploadCallbackDto res = new ResumeUploadCallbackDto();
@@ -859,11 +865,10 @@ public class UsersServiceImpl implements UsersService {
                     return res;
                 }
 
-                //⭐6.调用api解析图片中的文字
+                //⭐6.获取图片文件的二进制数组
                 System.out.println("时间6" + sdf.parse(sdf.format(new Date())));
                 byte[] buf = new byte[0];//二进制数组
                 try {
-                    //获取文件的二进制数组
                     buf = uploadFile.getBytes();//识别压缩图
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -1214,24 +1219,25 @@ public class UsersServiceImpl implements UsersService {
     public ResumeEditCallbackDto editPersonal(EditPersonalDto editPersonalDto) throws ParseException, Exception {
         ResumeEditCallbackDto res = new ResumeEditCallbackDto();
 
+        //1.判断有无输入
         if (editPersonalDto != null) {
             String telephone = editPersonalDto.getTelephone();//手机号
             String exp = editPersonalDto.getExp();
             String current_area = editPersonalDto.getCurrent_area();
 
-            if (telephone != null && !telephone.equals("")) {//手机号不为空
-                //根据手机号查找学生用户
+            if (telephone != null && !telephone.equals("")) {
+                //2.手机号不为空，根据手机号查找学生用户
                 Student student = stuInfoRepository.findStudentByTelephone(telephone);
 
                 if (student != null) {//存在学生
-                    //根据手机号找到该学生的简历
+                    //3.根据手机号找到该学生的简历
                     Resumes resumes = resumesInfoRepository.findResumesByStuId(telephone);
 
                     if (resumes != null) {//存在简历
-                        //更新DB
+                        //4.更新DB
                         resumesInfoRepository.updateResumesInfo(exp, current_area, "已修改", telephone);
 
-                        //找到简历的详细信息
+                        //5.找到简历的详细信息
 //                        GetResumeDto request = new GetResumeDto();
 //                        request.setTelephone(telephone);
 //                        ResumeInfoDto dto = this.getResume(request);//返回的详细信息dto
@@ -1240,7 +1246,7 @@ public class UsersServiceImpl implements UsersService {
                         dto.setCurrent_area(current_area);
                         dto.setStatus("已修改");
 
-                        //填充到res
+                        //6.填充到res
                         res.setTelephone(telephone);
                         res.setInfo(dto);
                     } else {//不存在简历
@@ -1267,6 +1273,7 @@ public class UsersServiceImpl implements UsersService {
     public GetCampusDto editCampus(EditCampusDto editCampusDto) throws ParseException, Exception {
         GetCampusDto res = new GetCampusDto();
 
+        //1.判断有无输入
         if (editCampusDto != null) {
             String telephone = editCampusDto.getTelephone();//手机号
             int rd_id = editCampusDto.getRd_id();
@@ -1275,17 +1282,17 @@ public class UsersServiceImpl implements UsersService {
             String start_time = editCampusDto.getStart_time();
             String end_time = editCampusDto.getEnd_time();
 
-            if (telephone != null && !telephone.equals("")) {//手机号不为空
-                //根据手机号查找学生用户
+            if (telephone != null && !telephone.equals("")) {
+                //2.手机号不为空，根据手机号查找学生用户
                 Student student = stuInfoRepository.findStudentByTelephone(telephone);
 
-                if (student != null) {//存在学生
-                    //根据手机号找到该学生的简历、校园经历
+                if (student != null) {
+                    //3.存在学生，根据手机号找到该学生的简历、校园经历
                     Resumes resumes = resumesInfoRepository.findResumesByStuId(telephone);
-                    //根据r_id+类型找到校园经历
+                    //4.根据r_id+类型找到校园经历
                     List<Resumedetail> list = resumesDetailRepository.findResumeDetailByRIdAndCategory2(resumes.getId(), "校园经历");
 
-                    //遍历列表，找到那个detail
+                    //5.遍历列表，找到那个detail
                     Resumedetail resumedetail = new Resumedetail();
                     for (Resumedetail detail : list) {
                         if (detail.getId() == rd_id) {//rd_id相同
@@ -1293,9 +1300,12 @@ public class UsersServiceImpl implements UsersService {
                         }
                     }
 
-                    if (resumes != null && resumedetail != null) {//存在简历和校园经历
+                    if (resumes != null && resumedetail != null) {
+                        //6-1.存在简历和校园经历
+
                         int f1 = 0, f2 = 0;//判断是否为空
-                        //处理时间
+
+                        //7.处理时间
                         Date start = new Date(), end = new Date();
                         SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM");
                         if (start_time != null && !start_time.equals("")) {//开始日期非空
@@ -1309,7 +1319,7 @@ public class UsersServiceImpl implements UsersService {
                             f2 = 1;
                         }
 
-                        //更新DB
+                        //8.更新DB
                         if (f1 == 1 && f2 == 1) {
                             resumesDetailRepository.updateResumedetailInfo1(title, content, "已修改", rd_id);
                         } else if (f1 == 1 && f2 == 0) {
@@ -1323,7 +1333,7 @@ public class UsersServiceImpl implements UsersService {
                         resumesInfoRepository.updateResumesStatus("已修改", telephone);
 
                         Resumedetail resumedetail2 = resumesDetailRepository.findResumeDetailByRdId(rd_id, resumes.getId());
-                        //填充到res
+                        //9.填充到res
                         res.setTelephone(telephone);
                         res.setRd_id(rd_id);
                         res.setTitle(resumedetail2.getTitle());
@@ -1331,13 +1341,13 @@ public class UsersServiceImpl implements UsersService {
                         res.setStart_time(resumedetail2.getStartTime());
                         res.setEnd_time(resumedetail2.getEndTime());
                         res.setRd_status(resumedetail2.getRdStatus());
-                    } else {//不存在简历/校园经历
+                    } else {
+                        //6-2.不存在简历/校园经历
                         if (resumes != null && resumedetail == null) {
                             logger.warn("该账号不存在校园经历信息");
 
-                            //创建一条detail
+                            //7.处理时间
                             Date now2 = new Date(System.currentTimeMillis());
-                            //处理时间
                             Date start = new Date(), end = new Date();
                             SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM");
                             if (start_time != null && !start_time.equals("")) {//开始日期非空
@@ -1347,11 +1357,12 @@ public class UsersServiceImpl implements UsersService {
                                 end = sdf.parse(end_time);
                             }
 
-                            //更新DB
+                            //8.创建一条detail
                             resumesDetailRepository.addAResumesDetailRecord(resumes.getId(), start, end, title,
                                     content, "校园经历", now2, "已上传");
                             int latestId = resumesDetailRepository.findLatestResumesDetail();//最新的记录的rd_id
 
+                            //9.填充res
                             res.setTelephone(telephone);
                             res.setRd_id(latestId);
                             res.setTitle(title);
@@ -1689,8 +1700,9 @@ public class UsersServiceImpl implements UsersService {
     public DeleteDetailCallbackDto deleteDetail(DeleteDetailDto deleteDetailDto) throws ParseException, Exception {
         DeleteDetailCallbackDto res = new DeleteDetailCallbackDto();
 
+        //1.判断有无输入
         if (deleteDetailDto != null) {
-            //1.有数据，获取传入的数据
+            //1-1.有数据，获取传入的数据
             String telephone = deleteDetailDto.getTelephone();//手机号
             int rd_id = deleteDetailDto.getRd_id();
             System.out.println("要删除的简历详情id是：" + rd_id);
@@ -1728,7 +1740,8 @@ public class UsersServiceImpl implements UsersService {
                             res.setRd_id(0);
                             res.setMemo("该简历详情不是该学生的");
                         }
-                    } else {//不存在简历/简历详情
+                    } else {
+                        //不存在简历/简历详情
                         if (resumes == null) {
                             logger.warn("该账号不存在简历信息");
                             res.setTelephone(telephone);
@@ -1762,13 +1775,14 @@ public class UsersServiceImpl implements UsersService {
     public AddDetailCallbackDto addDetail(AddDetailDto addDetailDto) throws ParseException, Exception {
         AddDetailCallbackDto res = new AddDetailCallbackDto();
 
+        //1.判断有无输入
         if (addDetailDto != null) {
-            //1.有数据，获取传入的数据
+            //1-1.有数据，获取传入的数据
             String stu_id = addDetailDto.getTelephone();
             int r_id = addDetailDto.getR_id();
             String category = addDetailDto.getCategory();
 
-            //2.根据种类判断
+            //2.根据种类判断，是专业技能，单独添加（因为专业技能没有开始日期、结束日期）
             if (category.equals("专业技能")) {
                 String content = addDetailDto.getContent();
 
@@ -1813,8 +1827,7 @@ public class UsersServiceImpl implements UsersService {
                     dto.setMemo("不存在简历");
                 }
             } else {
-                //其他三种detail
-
+                //2.其他三种detail
                 String date = addDetailDto.getDate();
                 String title = addDetailDto.getTitle();
                 String content = addDetailDto.getContent();
@@ -1879,6 +1892,7 @@ public class UsersServiceImpl implements UsersService {
         return res;
     }
 
+    //暂不支持
     @Override
     public DeleteResumeCallbackDto deleteResume(DeleteResumeDto deleteResumeDto) throws ParseException, Exception {
         DeleteResumeCallbackDto res = new DeleteResumeCallbackDto();
@@ -1943,19 +1957,21 @@ public class UsersServiceImpl implements UsersService {
         return res;
     }
 
+    //TODO 获取意向兼职-学生
     @Override
     public List<IntentionDto> getIntention(String telephone) throws ParseException {
         List<IntentionDto> res = new ArrayList<>();
 
+        //1.是否有输入
         if (telephone != null && !telephone.equals("")) {
-            //根据手机号查找学生用户
+            //2.根据手机号查找学生用户
             Student student = stuInfoRepository.findStudentByTelephone(telephone);
-            if (student != null) {//存在学生
-                //找到该用户的所有意向兼职
+            if (student != null) {
+                //3.存在学生，通过手机号找到该用户的所有意向兼职
                 List<Intention> list = intentionRepository.getIntentionsByStuId(telephone);
 
                 if (list != null && list.size() > 0) {
-                    //有意向兼职
+                    //4.有意向兼职数据，遍历每个意向兼职，构造dto，并加入res
                     for (Intention i : list) {
                         IntentionDto dto = new IntentionDto();
                         dto.setI_id(i.getId());
@@ -1988,12 +2004,13 @@ public class UsersServiceImpl implements UsersService {
         return res;
     }
 
+    //TODO 编辑意向兼职-学生
     @Override
     public List<IntentionDto> editIntention(EditIntentionDto editIntentionDto) throws ParseException {
         List<IntentionDto> res = new ArrayList<>();
 
         if (editIntentionDto != null) {
-            //获取数据
+            //1.获取数据，传入的意向兼职是String数组，将其转为list列表
             String stu_id = editIntentionDto.getTelephone();
             String[] input = editIntentionDto.getIntentions();
             List<String> intentions = new ArrayList<>();
@@ -2001,17 +2018,20 @@ public class UsersServiceImpl implements UsersService {
                 intentions.add(input[i]);
             }
 
-            //根据手机号查找学生用户
+            //2.根据手机号查找学生用户
             Student student = stuInfoRepository.findStudentByTelephone(stu_id);
-            if (student != null) {//存在学生
-                if (intentions != null && intentions.size() > 0) {//输入的不为空
-                    //获取该用户的所有意向兼职
+            if (student != null) {
+                //3.存在学生，判断有无选择的意向兼职
+                if (intentions != null && intentions.size() > 0) {
+                    //3-1.有选择意向兼职
+
+                    //4.获取该用户的所有意向兼职
                     List<IntentionDto> all = getIntention(stu_id);
                     //存放原来选择的意向兼职
                     List<String> before = new ArrayList<>();
-                    //编辑之前有意向兼职
+
                     if (all != null && all.size() > 0) {
-                        //从DB中删除该学生所有的
+                        //5-1.编辑前有意向兼职，就从DB中删除该学生所有的
                         intentionRepository.removeAllIntention(stu_id);
 //                        for (IntentionDto dto : all) {
 //                            String str = dto.getContent();
@@ -2024,12 +2044,12 @@ public class UsersServiceImpl implements UsersService {
 //                        List<String> reduce = intentions.stream().filter(item ->
 //                                !before.contains(item)).collect(toList());
 
-                        //DB插入元素
+                        //再向DB插入选择的意向兼职
                         for (int i = 0; i < intentions.size(); i++) {
                             intentionRepository.addIntention(stu_id, intentions.get(i));
                         }
                     } else {
-                        //之前没兼职
+                        //5-2.若之前没兼职，就直接创建包含这些意向兼职的记录
                         for (int i = 0; i < intentions.size(); i++) {
                             intentionRepository.addIntention(stu_id, intentions.get(i));
                         }
@@ -2038,7 +2058,7 @@ public class UsersServiceImpl implements UsersService {
                     //没选择兼职，就不动
                 }
 
-                //获取所有意向兼职
+                //6.获取所有意向兼职，构造dto，填充到res
                 List<Intention> list = intentionRepository.getIntentionsByStuId(stu_id);
 
                 if (list != null && list.size() > 0) {

@@ -58,6 +58,7 @@ public class CommentServiceImpl implements CommentService {
         return res;
     }
 
+    //TODO 评论-学生
     @Override
     public CommentDto post(CommentPostDto commentPostDto) throws ParttimeServiceException {
         CommentDto res = new CommentDto();
@@ -176,6 +177,7 @@ public class CommentServiceImpl implements CommentService {
         return res;
     }
 
+    //TODO 获取自己负责的所有兼职的所有评论记录-兼职发布者
     @Override
     public List<CommentToEmpDto> getAllSpecialComment(String emp_id) throws ParttimeServiceException {
         List<CommentToEmpDto> res = new ArrayList<>();
@@ -191,12 +193,13 @@ public class CommentServiceImpl implements CommentService {
                     //3.遍历每个兼职，找到报名该兼职的signup
                     List<Signup> signups = signupRepository.getAllSignupByPId(item.getId());
                     if (signups.size() > 0) {
-                        //4.存在报名，遍历报名
 
+                        //4.存在报名，遍历报名
                         for (Signup item2 : signups) {
                             //5.找到该signup的comment记录
                             Comment comment = commentRepository.getComment(item2.getId());
                             if (comment != null) {
+
                                 //6.存在该评论记录，构造dto，加入res
                                 CommentToEmpDto commentDto = new CommentToEmpDto();
                                 commentDto.setC_id(comment.getId());

@@ -1,5 +1,7 @@
 package com.zyq.parttime.entity;
 
+import org.hibernate.annotations.Proxy;
+
 import javax.persistence.*;
 import java.util.Date;
 import java.util.LinkedHashSet;
@@ -7,6 +9,7 @@ import java.util.Set;
 
 @Entity
 @Table(name = "employer")
+@Proxy(lazy = false)//禁止懒加载，解决定时任务运行失败的bug
 public class Employer {
     @Id
     @Column(name = "telephone", nullable = false)

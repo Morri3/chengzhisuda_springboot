@@ -89,18 +89,19 @@ public class PositionServiceImpl implements PositionService {
         return res;
     }
 
-    //
+    //TODO 获取所有兼职，按意向兼职排序-学生
     @Override
     public List<PositionInfoDto> getAllPositionByIntentions(GetPositionDto getPositionDto) throws ParttimeServiceException {
         List<PositionInfoDto> res = new ArrayList<>();
 
-        //判断有无输入
+        //1.判断有无输入
         if (getPositionDto != null) {
-            //有输入，获取意向兼职数组
+            //2.有输入，获取意向兼职数组
             List<String> intentions = getPositionDto.getIntentions();
 
-            //遍历意向兼职数组，先后找到这些类型的兼职，按照兼职种类在数组中的顺序先后加入到res中
-            if (intentions != null && intentions.size() > 0) {//有意向兼职
+            //3.遍历意向兼职数组
+            if (intentions != null && intentions.size() > 0) {
+                //4.有意向兼职,就先后找到这些类型的兼职，按照兼职种类在数组中的顺序先后加入到res中
                 for (String i : intentions) {
                     List<Parttimes> curList = positionRepository.getPositionByIntention(i);
                     if (curList != null && curList.size() > 0) {
@@ -130,17 +131,17 @@ public class PositionServiceImpl implements PositionService {
                 }
             }
 
-            //   不管是否有意向兼职，最后都是取所有兼职数据
-            //获取两个List的差集，求出意向兼职外的兼职种类
+            //5.不管是否有意向兼职，最后都是取所有兼职数据
+            //6.获取两个List的差集，求出意向兼职外的兼职种类
             List<String> allCategory = Arrays.asList("课程助教", "学生助理", "军训助理", "体测助理", "讲解员",
                     "公寓宣传员", "班助", "服务员");
             List<String> others = allCategory.stream().filter(item ->
                     !intentions.contains(item)).collect(toList());
             System.out.println("其他兼职种类：" + others.toString());//输出测试
 
-            //再获得意向兼职外的兼职，加入res
+            //7.再获得意向兼职外的兼职，加入res
             if (others != null && others.size() > 0) {
-                //有兼职可以查找
+                //8.parttimes中有兼职数据
                 for (String i : others) {
                     List<Parttimes> curList = positionRepository.getPositionByIntention(i);
                     if (curList != null && curList.size() > 0) {
@@ -169,7 +170,7 @@ public class PositionServiceImpl implements PositionService {
                     }
                 }
 
-                //判断有没有兼职数据
+                //9.判断有没有兼职数据，没数据返回错误提示，让前端显示暂无内容
                 if (res.size() > 0) {
                     //有数据
                 } else {
@@ -186,33 +187,6 @@ public class PositionServiceImpl implements PositionService {
                 dto.setMemo("兼职信息获取失败");
                 res.add(dto);
             }
-//            //数据
-//            List<Position> list = positionRepository.getAllPositionsByIntentions(intentions);
-//            if (list != null) {
-//                for (Position i : list) {
-//                    PositionInfoDto dto = new PositionInfoDto();
-//                    dto.setP_id(i.getId());
-//                    dto.setCategory(i.getCategory());
-//                    dto.setContent(i.getContent());
-//                    dto.setExp(i.getExp());
-//                    dto.setPosition_name(i.getPositionName());
-//                    dto.setPosition_status(i.getPositionStatus());
-//                    dto.setArea(i.getArea());
-//                    dto.setCreate_time(i.getCreateTime());
-//                    dto.setRequirement(i.getRequirement());
-//                    dto.setSalary(i.getSalary());
-//                    dto.setSettlement(i.getSettlement());
-//                    dto.setSignup_ddl(i.getSignupDdl());
-//                    dto.setSlogan(i.getSlogan());
-//                    dto.setUpdate_time(i.getUpdateTime());
-//                    dto.setOp_id(i.getOp().getId());
-//                    dto.setWork_time(i.getWorkTime());
-//                    res.add(dto);
-//                }
-//                System.out.println(list.toString());
-//            } else {
-//                logger.warn("该账号不存在");
-//            }
         } else {
             //无输入
             logger.warn("请检查输入");
@@ -257,6 +231,7 @@ public class PositionServiceImpl implements PositionService {
         return res;
     }
 
+    //TODO 报名兼职-学生
     @Override
     public SignupReturnDto signup(SignupDto signupDto) throws ParttimeServiceException, ParseException {
         SignupReturnDto res = new SignupReturnDto();
@@ -459,6 +434,7 @@ public class PositionServiceImpl implements PositionService {
         return res;
     }
 
+    //TODO 查看所有报名-学生
     @Override
     public List<SignupReturnDto> history(HistoryDto historyDto) throws ParttimeServiceException, ParseException {
         List<SignupReturnDto> res = new ArrayList<>();
@@ -466,10 +442,10 @@ public class PositionServiceImpl implements PositionService {
         if (historyDto != null) {
             String telephone = historyDto.getTelephone();
 
-            //查找该用户是否存在
+            //1.查找该用户是否存在
             Student stu = stuInfoRepository.findStudentByTelephone(telephone);
-            if (stu != null) {//存在
-                //查询该用户所有报名
+            if (stu != null) {
+                //2.存在，查询该用户所有报名
                 List<Signup> list = signupRepository.getAllSignup(telephone);
                 if (list != null && list.size() > 0) {
                     for (Signup item : list) {
@@ -602,7 +578,7 @@ public class PositionServiceImpl implements PositionService {
         return res;
     }
 
-    //按兼职种类筛选兼职
+    //TODO 按兼职种类筛选兼职-学生
     @Override
     public List<PositionInfoDto> getPositionByCategory(String category) throws ParttimeServiceException {
         List<PositionInfoDto> res = new ArrayList<>();
@@ -654,6 +630,7 @@ public class PositionServiceImpl implements PositionService {
         return res;
     }
 
+    //TODO 获取所有兼职（包括自己的和所有兼职发布者管理的兼职）-管理员
     @Override
     public List<PositionInfoToEmpDto> getAllPositionByAdmin(String emp_id) throws ParttimeServiceException {
         List<PositionInfoToEmpDto> res = new ArrayList<>();
@@ -737,6 +714,7 @@ public class PositionServiceImpl implements PositionService {
         return res;
     }
 
+    //TODO 获取自己管理的所有兼职-兼职发布者
     @Override
     public List<PositionInfoToEmpDto> getAllPositionByEmpId(String emp_id) throws ParttimeServiceException {
         List<PositionInfoToEmpDto> res = new ArrayList<>();
@@ -807,12 +785,12 @@ public class PositionServiceImpl implements PositionService {
             dto.setMemo("请检查输入");
             res.add(dto);
         }
-
         System.out.println(res.toString());
 
         return res;
     }
 
+    //TODO 根据单位id获取单位的信息-兼职发布者/管理员
     @Override
     public UnitInfoDto getUnitInfoByUnitName(String op_id) throws ParttimeServiceException {
         UnitInfoDto res = new UnitInfoDto();
@@ -848,10 +826,12 @@ public class PositionServiceImpl implements PositionService {
         return res;
     }
 
+    //TODO 发布兼职-兼职发布者/管理员
     @Override
     public PositionInfoToEmpDto publishParttime(PublishInputDto input) throws ParttimeServiceException, ParseException {
         PositionInfoToEmpDto res = new PositionInfoToEmpDto();
 
+        //1.判断有无输入
         if (input != null) {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
@@ -873,25 +853,25 @@ public class PositionServiceImpl implements PositionService {
             Date create_time = sdf.parse(create_time_input);
             int num = input.getNum_total();//名额数
 
-            //找到这个操作者
+            //2.找到这个操作者
             Employer emp = logAndRegByEmpRepository.findEmployerByTelephone(op_id);
             if (emp != null) {
-                //存在操作者，更新数据库
+                //3.存在操作者，更新数据库
                 positionRepository.publishAParttime(op_id, position_name, num, category, salary,
                         area, exp, content, requirement, signup_ddl, slogan, work_time, settlement,
                         "已发布", create_time, create_time);//更新时间设置为创建时间
 
-                //找到刚创建的兼职
+                //4.找到刚创建的兼职
                 Parttimes createdParttimes = positionRepository.getLatestPosition();
                 if (createdParttimes != null) {
-                    //更新该操作员的unit中的job_nums字段值
+                    //5.更新该操作员的unit中的job_nums字段值
                     Unit unit = unitRepository.findUnitByUnitId(emp.getU().getId());
 
                     if (unit != null) {
-                        //存在
-                        unitRepository.addJobNums(unit.getId());//更新job_nums
+                        //6.存在单位，更新job_nums
+                        unitRepository.addJobNums(unit.getId());
 
-                        //构造返回的res
+                        //7.构造返回的res
                         res.setP_id(createdParttimes.getId());
                         res.setOp_id(createdParttimes.getOp().getId());
                         res.setPosition_name(createdParttimes.getPositionName());
@@ -943,7 +923,7 @@ public class PositionServiceImpl implements PositionService {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
             String op_id = input.getOp_id();
-            int p_id = input.getP_id();
+            int p_id = input.getP_id();//要编辑的兼职id
             String category = input.getCategory();
             String salary = input.getSalary();
             String area = input.getArea();
@@ -960,60 +940,92 @@ public class PositionServiceImpl implements PositionService {
             Date update_time = sdf.parse(update_time_input);
             int num = input.getNum_total();//名额数
 
-            //找到这个操作者
+            //2.找到这个操作者
             Employer emp = logAndRegByEmpRepository.findEmployerByTelephone(op_id);
             if (emp != null) {
-                //存在操作者，判断该兼职是否是该操作者管理的
+                //3.存在操作者，判断该兼职是否是该操作者管理的
 
                 if (emp.getEmpGrade() == 1) {
-                    //是管理员，可以操作任何兼职
+                    //3-1.是管理员，可以操作任何兼职
 
-                    //找到兼职
+                    //4.找到兼职
                     Parttimes parttimes = positionRepository.getPosition(p_id);
-
                     if (parttimes != null) {
-                        //存在兼职
-                        //判断是否符合编辑的条件（兼职状态是“已发布”，没人报名）
+                        //5.存在兼职，判断是否符合编辑的条件（兼职状态是“已发布”，没人报名）
                         int n2 = signupRepository.getNumOfSpecialStatus(parttimes.getId(), "已录取");
                         int n3 = signupRepository.getNumOfSpecialStatus(parttimes.getId(), "已结束");
                         int num_employment = n2 + n3;
 
                         if (parttimes.getPositionStatus().equals("已发布") && num_employment == 0) {
-                            //满足条件，更新数据库
+                            //6.满足条件，更新数据库
                             positionRepository.editAParttime(num, category, salary, area, exp, content,
                                     requirement, signup_ddl, slogan, work_time, settlement, "已发布",
                                     update_time, p_id);
 
-                            //找到刚创建的兼职
-                            Parttimes createdParttimes = positionRepository.getLatestPosition();
-                            if (createdParttimes != null) {
-                                //更新该操作员的unit中的job_nums字段值
-                                Unit unit = unitRepository.findUnitByUnitId(emp.getU().getId());
+                            //7.找到编辑的这个兼职，这里的curPartttimes是parttimes更新后的版本
+                            Parttimes curPartttimes = positionRepository.getPosition(p_id);
+                            if (curPartttimes != null) {
+                                //8.这里区分是管理员所在单位，还是其他单位的兼职
+                                if (curPartttimes.getOp().getU().getId() == emp.getU().getId()) {
+                                    //8-1.是管理员所在单位
 
-                                if (unit != null) {
-                                    //构造返回的res
-                                    res.setP_id(createdParttimes.getId());
-                                    res.setOp_id(createdParttimes.getOp().getId());
-                                    res.setPosition_name(createdParttimes.getPositionName());
-                                    res.setCategory(createdParttimes.getCategory());
-                                    res.setSalary(createdParttimes.getSalary());
-                                    res.setArea(createdParttimes.getArea());
-                                    res.setExp(createdParttimes.getExp());
-                                    res.setContent(createdParttimes.getContent());
-                                    res.setRequirement(createdParttimes.getRequirement());
-                                    res.setSignup_ddl(createdParttimes.getSignupDdl());
-                                    res.setSlogan(createdParttimes.getSlogan());
-                                    res.setWork_time(createdParttimes.getWorkTime());
-                                    res.setSettlement(createdParttimes.getSettlement());
-                                    res.setPosition_status(createdParttimes.getPositionStatus());
-                                    res.setCreate_time(createdParttimes.getCreateTime());
-                                    res.setUpdate_time(createdParttimes.getUpdateTime());
-                                    res.setNum_total(createdParttimes.getNum());
-                                    res.setMemo("编辑成功");
+                                    //9.更新管理员所在单位的job_nums字段值
+                                    Unit unit = unitRepository.findUnitByUnitId(emp.getU().getId());
+                                    if (unit != null) {
+                                        //10.构造返回的res
+                                        res.setP_id(curPartttimes.getId());
+                                        res.setOp_id(curPartttimes.getOp().getId());
+                                        res.setPosition_name(curPartttimes.getPositionName());
+                                        res.setCategory(curPartttimes.getCategory());
+                                        res.setSalary(curPartttimes.getSalary());
+                                        res.setArea(curPartttimes.getArea());
+                                        res.setExp(curPartttimes.getExp());
+                                        res.setContent(curPartttimes.getContent());
+                                        res.setRequirement(curPartttimes.getRequirement());
+                                        res.setSignup_ddl(curPartttimes.getSignupDdl());
+                                        res.setSlogan(curPartttimes.getSlogan());
+                                        res.setWork_time(curPartttimes.getWorkTime());
+                                        res.setSettlement(curPartttimes.getSettlement());
+                                        res.setPosition_status(curPartttimes.getPositionStatus());
+                                        res.setCreate_time(curPartttimes.getCreateTime());
+                                        res.setUpdate_time(curPartttimes.getUpdateTime());
+                                        res.setNum_total(curPartttimes.getNum());
+                                        res.setMemo("编辑成功");
+                                    } else {
+                                        logger.warn("该兼职发布者不存在单位");
+                                        res.setP_id(0);
+                                        res.setMemo("该兼职发布者不存在单位");
+                                    }
                                 } else {
-                                    logger.warn("该兼职发布者不存在单位");
-                                    res.setP_id(0);
-                                    res.setMemo("该兼职发布者不存在单位");
+                                    //8-2.是其他单位的兼职数据
+
+                                    //9.更新实际管理这个兼职的兼职发布者所在单位的job_nums字段值
+                                    Unit unit = unitRepository.findUnitByUnitId(curPartttimes.getOp().getU().getId());
+                                    if (unit != null) {
+                                        //10.构造返回的res
+                                        res.setP_id(curPartttimes.getId());
+                                        res.setOp_id(curPartttimes.getOp().getId());
+                                        res.setPosition_name(curPartttimes.getPositionName());
+                                        res.setCategory(curPartttimes.getCategory());
+                                        res.setSalary(curPartttimes.getSalary());
+                                        res.setArea(curPartttimes.getArea());
+                                        res.setExp(curPartttimes.getExp());
+                                        res.setContent(curPartttimes.getContent());
+                                        res.setRequirement(curPartttimes.getRequirement());
+                                        res.setSignup_ddl(curPartttimes.getSignupDdl());
+                                        res.setSlogan(curPartttimes.getSlogan());
+                                        res.setWork_time(curPartttimes.getWorkTime());
+                                        res.setSettlement(curPartttimes.getSettlement());
+                                        res.setPosition_status(curPartttimes.getPositionStatus());
+                                        res.setCreate_time(curPartttimes.getCreateTime());
+                                        res.setUpdate_time(curPartttimes.getUpdateTime());
+                                        res.setNum_total(curPartttimes.getNum());
+                                        res.setMemo("编辑成功");
+                                    } else {
+                                        logger.warn("该兼职发布者不存在单位");
+                                        res.setP_id(0);
+                                        res.setMemo("该兼职发布者不存在单位");
+                                    }
                                 }
                             } else {
                                 logger.warn("发布中发生异常");
@@ -1031,48 +1043,47 @@ public class PositionServiceImpl implements PositionService {
                         res.setMemo("不存在该兼职");
                     }
                 } else {
-
-                    //兼职发布者，要判断是否是该兼职负责人
+                    //3-1.兼职发布者，要判断是否是该兼职负责人
                     Parttimes parttimes = positionRepository.checkIsTheManager(op_id, p_id);
                     if (parttimes != null) {
-                        //是该兼职管理者
+                        //4.是该兼职管理者
 
-                        //判断是否符合编辑的条件（兼职状态是“已发布”，没人报名）
+                        //5.判断是否符合编辑的条件（兼职状态是“已发布”，没人报名）
                         int n2 = signupRepository.getNumOfSpecialStatus(parttimes.getId(), "已录取");
                         int n3 = signupRepository.getNumOfSpecialStatus(parttimes.getId(), "已结束");
                         int num_employment = n2 + n3;
 
                         if (parttimes.getPositionStatus().equals("已发布") && num_employment == 0) {
-                            //满足条件，更新数据库
+                            //6.满足条件，更新数据库
                             positionRepository.editAParttime(num, category, salary, area, exp, content,
                                     requirement, signup_ddl, slogan, work_time, settlement, "已发布",
                                     update_time, p_id);
 
-                            //找到刚创建的兼职
-                            Parttimes createdParttimes = positionRepository.getLatestPosition();
-                            if (createdParttimes != null) {
-                                //更新该操作员的unit中的job_nums字段值
+                            //7.找到编辑的这个兼职，这里的curPartttimes是parttimes更新后的版本
+                            Parttimes curPartttimes = positionRepository.getPosition(p_id);
+                            if (curPartttimes != null) {
+                                //8.更新该操作员的unit中的job_nums字段值
                                 Unit unit = unitRepository.findUnitByUnitId(emp.getU().getId());
 
                                 if (unit != null) {
-                                    //构造返回的res
-                                    res.setP_id(createdParttimes.getId());
-                                    res.setOp_id(createdParttimes.getOp().getId());
-                                    res.setPosition_name(createdParttimes.getPositionName());
-                                    res.setCategory(createdParttimes.getCategory());
-                                    res.setSalary(createdParttimes.getSalary());
-                                    res.setArea(createdParttimes.getArea());
-                                    res.setExp(createdParttimes.getExp());
-                                    res.setContent(createdParttimes.getContent());
-                                    res.setRequirement(createdParttimes.getRequirement());
-                                    res.setSignup_ddl(createdParttimes.getSignupDdl());
-                                    res.setSlogan(createdParttimes.getSlogan());
-                                    res.setWork_time(createdParttimes.getWorkTime());
-                                    res.setSettlement(createdParttimes.getSettlement());
-                                    res.setPosition_status(createdParttimes.getPositionStatus());
-                                    res.setCreate_time(createdParttimes.getCreateTime());
-                                    res.setUpdate_time(createdParttimes.getUpdateTime());
-                                    res.setNum_total(createdParttimes.getNum());
+                                    //9.构造返回的res
+                                    res.setP_id(curPartttimes.getId());
+                                    res.setOp_id(curPartttimes.getOp().getId());
+                                    res.setPosition_name(curPartttimes.getPositionName());
+                                    res.setCategory(curPartttimes.getCategory());
+                                    res.setSalary(curPartttimes.getSalary());
+                                    res.setArea(curPartttimes.getArea());
+                                    res.setExp(curPartttimes.getExp());
+                                    res.setContent(curPartttimes.getContent());
+                                    res.setRequirement(curPartttimes.getRequirement());
+                                    res.setSignup_ddl(curPartttimes.getSignupDdl());
+                                    res.setSlogan(curPartttimes.getSlogan());
+                                    res.setWork_time(curPartttimes.getWorkTime());
+                                    res.setSettlement(curPartttimes.getSettlement());
+                                    res.setPosition_status(curPartttimes.getPositionStatus());
+                                    res.setCreate_time(curPartttimes.getCreateTime());
+                                    res.setUpdate_time(curPartttimes.getUpdateTime());
+                                    res.setNum_total(curPartttimes.getNum());
                                     res.setMemo("编辑成功");
                                 } else {
                                     logger.warn("该兼职发布者不存在单位");
@@ -1112,59 +1123,116 @@ public class PositionServiceImpl implements PositionService {
     @Override
     public PositionInfoToEmpDto undercarriageParttime(UndercarriageInputDto undercarriageInputDto) throws ParttimeServiceException, ParseException {
         PositionInfoToEmpDto res = new PositionInfoToEmpDto();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
+        //1.判断是否有输入
         if (undercarriageInputDto != null) {
-            //获取输入的内容
+            //2.获取输入的内容
             String telephone = undercarriageInputDto.getOp_id();
             int p_id = undercarriageInputDto.getP_id();
 
-            //根据telephone找用户，判断是否存在
+            //3.根据telephone找到这次下架操作的操作者，判断是否存在
             Employer emp = logAndRegByEmpRepository.findEmployerByTelephone(telephone);
-
             if (emp != null) {
-                //存在该操作者，去找该操作员是否是该兼职的管理者
-                Parttimes hasAuthority = positionRepository.checkIsTheManager(telephone, p_id);
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                //4.获取操作的这个兼职实体
+                Parttimes parttimes = positionRepository.getPosition(p_id);
+                if (parttimes != null) {
+                    if (emp.getEmpGrade() == 1) {
+                        //5-1.是管理员
 
-                //是负责人,且兼职不是已结束状态
-                if (hasAuthority != null && !hasAuthority.getPositionStatus().equals("已结束")) {
-                    //1.先判断是否有用户报名了改兼职，若有，将报名状态改为”已取消“，再下架
-                    List<Signup> list = signupRepository.getAllSignupByPId(p_id);//根据p_id找到所有报名该兼职的记录
-                    if (list.size() > 0) {
-                        //有人报名了该兼职
-                        for (Signup signup : list) {
-                            if (signup.getSignupStatus().equals("已报名")) {
-                                signupRepository.cancelSignup(sdf.parse(sdf.format(new Date())), signup.getId());//取消该兼职
+                        //6.先判断是否有用户报名了改兼职，若有，将报名状态改为”已取消“，再下架
+                        List<Signup> list = signupRepository.getAllSignupByPId(p_id);//根据p_id找到所有报名该兼职的记录
+                        if (list.size() > 0) {
+                            //6-1.有人报名了该兼职，遍历报名列表，将每个符合下架条件的报名状态改为”已取消“
+                            for (Signup signup : list) {
+                                if (signup.getSignupStatus().equals("已报名")) {
+                                    signupRepository.cancelSignup(sdf.parse(sdf.format(new Date())), signup.getId());//取消该兼职
+                                }
                             }
+
+                            //7.此时，报名均已取消，下架兼职
+                            positionRepository.updatePositionStatus("已结束", sdf.parse(sdf.format(new Date())), parttimes.getId());
+                        } else {
+                            //6-2.若没有报名该兼职的直接下架
+                            positionRepository.updatePositionStatus("已结束", sdf.parse(sdf.format(new Date())), parttimes.getId());
                         }
-                        //此时，都取消了，就下架
-                        positionRepository.updatePositionStatus("已结束", sdf.parse(sdf.format(new Date())), hasAuthority.getId());
+
+                        //8.判断是操作自己负责的兼职，还是操作其他兼职发布者负责的兼职
+                        Unit unit;
+                        if (parttimes.getOp().getU().getId() == emp.getU().getId()) {
+                            //8-1.操作自己负责的兼职
+                            unit = unitRepository.findUnitByUnitId(emp.getU().getId());
+                        } else {
+                            //8-2.操作其他兼职发布者负责的兼职
+                            unit = unitRepository.findUnitByUnitId(parttimes.getOp().getU().getId());
+                        }
+
+                        //9.更新管理员unit中的job_nums字段值
+                        if (unit != null) {
+                            //10.存在单位
+                            unitRepository.minusJobNums(unit.getId());//更新job_nums
+
+                            //11.构造res
+                            res.setOp_id(emp.getId());
+                            res.setOp_name(emp.getEmpName());
+                            res.setP_id(parttimes.getId());
+                            res.setPosition_status("已结束");
+                            res.setMemo("下架成功");
+                        } else {
+                            logger.warn("该操作员不存在单位");
+                            res.setP_id(0);
+                            res.setMemo("该操作员不存在单位");
+                        }
                     } else {
-                        //2.若没有报名该兼职的直接下架
-                        positionRepository.updatePositionStatus("已结束", sdf.parse(sdf.format(new Date())), hasAuthority.getId());
-                    }
+                        //5-2.是兼职发布者,判断有无权限操作该兼职
+                        Parttimes hasAuthority = positionRepository.checkIsTheManager(telephone, parttimes.getId());
+                        if (hasAuthority != null) {
+                            //6.有权限操作，先判断是否有用户报名了改兼职，若有，将报名状态改为”已取消“，再下架
+                            List<Signup> list = signupRepository.getAllSignupByPId(p_id);//根据p_id找到所有报名该兼职的记录
+                            if (list.size() > 0) {
+                                //6-1.有人报名了该兼职，遍历报名列表，将每个符合下架条件的报名状态改为”已取消“
+                                for (Signup signup : list) {
+                                    if (signup.getSignupStatus().equals("已报名")) {
+                                        signupRepository.cancelSignup(sdf.parse(sdf.format(new Date())), signup.getId());//取消该兼职
+                                    }
+                                }
 
-                    //更新该操作员的unit中的job_nums字段值
-                    Unit unit = unitRepository.findUnitByUnitId(emp.getU().getId());
+                                //7.此时，报名均已取消，下架兼职
+                                positionRepository.updatePositionStatus("已结束", sdf.parse(sdf.format(new Date())), hasAuthority.getId());
+                            } else {
+                                //6-2.若没有报名该兼职的直接下架
+                                positionRepository.updatePositionStatus("已结束", sdf.parse(sdf.format(new Date())), hasAuthority.getId());
+                            }
 
-                    if (unit != null) {
-                        //存在
-                        unitRepository.minusJobNums(unit.getId());//更新job_nums
+                            //8.判断是操作自己负责的兼职，还是操作其他兼职发布者负责的兼职
+                            Unit unit = unitRepository.findUnitByUnitId(emp.getU().getId());
 
-                        //构造res
-                        res.setP_id(hasAuthority.getId());
-                        res.setPosition_status("已结束");
-                        res.setMemo("下架成功");
-                    } else {
-                        logger.warn("该兼职发布者不存在单位");
-                        res.setP_id(0);
-                        res.setMemo("该兼职发布者不存在单位");
+                            //9.更新管理员unit中的job_nums字段值
+                            if (unit != null) {
+                                //10.存在单位
+                                unitRepository.minusJobNums(unit.getId());//更新job_nums
+
+                                //11.构造res
+                                res.setOp_id(emp.getId());//这里操作员就是兼职发布者
+                                res.setOp_name(emp.getEmpName());
+                                res.setP_id(parttimes.getId());
+                                res.setPosition_status("已结束");
+                                res.setMemo("下架成功");
+                            } else {
+                                logger.warn("该操作员不存在单位");
+                                res.setP_id(0);
+                                res.setMemo("该操作员不存在单位");
+                            }
+                        } else {
+                            logger.warn("无法操作非负责兼职");
+                            res.setP_id(0);
+                            res.setMemo("无法操作非负责兼职");
+                        }
                     }
                 } else {
-                    //不是负责人，不能操作
-                    logger.warn("非兼职负责人不能操作");
+                    logger.warn("该兼职不存在");
                     res.setP_id(0);
-                    res.setMemo("非兼职负责人不能操作");
+                    res.setMemo("该兼职不存在");
                 }
             } else {
                 logger.warn("不存在该兼职发布者");
@@ -1179,7 +1247,7 @@ public class PositionServiceImpl implements PositionService {
         return res;
     }
 
-    //TODO 获取自己管理的所有兼职的所有报名信息-兼职发布者/管理员
+    //TODO 获取自己管理的所有兼职的所有报名信息-兼职发布者
     @Override
     public List<SignupInfoToEmpDto> getSignupInfoByEmp(String emp_id) throws ParttimeServiceException, ParseException {
         List<SignupInfoToEmpDto> res = new ArrayList<>();
@@ -1187,7 +1255,7 @@ public class PositionServiceImpl implements PositionService {
         if (emp_id != null && !emp_id.equals("")) {
             //有输入
 
-            //1.找到该管理员所负责的所有兼职
+            //1.找到该兼职发布者负责的所有兼职
             List<Parttimes> parttimes = positionRepository.getAllPositionManagedByEmp(emp_id);
             if (parttimes.size() > 0) {
 
@@ -1348,6 +1416,7 @@ public class PositionServiceImpl implements PositionService {
         return res;
     }
 
+    //TODO 获取自己管理的所有兼职的所有报名信息-管理员
     @Override
     public List<SignupInfoToEmpDto> getSignupInfoByAdmin(String emp_id) throws ParttimeServiceException, ParseException {
         List<SignupInfoToEmpDto> res = new ArrayList<>();
@@ -1738,7 +1807,7 @@ public class PositionServiceImpl implements PositionService {
                         //存在signup
                         int p_id = signup.getP().getId();
 
-                        //5.由p_id找parttimes
+                        //5.由p_id、emp_id找parttimes
                         Parttimes parttimes = positionRepository.checkIsTheManager(emp_id, p_id);
                         if (parttimes != null) {
                             //6.是该兼职的操作员，就录用该学生的报名，更新报名状态为“已录取”

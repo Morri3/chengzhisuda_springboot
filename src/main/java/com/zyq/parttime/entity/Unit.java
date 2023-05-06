@@ -1,5 +1,7 @@
 package com.zyq.parttime.entity;
 
+import org.hibernate.annotations.Proxy;
+
 import javax.persistence.*;
 import java.util.LinkedHashSet;
 import java.util.Set;

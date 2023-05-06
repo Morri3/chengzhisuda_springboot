@@ -28,7 +28,7 @@ public class AnalyzeController {
     @Autowired
     private AnalyzeService analyzeService;
 
-    //TODO 获取每日兼职发布数量（每日所有兼职发布数）
+    //TODO 获取每日兼职发布数（每日所有兼职发布数）
     @RequestMapping(value = "/publish/get", method = RequestMethod.GET)
     @ResponseBody
     public ResponseData getNumOfDailyPublish() throws ParseException {
@@ -59,11 +59,4 @@ public class AnalyzeController {
         List<AnalyzeActivationDto> res = analyzeService.getActivationOfStudents();
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
-//    //TODO 获取评论词云
-//    @RequestMapping(value = "/comment/get", method = RequestMethod.GET)
-//    @ResponseBody
-//    public ResponseData getWordCloudOfComment() throws ParseException {
-//        List<WordFrequency> res = analyzeService.getWordCloudOfComment();
-//        return new ResponseData(ExceptionMsg.SUCCESS, res);
-//    }
 }

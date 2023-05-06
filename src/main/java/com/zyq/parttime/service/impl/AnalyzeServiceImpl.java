@@ -40,6 +40,7 @@ public class AnalyzeServiceImpl implements AnalyzeService {
     @Autowired
     private StuInfoRepository stuInfoRepository;
 
+    //TODO 获取每日兼职发布数（每日所有兼职发布数）
     @Override
     public List<AnalyzePublishDto> getNumOfDailyPublish() throws ParttimeServiceException, ParseException {
         List<AnalyzePublishDto> res = new ArrayList<>();
@@ -53,8 +54,6 @@ public class AnalyzeServiceImpl implements AnalyzeService {
         if (list.size() > 0) {
             //2.有数据，遍历每个Map
             for (Map<String, Object> item : list) {
-//                System.out.println("1: " + item.get("create_time"));
-//                System.out.println("2: " + item.get("num"));
 
                 //3.对于每个map，获取value，构造dto
                 AnalyzePublishDto dto = new AnalyzePublishDto();
@@ -106,6 +105,7 @@ public class AnalyzeServiceImpl implements AnalyzeService {
         return res;
     }
 
+    //TODO 获取所有兼职的报名/录取/名额数记录
     @Override
     public List<AnalyzeThreeIndicatorsDto> getNumOfThreeIndicators() throws ParttimeServiceException, ParseException {
         List<AnalyzeThreeIndicatorsDto> res = new ArrayList<>();
@@ -177,6 +177,7 @@ public class AnalyzeServiceImpl implements AnalyzeService {
         return res;
     }
 
+    //TODO 获取所有兼职的兼职名+平均综合评分
     @Override
     public List<AnalyzeAvgScoreOfMarkDto> getAvgScoreOfMark() throws ParttimeServiceException, ParseException {
         List<AnalyzeAvgScoreOfMarkDto> res = new ArrayList<>();
@@ -226,6 +227,7 @@ public class AnalyzeServiceImpl implements AnalyzeService {
         return res;
     }
 
+    //TODO 获取学生活跃度
     @Override
     public List<AnalyzeActivationDto> getActivationOfStudents() throws ParttimeServiceException, ParseException {
         List<AnalyzeActivationDto> res = new ArrayList<>();
@@ -235,40 +237,42 @@ public class AnalyzeServiceImpl implements AnalyzeService {
         if (allStudents.size() > 0) {
             //2.存在学生，遍历每个学生
             for (Student item : allStudents) {
-                //3.根据学生id在signup获取其报名数
+                //3.获取四个报名状态的记录数
+                int n1 = signupRepository.getNumOfSpecialCategoryByStuId(item.getId(), "已报名");
+                int n2 = signupRepository.getNumOfSpecialCategoryByStuId(item.getId(), "已录取");
+                int n3 = signupRepository.getNumOfSpecialCategoryByStuId(item.getId(), "已结束");
+                int n4 = signupRepository.getNumOfSpecialCategoryByStuId(item.getId(), "已取消");
+
+                //4.根据学生id在signup获取其报名数
                 AnalyzeActivationDto dto = new AnalyzeActivationDto();
-                //3-1.获取学生信息
+                //4-1.获取学生信息
                 dto.setStu_id(item.getId());
                 dto.setStu_name(item.getStuName());
-                //3-2.获取报名数
-                int num_signup = signupRepository.getNumOfSpecialCategoryByStuId(item.getId(), "已报名");
+                //4-2.获取报名数
                 dto.setNum_name("报名数");
-                dto.setNum(num_signup);
+                dto.setNum(n1 + n2 + n3 + n4);
                 dto.setMemo("获取成功");
                 res.add(dto);
 
-                //4.根据学生id在signup获取其录用数（录用数=录取状态报名数+结束状体报名数）
+                //5.根据学生id在signup获取其录用数（录用数=“已录取”报名数+“已结束”报名数）
                 AnalyzeActivationDto dto2 = new AnalyzeActivationDto();
-                //4-1.获取学生信息
+                //5-1.获取学生信息
                 dto2.setStu_id(item.getId());
                 dto2.setStu_name(item.getStuName());
-                //4-2.获取录用数
-                int num_employment = signupRepository.getNumOfSpecialCategoryByStuId(item.getId(), "已录取");
-                int num_finished = signupRepository.getNumOfSpecialCategoryByStuId(item.getId(), "已结束");
+                //5-2.获取录用数
                 dto2.setNum_name("录用数");
-                dto2.setNum(num_employment + num_finished);
+                dto2.setNum(n2 + n3);
                 dto2.setMemo("获取成功");
                 res.add(dto2);
 
-                //5.根据学生id在signup获取其取消数
+                //6.根据学生id在signup获取其取消数
                 AnalyzeActivationDto dto3 = new AnalyzeActivationDto();
-                //5-1.获取学生信息
+                //6-1.获取学生信息
                 dto3.setStu_id(item.getId());
                 dto3.setStu_name(item.getStuName());
-                //5-2.获取取消数
-                int num_cancel = signupRepository.getNumOfSpecialCategoryByStuId(item.getId(), "已取消");
+                //6-2.获取取消数
                 dto3.setNum_name("取消数");
-                dto3.setNum(num_cancel);
+                dto3.setNum(n4);
                 dto3.setMemo("获取成功");
                 res.add(dto3);
             }
