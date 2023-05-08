@@ -112,7 +112,7 @@ public class LogAndRegServiceImpl implements LogAndRegService {
         LogAndRegInfoDto res = new LogAndRegInfoDto();
 
         if (stuRegisterDto != null) {
-            //获取android传来的dto的信息
+            //1.获取android传来的dto的信息
             String stu_name = stuRegisterDto.getStu_name();
             int gender = stuRegisterDto.getGender();
             String telephone = stuRegisterDto.getTelephone();
@@ -128,7 +128,7 @@ public class LogAndRegServiceImpl implements LogAndRegService {
             String entrance_date = stuRegisterDto.getEntrance_date();
             String graduation_date = stuRegisterDto.getGraduation_date();
 
-            //判断两次新密码是否输入正确
+            //2.判断两次新密码是否输入正确
             if (!pwd.equals(pwd2)) {
                 logger.warn("两次密码请输入正确");
                 res.setTelephone(telephone);
@@ -136,28 +136,29 @@ public class LogAndRegServiceImpl implements LogAndRegService {
                 return res;
             }
 
-            //查看是否存在该手机号（手机号=账号）
+            //3.查看是否存在该手机号（手机号=账号）
             Student stu = logAndRegByStuRepository.findStudentByTelephone(telephone);
             Employer emp = logAndRegByEmpRepository.findEmployerByTelephone(telephone);
             if (stu != null || emp != null) {
-                //该手机号已注册过，用户在登录界面直接登录
+                //4.该手机号已注册过，用户在登录界面直接登录
                 logger.warn("该手机号已注册，请直接登录");
                 res.setTelephone(telephone);
                 res.setMemo("该手机号已注册，请直接登录");
             } else if (stu == null && emp == null) {//注册
-                String md5pwd = SaSecureUtil.md5BySalt(pwd, "stu");//md5加盐加密后的密码
+                //5.md5加盐加密后的密码
+                String md5pwd = SaSecureUtil.md5BySalt(pwd, "stu");
 
-                //注册时间
+                //6.当前时间作为注册时间
                 SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 Date reg = sdf1.parse(reg_date);
 
-                //入学年月、毕业年月
+                //7.入学年月、毕业年月
                 SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy-MM");
                 Date entrance = sdf2.parse(entrance_date);
                 Date graduation = sdf2.parse(graduation_date);
                 Date now = sdf2.parse(sdf2.format(new Date()));
 
-                //计算年级
+                //8.计算年级
                 Calendar c1 = Calendar.getInstance();
                 Calendar c2 = Calendar.getInstance();
                 Calendar c3 = Calendar.getInstance();
@@ -167,10 +168,10 @@ public class LogAndRegServiceImpl implements LogAndRegService {
 
                 int diff = 0;
                 if ((c1.getTime()).before(c2.getTime()) && (c2.getTime()).before(c3.getTime())) {
-                    //入学时间在毕业时间前，且毕业时间在现在时间前，已经毕业
+                    //8-1.入学时间在毕业时间前，且毕业时间在现在时间前，已经毕业
                     diff = 6;
                 } else if ((c1.getTime()).before(c2.getTime()) && (c2.getTime()).after(c3.getTime())) {
-                    //入学时间在毕业时间前，且毕业时间在现在时间后，未毕业
+                    //8-2.入学时间在毕业时间前，且毕业时间在现在时间后，未毕业
                     int tmp1 = c3.get(Calendar.DATE) - c1.get(Calendar.DATE);
                     int tmp2 = c3.get(Calendar.MONTH) - c1.get(Calendar.MONTH);
                     int tmp3 = c3.get(Calendar.YEAR) - c1.get(Calendar.YEAR);
@@ -184,7 +185,7 @@ public class LogAndRegServiceImpl implements LogAndRegService {
                     diff = tmp3 + tmp2;
                 }
 
-                //把int型年级转为字符串类型
+                //9.把int型年级转为字符串类型
                 String grade = "";
                 if (diff == 1) grade = "大一";
                 else if (diff == 2) grade = "大二";
@@ -193,11 +194,11 @@ public class LogAndRegServiceImpl implements LogAndRegService {
                 else if (diff == 5) grade = "大五（五年制）";
                 else if (diff == 6) grade = "已毕业";
 
-                //注册（暂不支持头像上传）
+                //10.注册（暂不支持头像上传）
                 logAndRegByStuRepository.registerByStu(telephone, md5pwd, sno, school_name, gender,
                         emails, stu_name, age, reg, entrance, graduation, 0, grade);
 
-                //将出生年份、月份存入缓存
+                //11.将出生年份、月份存入缓存
                 UserBirthDto userBirthDto = new UserBirthDto();
                 userBirthDto.setTelephone(telephone);
                 userBirthDto.setBirth_year(birth_year);
@@ -205,7 +206,7 @@ public class LogAndRegServiceImpl implements LogAndRegService {
                 redisTemplate.opsForValue().set(UserBirthDto.cacheKey(telephone), JSON.toJSONString(userBirthDto));
                 logger.warn("存储该学生的出生年月[{}]", UserBirthDto.cacheKey(telephone));
 
-                //填充返回给android的dto
+                //12.填充返回给android的dto
                 res.setTelephone(telephone);
                 res.setMemo("注册成功");
             }
@@ -283,7 +284,7 @@ public class LogAndRegServiceImpl implements LogAndRegService {
         LogAndRegInfoDto res = new LogAndRegInfoDto();
 
         if (empRegisterDto != null) {
-            //获取vue传来的dto的信息
+            //1.获取vue传来的dto的信息
             String telephone = empRegisterDto.getTelephone();
             String pwd = empRegisterDto.getPwd();
             String pwd2 = empRegisterDto.getPwd2();
@@ -298,7 +299,7 @@ public class LogAndRegServiceImpl implements LogAndRegService {
             String reg_date = empRegisterDto.getReg_date();
             boolean emp_grade = empRegisterDto.isEmp_grade();
 
-            //判断两次新密码是否输入正确
+            //2.判断两次新密码是否输入正确
             if (!pwd.equals(pwd2)) {
                 logger.warn("两次密码请输入正确");
                 res.setTelephone(telephone);
@@ -306,7 +307,7 @@ public class LogAndRegServiceImpl implements LogAndRegService {
                 return res;
             }
 
-            //判断邮箱格式是否正确
+            //3.判断邮箱格式是否正确
             if (!isEmail(emails)) {
                 //不是邮箱格式
                 logger.warn("请输入正确的邮箱格式");
@@ -315,21 +316,23 @@ public class LogAndRegServiceImpl implements LogAndRegService {
                 return res;
             }
 
-            //查看是否存在该手机号（手机号=账号）
+            //4.查看是否存在该手机号（手机号=账号）
             Student stu = logAndRegByStuRepository.findStudentByTelephone(telephone);
             Employer emp = logAndRegByEmpRepository.findEmployerByTelephone(telephone);
-            if (stu != null || emp != null) {//该手机号已注册过，用户在登录界面直接登录
+            if (stu != null || emp != null) {
+                //4-1.该手机号已注册过，用户在登录界面直接登录
                 logger.warn("该手机号已注册，请直接登录");
                 res.setTelephone(telephone);
                 res.setMemo("该手机号已注册，请直接登录");
             } else if (stu == null && emp == null) {//注册
-                String md5pwd = SaSecureUtil.md5BySalt(pwd, "emp");//md5加盐加密后的密码
+                //4.md5加盐加密后的密码
+                String md5pwd = SaSecureUtil.md5BySalt(pwd, "emp");
 
-                //注册时间
+                //5.注册时间
                 SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 Date reg = sdf1.parse(reg_date);
 
-                //若单位名称存在DB中，找到该单位的id；若不存在，则在unit表新增一条记录，并返回该记录id
+                //6.若unit表有该单位名称，就找到该单位id；若不存在，在unit表加一条记录，返回该记录id
                 int u_id = 0;
                 Unit unit = unitRepository.findUnitByUnitName(unit_name);
                 if (unit != null) {//存在单位
@@ -339,11 +342,11 @@ public class LogAndRegServiceImpl implements LogAndRegService {
                     u_id = unitRepository.findUnitByUnitNameWithUId(unit_name);
                 }
 
-                //注册（暂不支持头像上传）
+                //7.注册（暂不支持头像上传）
                 logAndRegByEmpRepository.registerByEmp(telephone, u_id, md5pwd, jno, gender, emails, emp_name,
                         age, reg, 0, emp_grade);
 
-                //将出生年份、月份存入缓存
+                //8.将出生年份、月份存入缓存
                 UserBirthDto userBirthDto = new UserBirthDto();
                 userBirthDto.setTelephone(telephone);
                 userBirthDto.setBirth_year(birth_year);
@@ -351,7 +354,7 @@ public class LogAndRegServiceImpl implements LogAndRegService {
                 redisTemplate.opsForValue().set(UserBirthDto.cacheKey(telephone), JSON.toJSONString(userBirthDto));
                 logger.warn("存储该兼职发布者的出生年月[{}]", UserBirthDto.cacheKey(telephone));
 
-                //填充返回给android的dto
+                //9.填充返回给android的dto
                 res.setTelephone(telephone);
                 res.setMemo("注册成功");
             }
@@ -362,6 +365,7 @@ public class LogAndRegServiceImpl implements LogAndRegService {
         return res;
     }
 
+    //TODO 退出登录-学生
     @Override
     public String logoutByStu(LogoutDto logoutDto) throws ParttimeServiceException {
         String res = "";
@@ -369,7 +373,7 @@ public class LogAndRegServiceImpl implements LogAndRegService {
         if (logoutDto != null) {
             String input_telephone = logoutDto.getInput_telephone();//手机号
 
-            //缓存取token
+            //1.缓存中取token
             String cur_token = "";
             for (int i = 0; i < idx; i++) {
                 String str = (String) redisTemplate.opsForValue().get(UsersTokenDto.cacheKey(idx));
@@ -383,10 +387,11 @@ public class LogAndRegServiceImpl implements LogAndRegService {
             }
 
             if (cur_token != "" || cur_token != null) {
-                //查找该用户
+                //2.查找该用户
                 Student student = logAndRegByStuRepository.findStudentByTelephone(input_telephone);
                 if (student != null) {
-                    StpUtil.logout();//用户登出
+                    //3.用户登出
+                    StpUtil.logout();
                     res = "用户登出成功";
                 } else {
                     res = "用户登出失败";
@@ -398,6 +403,7 @@ public class LogAndRegServiceImpl implements LogAndRegService {
         return res;
     }
 
+    //TODO 退出登录-兼职发布者/管理员
     @Override
     public String logoutByEmp(LogoutDto logoutDto) throws ParttimeServiceException {
         String res = "";
@@ -405,7 +411,7 @@ public class LogAndRegServiceImpl implements LogAndRegService {
         if (logoutDto != null) {
             String input_telephone = logoutDto.getInput_telephone();//手机号
 
-            //缓存取token
+            //1.缓存取token
             String cur_token = "";
             for (int i = 0; i < idx; i++) {
                 String str = (String) redisTemplate.opsForValue().get(UsersTokenDto.cacheKey(idx));
@@ -419,10 +425,11 @@ public class LogAndRegServiceImpl implements LogAndRegService {
             }
 
             if (cur_token != "" || cur_token != null) {
-                //查找该用户
+                //2.查找该用户
                 Employer employer = logAndRegByEmpRepository.findEmployerByTelephone(input_telephone);
                 if (employer != null) {
-                    StpUtil.logout();//用户登出
+                    //3.用户登出
+                    StpUtil.logout();
                     res = "用户登出成功";
                 } else {
                     res = "用户登出失败";

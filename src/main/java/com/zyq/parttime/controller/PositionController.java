@@ -179,7 +179,7 @@ public class PositionController {
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
-//    //兼职推荐（基于兼职评分+意向兼职的简单协同过滤算法）-学生
+//    //兼职推荐-学生
 //    @RequestMapping(value = "/recommend", method = RequestMethod.GET)
 //    @ResponseBody
 //    public ResponseData recommendParttimes(@RequestParam String stu_id) throws ParseException {

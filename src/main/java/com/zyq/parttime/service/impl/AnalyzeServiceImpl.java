@@ -66,25 +66,21 @@ public class AnalyzeServiceImpl implements AnalyzeService {
             //4.创建map，存放日期、数量
             HashMap<String, Integer> map = new HashMap<>();
 
-            //5.遍历dto列表
+            //5.遍历dto列表，实现相同日期的兼职发布数进行叠加
             for (AnalyzePublishDto item : tmp) {
-                if (map.containsKey(item.getDate())) {// 若map中的key包含该日期，put前加上原来的数量
+                if (map.containsKey(item.getDate())) {
+                    // 若map中的key包含该日期，put前加上原来的数量
                     map.put(item.getDate(), item.getNum() + map.get(item.getDate()));// 将合并数量的该对象重新存入map集合，因key值相同，所以会覆盖掉之前的对象
-                } else {//不包含，直接put
+                } else {
+                    //不包含，直接put到map中
                     map.put(item.getDate(), item.getNum());
                 }
             }
-            //测试
-//            List<Integer> numList = new ArrayList<>();
-//            for (String date : map.keySet()) {// 将map中的对象重新存放新的List集合
-//                Integer num = map.get(date);
-//                numList.add(num);
-//            }
-//            System.out.println(numList.toString());
-            //6.按照日期排序
+
+            //6.使用treemap+自定义比较器接口实现按日期升序排序
             Map<String, Object> sortMap = new TreeMap<>(new MapKeyComparator());
             sortMap.putAll(map);
-            System.out.println("排序后的map：" + sortMap);
+            System.out.println("升序排序后的map：" + sortMap);
 
             //7.构造dto
             for (String date : sortMap.keySet()) {
@@ -94,7 +90,7 @@ public class AnalyzeServiceImpl implements AnalyzeService {
                 dto.setMemo("获取成功");
                 res.add(dto);//加入列表
             }
-            System.out.println("结果：" + res.toString());
+            System.out.println("接口1的结果：" + res.toString());
         } else {
             logger.warn("暂无兼职");
             AnalyzePublishDto dto = new AnalyzePublishDto();
@@ -286,7 +282,8 @@ public class AnalyzeServiceImpl implements AnalyzeService {
         return res;
     }
 
-    //map键比较器类
+    //自定义map键比较器类，实现map的键按字典顺序升序排序，从而实现日期的升序排序
+    //e.g. 2023-05-05 < 2023-05-08，前9位字符相同，第10位字符的5小于8，故前者小于后者
     public class MapKeyComparator implements Comparator<String> {
         @Override
         public int compare(String str1, String str2) {

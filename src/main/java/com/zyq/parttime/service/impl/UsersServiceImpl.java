@@ -71,17 +71,17 @@ public class UsersServiceImpl implements UsersService {
     @Value("${minio.bucket}")
     private String bucket;
 
-    //TODO 获取个人信息——学生
+    //TODO 个人信息查看——学生
     @Override
     public StuInfoDto getStuInfo(String telephone) throws ParttimeServiceException {
         StuInfoDto res = new StuInfoDto();
 
         if (telephone != null) {
-            //查找该用户是否存在
+            //1.查找该用户是否存在
             Student stu = stuInfoRepository.findStudentByTelephone(telephone);
 
             if (stu != null) {
-                //存在学生，获取该用户的个人信息，填充到res
+                //2.存在学生，获取该用户的个人信息，填充到res
                 String stu_name = stu.getStuName();
                 int gender = stu.getGender();
                 String emails = stu.getEmails();
@@ -93,7 +93,7 @@ public class UsersServiceImpl implements UsersService {
                 Date graduation_date = stu.getGraduationDate();
                 String head = stu.getHead();
 
-                //缓存中获取出生年月
+                //3.缓存中获取出生年月
                 String dtoStr = (String) redisTemplate.opsForValue().get(UserBirthDto.cacheKey(telephone));
                 UserBirthDto tmp = com.alibaba.fastjson.JSONObject.parseObject(dtoStr, UserBirthDto.class);//json转dto
                 String birth_year = "", birth_month = "";//出生年月
@@ -103,6 +103,7 @@ public class UsersServiceImpl implements UsersService {
                     birth_month = tmp.getBirth_month();
                 }
 
+                //4.构造res
                 res.setStu_name(stu_name);
                 res.setGender(gender);
                 res.setTelephone(telephone);
@@ -971,8 +972,9 @@ public class UsersServiceImpl implements UsersService {
                 for (int i = startIdx; i < words.size(); i++) {//遍历列表
                     //13.教育背景【以本科生为例，设定为只有本科一段教育经历】
                     ResumeDetailDto dto1 = new ResumeDetailDto();
-                    if (words.get(i).get("words").equals("教育背景") || words.get(i).get("words").equals("敦育背景")) {
-                        //可能会识别为“敦育背景”
+                    if (words.get(i).get("words").equals("教育背景") || words.get(i).get("words").equals("敦育背景")
+                            || words.get(i).get("words").equals("救育背景")) {
+                        //可能会识别为“敦育背景”“救育背景”
                         String time = (words.get(i + 1).get("words")).toString();
                         String start = (time.split("-"))[0];
                         String end = (time.split("-"))[1];
@@ -1828,18 +1830,18 @@ public class UsersServiceImpl implements UsersService {
                 }
             } else {
                 //2.其他三种detail
-                String date = addDetailDto.getDate();
-                String title = addDetailDto.getTitle();
-                String content = addDetailDto.getContent();
+                String date = addDetailDto.getDate();//日期
+                String title = addDetailDto.getTitle();//标题
+                String content = addDetailDto.getContent();//内容
 
                 //3.判断是否存在该resume简历，以及该简历是否是该学生的
                 Resumes resumes = resumesInfoRepository.checkIsTheResumeOfStu(r_id, stu_id);
-
                 if (resumes != null) {
+
                     //4.存在且是该学生的兼职,处理日期
-                    String[] arr = date.split("-");
-                    String start = arr[0].substring(0, 4) + "-" + arr[0].substring(5, 7) + "-01";
-                    String end = arr[1].substring(0, 4) + "-" + arr[0].substring(5, 7) + "-01";
+                    String[] arr = date.split("-");//日期数组
+                    String start = arr[0].substring(0, 4) + "-" + arr[0].substring(5, 7) + "-01"; //开始年月
+                    String end = arr[1].substring(0, 4) + "-" + arr[1].substring(5, 7) + "-01"; //结束年月
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");//年月日格式
                     Date start_time = sdf.parse(start);
                     Date end_time = sdf.parse(end);
@@ -2146,18 +2148,19 @@ public class UsersServiceImpl implements UsersService {
         return res;
     }
 
+    //TODO 修改密码-兼职发布者/管理员
     @Override
     public EmpInfoDto modifyEmpPwd(ModifyPwdDto modifyPwdDto) throws ParttimeServiceException {
         EmpInfoDto res = new EmpInfoDto();
 
         if (modifyPwdDto != null) {
-            //获取传入的dto的信息
+            //1.获取传入的dto的信息
             String telephone = modifyPwdDto.getTelephone();
             String old_pwd = modifyPwdDto.getOld_pwd();
             String new_pwd = modifyPwdDto.getNew_pwd();
             String new_pwd2 = modifyPwdDto.getNew_pwd2();
 
-            //判断两次新密码是否输入正确
+            //2.判断两次新密码是否输入正确
             if (!new_pwd.equals(new_pwd2)) {
                 logger.warn("两次新密码请输入正确");
                 res.setTelephone(telephone);
@@ -2165,17 +2168,19 @@ public class UsersServiceImpl implements UsersService {
                 return res;
             }
 
-            //查找该用户是否存在
+            //3.查找该用户是否存在
             Employer emp = empInfoRepository.findEmployerByTelephone(telephone);
-            if (emp != null) {//存在
-                //判断输入的旧密码和真正的旧密码是否相同
-                old_pwd = SaSecureUtil.md5BySalt(old_pwd, "emp");//md5加盐加密后的密码
+            if (emp != null) {
+                //4.存在用户，判断输入的旧密码和真正的旧密码是否相同
+
+                //5.md5加盐加密后的密码
+                old_pwd = SaSecureUtil.md5BySalt(old_pwd, "emp");
                 if (emp.getPwd().equals(old_pwd)) {//相同
-                    //更新DB
+                    //6.更新DB
                     String md5pwd = SaSecureUtil.md5BySalt(new_pwd, "emp");//md5加盐加密后的密码
                     empInfoRepository.modifyEmpPwd(md5pwd, telephone);
 
-                    //填充返回的dto
+                    //7.填充返回的dto
                     res.setTelephone(telephone);
                     res.setMemo("修改密码成功");
                 } else {//旧密码输入错误
@@ -2197,33 +2202,38 @@ public class UsersServiceImpl implements UsersService {
     }
 
     /* ↓下面是桶的操作↓ */
+    //TODO  创建桶
     @Override
     public Boolean createBucket(String bucketName) throws ParttimeServiceException, Exception {
         return minIO.createBucket(bucketName);
     }
 
+    //TODO  删除桶
     @Override
     public Boolean deleteBucket(String bucketName) throws ParttimeServiceException, Exception {
         return minIO.deleteBucket(bucketName);
     }
 
+    //TODO  上传图片文件
     @Override
     public String upload(MultipartFile file) throws ParttimeServiceException, Exception {
         return minIO.uploadFile(file, "parttime");//上传图片文件
     }
 
+    //TODO  下载文件，未涉及
     @Override
     public String download(String fileName, HttpServletResponse res) throws ParttimeServiceException, Exception {
         if (minIO.downloadFile("parttime", fileName, res) != null) return "下载成功";
         else return "下载失败";
     }
 
+    //TODO  删除文件，未涉及
     @Override
     public String deleteFile(String fileName) throws ParttimeServiceException, Exception {
         return minIO.deleteFile("parttime", fileName);
     }
 
-    //判断是否是日期格式
+    //TODO 判断是否是日期格式
     public boolean isDate(String str) {
         boolean convertSuccess = true;
         SimpleDateFormat format = new SimpleDateFormat("yyyy.MM");
@@ -2238,7 +2248,7 @@ public class UsersServiceImpl implements UsersService {
         return convertSuccess;
     }
 
-    //根据文件后缀是否是照片类型的文件
+    //TODO 根据文件后缀名判断是否是照片类型文件
     public boolean isPicture(String imgName) {
         boolean flag = false;
         if (StringUtils.isBlank(imgName)) {
