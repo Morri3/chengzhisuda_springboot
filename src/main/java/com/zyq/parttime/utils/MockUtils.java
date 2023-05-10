@@ -13,10 +13,10 @@ import java.io.InputStream;
 
 public class MockUtils implements MultipartFile {
     private final String name;
-    private final String originalFilename;
+    private final String originalFilename;//原始文件名
     @Nullable
     private final String contentType;
-    private final byte[] content;
+    private final byte[] content;//文件内容
 
     public MockUtils(String name, @Nullable byte[] content) {
         this(name, "", (String)null, (byte[])content);

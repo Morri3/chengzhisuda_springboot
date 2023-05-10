@@ -236,15 +236,7 @@ public class UsersController {
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
-    //    //TODO 简历查看-学生
-//    @RequestMapping(value = "/resumes/get1", method = RequestMethod.GET)
-//    @ResponseBody
-//    public ResponseData getResumeByAdmin(@RequestBody GetResumeDto getResumeDto) throws ParseException {
-//        ResumeInfoDto res = usersService.getResume(getResumeDto);
-//        return new ResponseData(ExceptionMsg.SUCCESS, res);
-//    }
-
-    //    public ResponseData uploadResume(MultipartFile file, String telephone,
+//    public ResponseData uploadResume(MultipartFile file, String telephone,
 //                                     String upload_time) throws ParseException, Exception {
 //        ResumeUploadCallbackDto res = usersService.uploadResume(file, telephone, upload_time);
 ////    public ResponseData uploadResume(@RequestBody File file, @RequestParam String telephone,

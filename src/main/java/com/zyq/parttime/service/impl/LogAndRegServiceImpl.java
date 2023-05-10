@@ -41,7 +41,7 @@ public class LogAndRegServiceImpl implements LogAndRegService {
     @Autowired
     private UnitRepository unitRepository;
 
-    //判断邮箱格式是否正确
+    //TODO 判断邮箱格式是否正确
     public static boolean isEmail(String emails) {
         boolean flag = false;
         try {
@@ -200,7 +200,6 @@ public class LogAndRegServiceImpl implements LogAndRegService {
 
                 //11.将出生年份、月份存入缓存
                 UserBirthDto userBirthDto = new UserBirthDto();
-                userBirthDto.setTelephone(telephone);
                 userBirthDto.setBirth_year(birth_year);
                 userBirthDto.setBirth_month(birth_month);
                 redisTemplate.opsForValue().set(UserBirthDto.cacheKey(telephone), JSON.toJSONString(userBirthDto));
@@ -348,7 +347,6 @@ public class LogAndRegServiceImpl implements LogAndRegService {
 
                 //8.将出生年份、月份存入缓存
                 UserBirthDto userBirthDto = new UserBirthDto();
-                userBirthDto.setTelephone(telephone);
                 userBirthDto.setBirth_year(birth_year);
                 userBirthDto.setBirth_month(birth_month);
                 redisTemplate.opsForValue().set(UserBirthDto.cacheKey(telephone), JSON.toJSONString(userBirthDto));

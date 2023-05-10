@@ -179,11 +179,4 @@ public class PositionController {
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
-//    //兼职推荐-学生
-//    @RequestMapping(value = "/recommend", method = RequestMethod.GET)
-//    @ResponseBody
-//    public ResponseData recommendParttimes(@RequestParam String stu_id) throws ParseException {
-//        List<PositionInfoDto> res = positionService.recommendParttimes(stu_id);
-//        return new ResponseData(ExceptionMsg.SUCCESS, res);
-//    }
 }

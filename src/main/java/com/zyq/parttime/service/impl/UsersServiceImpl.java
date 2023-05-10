@@ -893,27 +893,20 @@ public class UsersServiceImpl implements UsersService {
                 System.out.println("识别结果：" + words.toString());//输出识别结果
 
                 //10.个人信息部分
-                String birth, phone, current_area, exp;
+                String phone, current_area, exp;
                 try {
                     if (((words.get(0).get("words")).toString()).length() > 3) {
                         //第一个字段识别的是“姓名：XXX”，正常识别
-                        birth = ((words.get(1).get("words")).toString().split("："))[1];//出生年月
                         phone = ((words.get(3).get("words")).toString().split("："))[1];//联系方式
                         current_area = ((words.get(4).get("words")).toString().split("："))[1];//现居地
                         exp = ((words.get(5).get("words")).toString().split("："))[1];//工作经验
                     } else {
                         //第一个字段识别的是“姓名：”，非正常识别
-                        birth = ((words.get(2).get("words")).toString().split("："))[1];//出生年月
                         phone = ((words.get(4).get("words")).toString().split("："))[1];//联系方式
                         current_area = ((words.get(5).get("words")).toString().split("："))[1];//现居地
                         exp = ((words.get(6).get("words")).toString().split("："))[1];//工作经验
                     }
                     System.out.println("识别到的手机号：" + phone + "；现居地：" + current_area + "；工作经验：" + exp);
-
-                    //计算年龄
-                    int age;
-                    String birthYear = birth.substring(0, 4);
-                    String birthMonth = birth.substring(4, 6);
 
                     //11.把现居地、工作经验填充到res
                     res.setTelephone(phone);
@@ -1894,7 +1887,7 @@ public class UsersServiceImpl implements UsersService {
         return res;
     }
 
-    //暂不支持
+    //暂不支持删除简历
     @Override
     public DeleteResumeCallbackDto deleteResume(DeleteResumeDto deleteResumeDto) throws ParseException, Exception {
         DeleteResumeCallbackDto res = new DeleteResumeCallbackDto();

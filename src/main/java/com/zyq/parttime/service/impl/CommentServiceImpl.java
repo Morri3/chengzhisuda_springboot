@@ -107,58 +107,65 @@ public class CommentServiceImpl implements CommentService {
         return res;
     }
 
+    //TODO 获取某一兼职的所有评论，并取出前3条-学生
     @Override
     public OneCommentDto getCommentThree(int p_id) throws ParttimeServiceException {
-        //结果是前3个评论组成字符串
+        //1.结果是前3个评论组成字符串
         OneCommentDto res = new OneCommentDto();
-        List<CommentDto> list = new ArrayList<>();//存放该兼职的所有评论
 
-        //1.signup中查找该p_id的所有signup
+        //存放该兼职的所有评论
+        List<CommentDto> list = new ArrayList<>();
+
+        //2.signup中查找该p_id的所有报名
         List<Signup> signups = signupRepository.getAllSignupByPId(p_id);
         if (signups != null && signups.size() > 0) {
-            boolean flag = false;//是否有评论
+            boolean flag = false;//用于判断是否有评论
 
-            //遍历signups，找到s_id
+            //3.遍历所有报名，找到s_id
             for (Signup signup : signups) {
                 System.out.println("当前遍历的s_id：" + signup.getId());
 
-                //2.由s_id找到对应的comment，若有就加入，没有就跳过
+                //4.由s_id找到对应的comment，若有就加入，没有就跳过
                 Comment comment = commentRepository.getComment(signup.getId());
                 if (comment != null) {
-                    //有该评论
+                    //4-1.有该评论
                     flag = true;
 
+                    //5.构造dto，加入到res
                     CommentDto dto = new CommentDto();
                     dto.setS_id(signup.getId());
                     dto.setC_id(comment.getId());
                     dto.setContent(comment.getContent());
                     dto.setCreate_time(comment.getCreateTime());
                     dto.setMemo("获取成功");
-                    //加入到res
                     list.add(dto);
                 } else {
-                    //没有该报名的评论，跳过
+                    //4-2.没有该报名的评论，跳过
                 }
             }
 
             if (flag == true) {
-                //有评论，取前3个
-
+                //6.有评论，取前3条评论，拼接成字符串
                 if (list.size() > 3) {
+                    //6-1.评论条数＞3，要取前3条
                     String str = "";
                     for (int i = 0; i < 2; i++) {
                         str += "No" + (i + 1) + ": " + list.get(i).getContent() + "\n";
                     }
                     str += "No3: " + list.get(2).getContent();
-                    res.setContent(str);//set到res中
+
+                    //7.set到res中
+                    res.setContent(str);
                 } else if (list.size() > 0 && list.size() <= 3) {
-                    //不做操作，保留这3个
+                    //6-2.评论条数≤3，保留这3条
                     String str = "";
                     for (int i = 0; i < list.size() - 1; i++) {
                         str += "No" + (i + 1) + ": " + list.get(i).getContent() + "\n";
                     }
                     str += "No" + list.size() + ": " + list.get(list.size() - 1).getContent();
-                    res.setContent(str);//set到res中
+
+                    //7.set到res中
+                    res.setContent(str);
                 }
             } else {
                 //无评论

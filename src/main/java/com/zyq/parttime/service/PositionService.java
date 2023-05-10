@@ -73,7 +73,4 @@ public interface PositionService {
     //婉拒
     SignupInfoToEmpDto rejectSignup(RejectInputDto rejectInputDto) throws ParttimeServiceException, ParseException;
 
-//    //推荐兼职
-//    List<PositionInfoDto> recommendParttimes(String stu_id) throws ParttimeServiceException, ParseException;
-
 }

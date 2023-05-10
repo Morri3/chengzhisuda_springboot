@@ -39,7 +39,7 @@ public class CommentController {
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
-    //TODO 获取某一兼职的所有学生的评论（前3条）-学生
+    //TODO 获取某一兼职的所有评论，并取出前3条-学生
     @RequestMapping(value = "/getAll", method = RequestMethod.GET)
     @ResponseBody
     public ResponseData getCommentThree(@RequestParam int p_id) {

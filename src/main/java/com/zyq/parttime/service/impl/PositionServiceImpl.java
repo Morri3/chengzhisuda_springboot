@@ -396,28 +396,32 @@ public class PositionServiceImpl implements PositionService {
         return res;
     }
 
+    //TODO 取消报名-学生
     @Override
     public CancelReturnDto cancel(CancelDto cancelDto) throws ParttimeServiceException, ParseException {
         CancelReturnDto res = new CancelReturnDto();
 
+        //1.获取输入
         if (cancelDto != null) {
             String telephone = cancelDto.getTelephone();
             int s_id = cancelDto.getS_id();
 
-            //查找该用户是否存在
+            //2.查找该用户是否存在
             Student stu = stuInfoRepository.findStudentByTelephone(telephone);
-            if (stu != null) {//存在
-                //判断报名是否存在
+            if (stu != null) {
+
+                //3.存在用户，判断报名是否存在
                 Signup find = signupRepository.findSignup(s_id);
                 if (find != null && find.getSignupStatus().equals("已报名")) {
-                    //存在报名，且已报名状态可取消
+
+                    //4.存在报名，且是“已报名”状态，才能取消，这时更新DB
 
                     //当前时间
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                     Date now = sdf.parse(sdf.format(new Date()));
                     signupRepository.cancelSignup(now, s_id);//修改DB
 
-                    //构造返回
+                    //5.构造返回
                     res.setStu_id(telephone);
                     res.setMemo("取消成功");
                 } else {
@@ -2022,35 +2026,5 @@ public class PositionServiceImpl implements PositionService {
 
         return res;
     }
-
-//    @Override
-//    public List<PositionInfoDto> recommendParttimes(String stu_id) throws ParttimeServiceException, ParseException {
-//        List<PositionInfoDto> res = new ArrayList<>();
-//
-//        if (stu_id != null && !stu_id.equals("")) {
-//            //1.有输入，查找该学生是否存在
-//            Student student = stuInfoRepository.findStudentByTelephone(stu_id);
-//
-//            if (student != null) {
-//                //2.存在学生，
-//
-//
-//            } else {
-//                //不存在学生
-//                logger.warn("不存在该学生");
-//                PositionInfoDto dto = new PositionInfoDto();
-//                dto.setP_id(0);
-//                dto.setMemo("不存在该学生");
-//                res.add(dto);
-//            }
-//        } else {
-//            logger.warn("请检查输入的信息是否完整");
-//            PositionInfoDto dto = new PositionInfoDto();
-//            dto.setP_id(0);
-//            dto.setMemo("请检查输入的信息是否完整");
-//            res.add(dto);
-//        }
-//        return res;
-//    }
 
 }
