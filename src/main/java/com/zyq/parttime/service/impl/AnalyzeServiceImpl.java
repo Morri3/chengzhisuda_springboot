@@ -185,20 +185,24 @@ public class AnalyzeServiceImpl implements AnalyzeService {
             for (Parttimes item : allParttimes) {
                 //3.获取每个item的平均综合评分
                 Map<String, Object> map = markRepository.getMarkByPId(item.getId());
+
                 //4.判断该兼职是否有评分
                 if (map.get("total_score") == null) {
-                    //该兼职无评分
+                    //4-1.该兼职无评分
                     logger.warn("该兼职暂无评分");
                     AnalyzeAvgScoreOfMarkDto dto = new AnalyzeAvgScoreOfMarkDto();
                     dto.setMemo("该兼职暂无评分");
                     res.add(dto);
                 } else {
-                    //有评分
-                    OneMark mark = JSON.parseObject(JSON.toJSONString(map), OneMark.class);//map转dto
+                    //4-2.有评分
+
+                    //map转dto
+                    OneMark mark = JSON.parseObject(JSON.toJSONString(map), OneMark.class);
                     if (mark != null) {
-                        float avg_total = mark.getTotal_score();
+                        float avg_total = mark.getTotal_score();//综合评分的均分
                         System.out.println("avg: " + avg_total);
-                        //4.构造dto
+
+                        //5.构造dto
                         AnalyzeAvgScoreOfMarkDto dto = new AnalyzeAvgScoreOfMarkDto();
                         dto.setAvg_total(avg_total);
                         dto.setP_id(item.getId());
