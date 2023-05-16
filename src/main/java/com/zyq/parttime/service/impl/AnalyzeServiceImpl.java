@@ -48,28 +48,27 @@ public class AnalyzeServiceImpl implements AnalyzeService {
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
-        //1.获取所有兼职
+        //1.获取所有兼职的发布数，返回结果为List<Map>
         List<Map<String, Object>> list = positionRepository.getNumOfDailyPublish();
 
         if (list.size() > 0) {
-            //2.有数据，遍历每个Map
+            //2.有数据，遍历每个Map，获取value发布数，构造dto
             for (Map<String, Object> item : list) {
-
-                //3.对于每个map，获取value，构造dto
                 AnalyzePublishDto dto = new AnalyzePublishDto();
                 dto.setDate(sdf.format(sdf.parse(item.get("create_time").toString())));//Date转String
                 dto.setNum(Integer.parseInt(item.get("num").toString()));
                 dto.setMemo("获取成功");
-                tmp.add(dto);//加入列表
+                //加入列表
+                tmp.add(dto);
             }
 
-            //4.创建map，存放日期、数量
+            //3.创建HashMap，键=日期，值=发布数
             HashMap<String, Integer> map = new HashMap<>();
 
-            //5.遍历dto列表，实现相同日期的兼职发布数进行叠加
+            //4.遍历dto列表，实现相同日期的兼职发布数进行叠加
             for (AnalyzePublishDto item : tmp) {
                 if (map.containsKey(item.getDate())) {
-                    // 若map中的key包含该日期，put前加上原来的数量
+                    //若map中的key包含该日期，put前加上原来的数量
                     map.put(item.getDate(), item.getNum() + map.get(item.getDate()));// 将合并数量的该对象重新存入map集合，因key值相同，所以会覆盖掉之前的对象
                 } else {
                     //不包含，直接put到map中
@@ -77,18 +76,19 @@ public class AnalyzeServiceImpl implements AnalyzeService {
                 }
             }
 
-            //6.使用treemap+自定义比较器接口实现按日期升序排序
+            //5.使用treemap+自定义比较器接口实现按日期升序排序
             Map<String, Object> sortMap = new TreeMap<>(new MapKeyComparator());
             sortMap.putAll(map);
             System.out.println("升序排序后的map：" + sortMap);
 
-            //7.构造dto
+            //6.遍历升序排序后的treemap，构造dto加入res
             for (String date : sortMap.keySet()) {
                 AnalyzePublishDto dto = new AnalyzePublishDto();
                 dto.setDate(date);//日期是string类型
                 dto.setNum(Integer.parseInt(map.get(date).toString()));
                 dto.setMemo("获取成功");
-                res.add(dto);//加入列表
+                //加入列表
+                res.add(dto);
             }
             System.out.println("接口1的结果：" + res.toString());
         } else {

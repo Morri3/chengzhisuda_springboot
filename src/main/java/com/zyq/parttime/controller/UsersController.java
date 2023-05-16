@@ -97,7 +97,7 @@ public class UsersController {
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
-    //TODO 简历上传stu_id-学生
+    //TODO 简历上传 step1上传账号+上传时间-学生
     @RequestMapping(value = "/resumes/upload/stu_info", method = RequestMethod.POST)
     @ResponseBody
     public ResponseData uploadResumeWithStuInfo(@RequestParam String telephone,@RequestParam String upload_time)
@@ -106,7 +106,7 @@ public class UsersController {
         return new ResponseData(ExceptionMsg.SUCCESS, res);
     }
 
-    //TODO 简历上传图片-学生
+    //TODO 简历上传 step2上传图片-学生
     @RequestMapping(value = "/resumes/upload", method = RequestMethod.POST)
     @ResponseBody
     public ResponseData uploadResume(MultipartFile file) throws ParseException, Exception {

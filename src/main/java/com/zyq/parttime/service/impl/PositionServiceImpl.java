@@ -1173,8 +1173,8 @@ public class PositionServiceImpl implements PositionService {
 
                         //9.更新管理员unit中的job_nums字段值
                         if (unit != null) {
-                            //10.存在单位
-                            unitRepository.minusJobNums(unit.getId());//更新job_nums
+                            //10.存在单位，更新job_nums
+                            unitRepository.minusJobNums(unit.getId());
 
                             //11.构造res
                             res.setOp_id(emp.getId());
@@ -1213,8 +1213,8 @@ public class PositionServiceImpl implements PositionService {
 
                             //9.更新管理员unit中的job_nums字段值
                             if (unit != null) {
-                                //10.存在单位
-                                unitRepository.minusJobNums(unit.getId());//更新job_nums
+                                //10.存在单位，更新job_nums
+                                unitRepository.minusJobNums(unit.getId());
 
                                 //11.构造res
                                 res.setOp_id(emp.getId());//这里操作员就是兼职发布者

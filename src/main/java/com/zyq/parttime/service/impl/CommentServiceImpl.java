@@ -39,18 +39,22 @@ public class CommentServiceImpl implements CommentService {
     @Autowired
     private EmpInfoRepository empInfoRepository;
 
+    //TODO 获取指定报名的评论-学生
     @Override
     public CommentDto getComment(int s_id) throws ParttimeServiceException {
         CommentDto res = new CommentDto();
-        //数据
+
+        //1.获取该报名的评论
         Comment comment = commentRepository.getComment(s_id);
         if (comment != null) {
+            //1-1.存在评论
             res.setC_id(comment.getId());
             res.setCreate_time(comment.getCreateTime());
             res.setS_id(comment.getS().getId());
             res.setContent(comment.getContent());
             res.setMemo("获取成功");
         } else {
+            //1-2.不存在评论
             res.setMemo("获取失败");
         }
         System.out.println(res.toString());
